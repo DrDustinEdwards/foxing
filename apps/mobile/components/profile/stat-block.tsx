@@ -1,23 +1,12 @@
 import { useColors } from "@/constants/colors";
 import { Text, View } from "react-native";
 import { Fonts } from "@/constants/fonts";
+import { SectionLabel } from "@/components/ui/section-label";
 
 export function StatBlock({ heading, children }: { heading: string; children: React.ReactNode }) {
-  const colors = useColors();
   return (
     <View>
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          fontSize: 11,
-          color: colors.textTertiary,
-          textTransform: "uppercase",
-          letterSpacing: 0.6,
-          marginBottom: 6,
-        }}
-      >
-        {heading}
-      </Text>
+      <SectionLabel style={{ marginBottom: 6 }}>{heading}</SectionLabel>
       <View className="flex-row flex-wrap" style={{ marginHorizontal: -8 }}>
         {children}
       </View>

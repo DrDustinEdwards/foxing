@@ -10,6 +10,7 @@ import { BackHeader } from "@/components/ui/back-header";
 import { Avatar } from "@/components/ui/avatar";
 import { FollowButton } from "@/components/profile/follow-button";
 import { Divider, StatTile } from "@/components/profile/stat-tile";
+import { SectionLabel } from "@/components/ui/section-label";
 
 // A reader's profile: the shared GET /u/:username page. A private profile shows only
 // who it is; following and close-friend toggles patch this page in place.
@@ -292,21 +293,9 @@ function PublicProfile({ page }: { page: Extract<W.ProfilePage, { isPrivate: fal
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  const colors = useColors();
   return (
     <View style={{ marginBottom: 20 }}>
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          fontSize: 11,
-          color: colors.textTertiary,
-          textTransform: "uppercase",
-          letterSpacing: 0.6,
-          marginBottom: 10,
-        }}
-      >
-        {title}
-      </Text>
+      <SectionLabel style={{ marginBottom: 10 }}>{title}</SectionLabel>
       {children}
     </View>
   );

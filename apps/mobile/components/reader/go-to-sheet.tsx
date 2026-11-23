@@ -21,6 +21,7 @@ import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { type BookmarkRow, useBookmarks, useReaderWrites } from "@/lib/reader-data";
 import type { PositionEntry } from "@/lib/position-history";
+import { SectionLabel } from "@/components/ui/section-label";
 
 type Tab = "contents" | "location" | "places";
 
@@ -188,18 +189,7 @@ export function GoToSheet({
         </ScrollView>
       ) : tab === "location" ? (
         <View style={{ padding: 16 }}>
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 11,
-              color: colors.textTertiary,
-              textTransform: "uppercase",
-              letterSpacing: 0.6,
-              marginBottom: 8,
-            }}
-          >
-            Jump to percentage
-          </Text>
+          <SectionLabel style={{ marginBottom: 8 }}>Jump to percentage</SectionLabel>
           <View className="flex-row items-center" style={{ gap: 8 }}>
             <TextInput
               value={percent}
@@ -433,22 +423,7 @@ function MyPlacesTab({
 }
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
-  const colors = useColors();
-  return (
-    <Text
-      style={{
-        fontFamily: Fonts.uiMedium,
-        fontSize: 11,
-        color: colors.textTertiary,
-        textTransform: "uppercase",
-        letterSpacing: 0.6,
-        marginBottom: 8,
-        paddingHorizontal: 4,
-      }}
-    >
-      {children}
-    </Text>
-  );
+  return <SectionLabel style={{ marginBottom: 8, paddingHorizontal: 4 }}>{children}</SectionLabel>;
 }
 
 function timeAgoShort(ts: number): string {

@@ -4,6 +4,7 @@ import { Fonts } from "@/constants/fonts";
 import type { ClubCard } from "@foxing/types";
 import { BookOpen, CaretDown, CaretUp } from "phosphor-react-native";
 import { useState } from "react";
+import { SectionBlock, SectionLabel } from "@/components/ui/section-label";
 
 /** What a cover tile needs; book cards and today's pick both have it. */
 export interface MiniBook {
@@ -11,28 +12,6 @@ export interface MiniBook {
   title: string;
   author: string;
   coverUrl: string | null;
-}
-
-export function SectionWrap({ title, children }: { title: string; children: React.ReactNode }) {
-  const colors = useColors();
-  return (
-    <View style={{ marginTop: 18 }}>
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          fontSize: 11,
-          color: colors.textTertiary,
-          textTransform: "uppercase",
-          letterSpacing: 0.6,
-          marginBottom: 10,
-          paddingHorizontal: 16,
-        }}
-      >
-        {title}
-      </Text>
-      {children}
-    </View>
-  );
 }
 
 export function SectionRow({
@@ -45,7 +24,7 @@ export function SectionRow({
   onPressBook: (slug: string) => void;
 }) {
   return (
-    <SectionWrap title={title}>
+    <SectionBlock title={title}>
       <FlatList
         horizontal
         data={books}
@@ -54,7 +33,7 @@ export function SectionRow({
         showsHorizontalScrollIndicator={false}
         renderItem={({ item }) => <BookMini book={item} onPress={() => onPressBook(item.slug)} />}
       />
-    </SectionWrap>
+    </SectionBlock>
   );
 }
 
@@ -107,7 +86,7 @@ export function ChipRow({
 }) {
   const colors = useColors();
   return (
-    <SectionWrap title={title}>
+    <SectionBlock title={title}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -129,7 +108,7 @@ export function ChipRow({
           </Pressable>
         ))}
       </ScrollView>
-    </SectionWrap>
+    </SectionBlock>
   );
 }
 
@@ -172,19 +151,7 @@ export function TodaysPickHero({ book, onOpen }: { book: MiniBook; onOpen: () =>
   const colors = useColors();
   return (
     <View style={{ marginTop: 18, marginBottom: 4 }}>
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          fontSize: 11,
-          color: colors.textTertiary,
-          textTransform: "uppercase",
-          letterSpacing: 0.6,
-          marginBottom: 10,
-          paddingHorizontal: 16,
-        }}
-      >
-        Today's pick
-      </Text>
+      <SectionLabel style={{ marginBottom: 10, paddingHorizontal: 16 }}>Today's pick</SectionLabel>
       <Pressable
         onPress={onOpen}
         accessibilityRole="button"

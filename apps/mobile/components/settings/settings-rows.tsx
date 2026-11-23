@@ -2,6 +2,7 @@ import { useColors } from "@/constants/colors";
 import { Pressable, Switch, Text, TextInput, View } from "react-native";
 import { Fonts } from "@/constants/fonts";
 import { CaretRight } from "phosphor-react-native";
+import { SectionLabel } from "@/components/ui/section-label";
 
 export function MetaHeader({ children }: { children: React.ReactNode }) {
   const colors = useColors();
@@ -21,26 +22,14 @@ export function MetaHeader({ children }: { children: React.ReactNode }) {
 }
 
 export function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  const colors = useColors();
   return (
     <View
       style={{ marginTop: 18 }}
       className="rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark overflow-hidden"
     >
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          fontSize: 11,
-          color: colors.textTertiary,
-          textTransform: "uppercase",
-          letterSpacing: 0.6,
-          paddingHorizontal: 12,
-          paddingTop: 10,
-          paddingBottom: 4,
-        }}
-      >
+      <SectionLabel style={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: 4 }}>
         {title}
-      </Text>
+      </SectionLabel>
       {children}
     </View>
   );

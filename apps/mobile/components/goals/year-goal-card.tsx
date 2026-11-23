@@ -1,7 +1,7 @@
 import { View, Text, Pressable, TextInput, ActivityIndicator } from "react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
-import { Section } from "./section";
+import { SectionBlock } from "@/components/ui/section-label";
 
 export function YearGoalCard({
   year,
@@ -25,7 +25,7 @@ export function YearGoalCard({
   colors: ReturnType<typeof useColors>;
 }) {
   return (
-    <Section title={`${year} goal`}>
+    <SectionBlock title={`${year} goal`} inset={0}>
       <View className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
         <Text
           style={{
@@ -118,6 +118,6 @@ export function YearGoalCard({
           </View>
         ) : null}
       </View>
-    </Section>
+    </SectionBlock>
   );
 }

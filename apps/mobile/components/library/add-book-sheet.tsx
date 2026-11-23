@@ -7,6 +7,7 @@ import { SheetScaffold } from "@/components/ui/sheet-scaffold";
 import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
 import { Fonts } from "@/constants/fonts";
 import { Compass, LinkSimple } from "phosphor-react-native";
+import { SectionLabel } from "@/components/ui/section-label";
 
 export function AddBookSheet({
   visible,
@@ -71,19 +72,9 @@ export function AddBookSheet({
       onClose={onClose}
       variant="bottom"
       header={
-        <Text
-          style={{
-            fontFamily: Fonts.uiMedium,
-            fontSize: 11,
-            color: colors.textTertiary,
-            textTransform: "uppercase",
-            letterSpacing: 0.6,
-            paddingHorizontal: 20,
-            marginBottom: 8,
-          }}
-        >
+        <SectionLabel style={{ paddingHorizontal: 20, marginBottom: 8 }}>
           {mode === "url" ? "Add from URL" : "Add a book"}
-        </Text>
+        </SectionLabel>
       }
     >
       {mode === "choose" ? (

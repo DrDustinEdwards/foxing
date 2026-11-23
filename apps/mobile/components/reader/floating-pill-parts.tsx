@@ -14,6 +14,7 @@ import {
 import { SheetScaffold } from "@/components/ui/sheet-scaffold";
 import { Pressable, Text, View } from "react-native";
 import { Fonts } from "@/constants/fonts";
+import { SectionLabel } from "@/components/ui/section-label";
 
 // All-options bottom sheet shown on long-press of the pill. Mirrors the inline
 // menu with full labels. Each action calls the handler the pill already wires.
@@ -127,19 +128,7 @@ export function AllOptionsSheet({
       variant="bottom"
       scroll={false}
       header={
-        <Text
-          style={{
-            fontFamily: Fonts.uiMedium,
-            fontSize: 11,
-            color: colors.textTertiary,
-            textTransform: "uppercase",
-            letterSpacing: 0.6,
-            paddingHorizontal: 20,
-            marginBottom: 8,
-          }}
-        >
-          Actions
-        </Text>
+        <SectionLabel style={{ paddingHorizontal: 20, marginBottom: 8 }}>Actions</SectionLabel>
       }
     >
       {items.map((item, i) => {

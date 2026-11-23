@@ -19,6 +19,7 @@ import {
 } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { SectionLabel } from "@/components/ui/section-label";
 
 /** Companion tools that open as one answer sheet (the server's action names). */
 export type CompanionTool =
@@ -194,7 +195,9 @@ export function MenuSheet({
             {showCompanion ? (
               <View style={{ paddingBottom: 4 }}>
                 <View style={{ paddingHorizontal: 12 }}>
-                  <SectionLabel label="This book" />
+                  <SectionLabel style={{ marginTop: 4, marginBottom: 8, paddingHorizontal: 4 }}>
+                    This book
+                  </SectionLabel>
                   {/* Prominent standalone Ask/Chat entry: opens the companion
                       in general mode (book + chapter context, no seed). */}
                   <Pressable
@@ -226,7 +229,9 @@ export function MenuSheet({
                     {locked ? <Lock color={colors.textOnBrand} size={16} weight="fill" /> : null}
                   </Pressable>
                   <Row items={BOOK_TOOLS} onSelect={handleSelect} locked={locked} />
-                  <SectionLabel label="This chapter" />
+                  <SectionLabel style={{ marginTop: 4, marginBottom: 8, paddingHorizontal: 4 }}>
+                    This chapter
+                  </SectionLabel>
                   <Row items={CHAPTER_TOOLS} onSelect={handleSelect} locked={locked} />
                 </View>
               </View>
@@ -323,26 +328,5 @@ function LockBadge({ colors }: { colors: ReturnType<typeof useColors> }) {
     >
       <Lock color={colors.brandText} size={10} weight="fill" />
     </View>
-  );
-}
-
-// Group heading inside the Companion hub ("This book" / "This chapter").
-function SectionLabel({ label }: { label: string }) {
-  const colors = useColors();
-  return (
-    <Text
-      style={{
-        fontFamily: Fonts.uiMedium,
-        fontSize: 11,
-        color: colors.textTertiary,
-        textTransform: "uppercase",
-        letterSpacing: 0.6,
-        marginTop: 4,
-        marginBottom: 8,
-        paddingHorizontal: 4,
-      }}
-    >
-      {label}
-    </Text>
   );
 }

@@ -19,6 +19,7 @@ import {
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { relativeTime } from "@/lib/relative-time";
+import { SectionLabel } from "@/components/ui/section-label";
 
 type BucketKey = "today" | "week" | "earlier";
 const BUCKETS: Array<{ key: BucketKey; label: string }> = [
@@ -89,20 +90,9 @@ export default function NotificationsScreen() {
           }
           renderItem={({ item }) =>
             item.kind === "header" ? (
-              <Text
-                style={{
-                  fontFamily: Fonts.uiMedium,
-                  fontSize: 11,
-                  color: colors.textTertiary,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.6,
-                  marginTop: 16,
-                  marginBottom: 6,
-                  paddingHorizontal: 16,
-                }}
-              >
+              <SectionLabel style={{ marginTop: 16, marginBottom: 6, paddingHorizontal: 16 }}>
                 {item.label}
-              </Text>
+              </SectionLabel>
             ) : (
               <NotificationRowView row={item.row} onPress={() => onTap(item.row)} />
             )

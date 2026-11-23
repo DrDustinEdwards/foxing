@@ -1,7 +1,7 @@
 import { View, Text } from "react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
-import { Section } from "./section";
+import { SectionBlock } from "@/components/ui/section-label";
 
 export function WeeklySummaryCard({
   last7,
@@ -13,7 +13,7 @@ export function WeeklySummaryCard({
   colors: ReturnType<typeof useColors>;
 }) {
   return (
-    <Section title="This week">
+    <SectionBlock title="This week" inset={0}>
       <View className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
         <View className="flex-row justify-between" style={{ height: 100, marginBottom: 6 }}>
           {last7.map((d) => {
@@ -55,6 +55,6 @@ export function WeeklySummaryCard({
           })}
         </View>
       </View>
-    </Section>
+    </SectionBlock>
   );
 }

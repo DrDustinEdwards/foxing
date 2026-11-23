@@ -2,6 +2,7 @@ import type * as W from "@foxing/types";
 import { View, Text, Pressable, Image } from "react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { SectionLabel } from "@/components/ui/section-label";
 
 // The books on the reader's public profile strip.
 export function FavoritesStrip({
@@ -15,18 +16,7 @@ export function FavoritesStrip({
   if (books.length === 0) return null;
   return (
     <View style={{ marginBottom: 16 }}>
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          fontSize: 11,
-          color: colors.textTertiary,
-          textTransform: "uppercase",
-          letterSpacing: 0.6,
-          marginBottom: 8,
-        }}
-      >
-        Favorites
-      </Text>
+      <SectionLabel style={{ marginBottom: 8 }}>Favorites</SectionLabel>
       <View className="flex-row" style={{ gap: 8 }}>
         {books.slice(0, 5).map((b) => (
           <Pressable

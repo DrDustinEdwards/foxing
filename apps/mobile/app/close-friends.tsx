@@ -7,6 +7,7 @@ import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { BackHeader } from "@/components/ui/back-header";
 import { PersonRow } from "@/components/profile/person-row";
+import { SectionLabel } from "@/components/ui/section-label";
 
 // Close friends see what you share with friends only. They are chosen from the
 // people you follow, as on the web People page; a toggle patches the list in place.
@@ -84,21 +85,7 @@ export default function CloseFriendsScreen() {
 }
 
 function Heading({ children }: { children: React.ReactNode }) {
-  const colors = useColors();
-  return (
-    <Text
-      style={{
-        fontFamily: Fonts.uiMedium,
-        fontSize: 11,
-        color: colors.textTertiary,
-        textTransform: "uppercase",
-        letterSpacing: 0.6,
-        marginBottom: 8,
-      }}
-    >
-      {children}
-    </Text>
-  );
+  return <SectionLabel style={{ marginBottom: 8 }}>{children}</SectionLabel>;
 }
 
 function Note({ children }: { children: React.ReactNode }) {

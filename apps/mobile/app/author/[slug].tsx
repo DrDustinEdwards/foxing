@@ -7,6 +7,7 @@ import { CaretLeft, BookOpen, CheckCircle, Bookmark, Clock } from "phosphor-reac
 import { authClient } from "@/lib/api";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { SectionLabel } from "@/components/ui/section-label";
 
 // An author's page: the shared GET /authors/:slug view, with a badge on the books
 // already on the reader's shelf.
@@ -163,20 +164,5 @@ function StatusIcon({ status }: { status: W.ShelfStatus }) {
 }
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
-  const colors = useColors();
-  return (
-    <Text
-      style={{
-        fontFamily: Fonts.uiMedium,
-        fontSize: 11,
-        color: colors.textTertiary,
-        textTransform: "uppercase",
-        letterSpacing: 0.6,
-        marginTop: 18,
-        marginBottom: 10,
-      }}
-    >
-      {children}
-    </Text>
-  );
+  return <SectionLabel style={{ marginTop: 18, marginBottom: 10 }}>{children}</SectionLabel>;
 }

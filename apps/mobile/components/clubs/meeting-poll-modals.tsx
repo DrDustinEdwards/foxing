@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { CaretLeft } from "phosphor-react-native";
 import { Fonts } from "@/constants/fonts";
+import { SectionLabel } from "@/components/ui/section-label";
 
 function FormModal({
   visible,
@@ -248,17 +249,7 @@ export function AddPollModal({
         onChange={setDescription}
         multiline
       />
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          fontSize: 11,
-          color: colors.textTertiary,
-          textTransform: "uppercase",
-          letterSpacing: 0.6,
-        }}
-      >
-        Options
-      </Text>
+      <SectionLabel>Options</SectionLabel>
       {options.map((opt, idx) => (
         <View key={idx} className="flex-row items-center" style={{ gap: 8 }}>
           <TextInput
@@ -345,18 +336,7 @@ function FieldInput({
   const colors = useColors();
   return (
     <View>
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          fontSize: 11,
-          color: colors.textTertiary,
-          textTransform: "uppercase",
-          letterSpacing: 0.6,
-          marginBottom: 4,
-        }}
-      >
-        {label}
-      </Text>
+      <SectionLabel style={{ marginBottom: 4 }}>{label}</SectionLabel>
       <TextInput
         value={value}
         onChangeText={onChange}

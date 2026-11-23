@@ -23,6 +23,7 @@ import {
   PersonResult,
   ResultsSection,
 } from "@/components/search/search-results";
+import { SectionLabel } from "@/components/ui/section-label";
 
 type FilterKey = "all" | "books" | "authors" | "people" | "clubs";
 
@@ -182,18 +183,7 @@ export default function SearchScreen() {
         {/* Recent searches */}
         {showRecent ? (
           <View>
-            <Text
-              style={{
-                fontFamily: Fonts.uiMedium,
-                fontSize: 11,
-                color: colors.textTertiary,
-                textTransform: "uppercase",
-                letterSpacing: 0.6,
-                marginBottom: 8,
-              }}
-            >
-              Recent searches
-            </Text>
+            <SectionLabel style={{ marginBottom: 8 }}>Recent searches</SectionLabel>
             {recent.map((r) => (
               <View key={r} className="flex-row items-center mb-1">
                 <Pressable

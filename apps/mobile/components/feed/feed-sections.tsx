@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-nati
 import { Bell, Newspaper, UserPlus } from "phosphor-react-native";
 import { Fonts } from "@/constants/fonts";
 import { TrendingBookCard } from "@/components/feed/trending-book-card";
+import { SectionLabel } from "@/components/ui/section-label";
 
 export function FeedEmptyState({
   icon,
@@ -223,7 +224,7 @@ export function PopularSection({
         </Pressable>
       ) : null}
 
-      <SectionLabel>Popular on Foxing this month</SectionLabel>
+      <SectionLabel style={{ marginBottom: 8 }}>Popular on Foxing this month</SectionLabel>
       {trending.length === 0 ? (
         <View className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
           <Text style={{ fontFamily: Fonts.body, fontSize: 13, color: colors.textTertiary }}>
@@ -244,27 +245,9 @@ export function PopularSection({
 
       {sectionLabel ? (
         <View style={{ marginTop: 18, marginBottom: 6 }}>
-          <SectionLabel>{sectionLabel}</SectionLabel>
+          <SectionLabel style={{ marginBottom: 8 }}>{sectionLabel}</SectionLabel>
         </View>
       ) : null}
     </View>
-  );
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  const colors = useColors();
-  return (
-    <Text
-      style={{
-        fontFamily: Fonts.uiMedium,
-        fontSize: 11,
-        color: colors.textTertiary,
-        textTransform: "uppercase",
-        letterSpacing: 0.6,
-        marginBottom: 8,
-      }}
-    >
-      {children}
-    </Text>
   );
 }

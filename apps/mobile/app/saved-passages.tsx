@@ -17,6 +17,7 @@ import { Trash, ShareNetwork, PencilSimple, Check, BookOpen } from "phosphor-rea
 import { highlightSwatch, useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { BackHeader } from "@/components/ui/back-header";
+import { SectionLabel } from "@/components/ui/section-label";
 
 // Saved Passages, the merged Highlights + Commonplace view per task.md
 // Section 2a. Pulls every highlight where a note has been written, grouped
@@ -111,18 +112,7 @@ export default function SavedPassagesScreen() {
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
           {grouped.map(([title, entries]) => (
             <View key={title} style={{ marginBottom: 18 }}>
-              <Text
-                style={{
-                  fontFamily: Fonts.uiMedium,
-                  fontSize: 11,
-                  color: colors.textTertiary,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.6,
-                  marginBottom: 8,
-                }}
-              >
-                {title}
-              </Text>
+              <SectionLabel style={{ marginBottom: 8 }}>{title}</SectionLabel>
               {entries.map((e) => (
                 <View
                   key={e.id}

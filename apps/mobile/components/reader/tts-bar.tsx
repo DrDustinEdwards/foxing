@@ -5,6 +5,7 @@ import { Play, Pause, SkipBack, SkipForward, X as XIcon, Moon } from "phosphor-r
 import * as Speech from "expo-speech";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { SectionLabel } from "@/components/ui/section-label";
 
 const SPEED_OPTIONS = [0.75, 1.0, 1.25, 1.5, 2.0] as const;
 const SLEEP_TIMERS = [15, 30, 45, 60] as const;
@@ -186,18 +187,7 @@ export function TtsBar({ visible, chapterText, onCurrentSentence, onClose }: Tts
         }}
       >
         <View className="flex-row items-center" style={{ marginBottom: 8 }}>
-          <Text
-            style={{
-              flex: 1,
-              fontFamily: Fonts.uiMedium,
-              fontSize: 11,
-              color: colors.textTertiary,
-              textTransform: "uppercase",
-              letterSpacing: 0.6,
-            }}
-          >
-            Listen
-          </Text>
+          <SectionLabel style={{ flex: 1 }}>Listen</SectionLabel>
           {sleepRemaining !== null ? (
             <Pressable onPress={cancelSleepTimer} hitSlop={6} style={{ marginRight: 12 }}>
               <Text style={{ fontFamily: Fonts.mono, fontSize: 11, color: colors.brandText }}>

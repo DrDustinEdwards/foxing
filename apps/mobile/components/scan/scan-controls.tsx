@@ -1,30 +1,12 @@
 import { useColors } from "@/constants/colors";
 import { Pressable, Text, View } from "react-native";
 import { Fonts } from "@/constants/fonts";
+import { SectionLabel } from "@/components/ui/section-label";
 
-export function Section({
-  colors,
-  label,
-  children,
-}: {
-  colors: ReturnType<typeof useColors>;
-  label: string;
-  children: React.ReactNode;
-}) {
+export function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <View style={{ marginTop: 14 }}>
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          fontSize: 11,
-          color: colors.textTertiary,
-          textTransform: "uppercase",
-          letterSpacing: 0.6,
-          marginBottom: 8,
-        }}
-      >
-        {label}
-      </Text>
+      <SectionLabel style={{ marginBottom: 8 }}>{label}</SectionLabel>
       {children}
     </View>
   );
