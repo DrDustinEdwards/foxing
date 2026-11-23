@@ -19,6 +19,7 @@ function captureHub(): { hub: ClubLiveHub; sent: { clubId: string; message: Live
       async connect() {
         return new Response(null, { status: 101 });
       },
+      async disconnect() {},
     },
   };
 }
@@ -344,6 +345,31 @@ describe("clubs API (web -> api -> core -> D1)", () => {
       body: { content: "let me in" },
     });
     expect(res.status).toBe(403);
+  });
+
+  it("a banned member cannot leave to clear the ban, rejoin or post an announcement", async () => {
+    await seedUser("owner8", "plus");
+    await seedUser("banned1", "free");
+    await seedUser("plain1", "free");
+    const { body } = await createClub("owner8");
+    const id = body.club.id;
+    for (const user of ["banned1", "plain1"]) {
+      await call(`/clubs/${id}/join`, { method: "POST", user });
+    }
+    const ban = await call(`/clubs/${id}/members/banned1/ban`, { method: "POST", user: "owner8" });
+    expect(ban.status).toBe(200);
+
+    const leave = await call(`/clubs/${id}/members/me`, { method: "DELETE", user: "banned1" });
+    expect(leave.status).toBe(403);
+    const rejoin = await call(`/clubs/${id}/join`, { method: "POST", user: "banned1" });
+    expect(rejoin.status).toBe(403);
+
+    const announce = await call(`/clubs/${id}/threads`, {
+      method: "POST",
+      user: "plain1",
+      body: { title: "Everyone read this", type: "announcement" },
+    });
+    expect(announce.status).toBe(403);
   });
 
   it("deleting an account hands the club to the chosen member, keeps their posts, and a bad pick changes nothing", async () => {

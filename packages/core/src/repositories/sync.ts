@@ -33,17 +33,14 @@ const annotationAdapter: SyncAdapter = {
   async insert(db, userId, op) {
     const p = (op.payload ?? {}) as Record<string, unknown>;
     const selectedText = (p.selectedText as string | null) ?? null;
-    const normalized =
-      (p.normalizedText as string | null) ?? (selectedText ? normalizeText(selectedText) : null);
     await db.insert(annotations).values({
       id: op.id,
       userId,
       bookId: (p.bookId as string | null) ?? null,
-      clubId: (p.clubId as string | null) ?? null,
       type: (p.type as string) ?? "highlight",
       locator: (p.locator as Record<string, unknown> | null) ?? null,
       selectedText,
-      normalizedText: normalized,
+      normalizedText: selectedText ? normalizeText(selectedText) : null,
       body: (p.body as string | null) ?? null,
       color: (p.color as string | null) ?? null,
       chapter: (p.chapter as string | null) ?? null,
@@ -51,7 +48,6 @@ const annotationAdapter: SyncAdapter = {
       visibility: (p.visibility as string) ?? "private",
       containsSpoilers: (p.containsSpoilers as boolean) ?? false,
       isPinned: (p.isPinned as boolean) ?? false,
-      parentId: (p.parentId as string | null) ?? null,
       updatedAt: new Date(op.clientTs),
     });
   },
@@ -72,7 +68,7 @@ const annotationAdapter: SyncAdapter = {
     ]) {
       if (k in p) set[k] = p[k];
     }
-    if ("selectedText" in p && !("normalizedText" in p)) {
+    if ("selectedText" in p) {
       set.normalizedText = p.selectedText ? normalizeText(p.selectedText as string) : null;
     }
     await db

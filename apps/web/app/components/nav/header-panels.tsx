@@ -1,10 +1,10 @@
 // The Books and Celebrity Picks panels of Capsomer's site header, and the same links as groups
 // for the phone's sheet. Browse items are real routes; era chips map to /books?era= filters that
-// ship today. By Mood is cut until mood_tags is populated (all catalog books are '[]' today). The
-// era list mirrors core ERA_BUCKETS (facets.ts), kept local so the client bundle does not pull in
-// the core query layer. Featured clubs come from the root loader (listExternalClubs), so the
+// ship today. By Mood is cut until mood_tags is populated (all catalog books are '[]' today).
+// Featured clubs come from the root loader (listExternalClubs), so the
 // panel renders server-side; the Book of the Month card shows only when a published pick exists.
 // Every item is a link, so the header's panel closes on its own when one is followed.
+import { ERA_BUCKETS } from "@foxing/core/catalog-buckets";
 import type { HeaderGroup } from "capsomer/react/site-header";
 import { Link } from "capsomer/react/link";
 import type { NavBotm, NavFeaturedClub } from "~/lib/nav.server";
@@ -13,20 +13,12 @@ const BOOKS_BROWSE = [
   { href: "/books", label: "All books" },
   { href: "/awards", label: "Award winners" },
 ];
-/** The era filters, as core's ERA_BUCKETS names them; the search filter bar reads this list too. */
-export const BOOKS_ERAS = [
-  { slug: "pre-1800", label: "Before 1800" },
-  { slug: "1800-1849", label: "1800 to 1849" },
-  { slug: "1850-1899", label: "1850 to 1899" },
-  { slug: "1900-1949", label: "1900 to 1949" },
-  { slug: "modern", label: "1950 and later" },
-];
 
 export const booksGroups: HeaderGroup[] = [
   { label: "Browse", links: BOOKS_BROWSE },
   {
     label: "By era",
-    links: BOOKS_ERAS.map((era) => ({ href: `/books?era=${era.slug}`, label: era.label })),
+    links: ERA_BUCKETS.map((era) => ({ href: `/books?era=${era.slug}`, label: era.label })),
   },
 ];
 
@@ -46,7 +38,7 @@ export function BooksPanel() {
       <div>
         <div className="cap-site-header-panel-label">By era</div>
         <ul className="fx-panel-chips">
-          {BOOKS_ERAS.map((era) => (
+          {ERA_BUCKETS.map((era) => (
             <li key={era.slug}>
               <Link to={`/books?era=${era.slug}`} className="fx-tag">
                 {era.label}

@@ -182,6 +182,10 @@ export async function leaveClub(db: Db, actor: EventActor, clubId: string): Prom
   if (club.creatorId === actor.userId) {
     throw domainErrors.conflict("The creator cannot leave; delete or transfer the club instead.");
   }
+  // Leaving must not overwrite a ban (or a mute): a banned member who "left" could join again.
+  if ((await clubsRepo.getMembership(db, clubId, actor.userId))?.status === "banned") {
+    throw domainErrors.forbidden("You are banned from this club.");
+  }
   await clubsRepo.setMemberStatus(db, clubId, actor.userId, "left");
 }
 
@@ -324,6 +328,8 @@ export async function createThread(
   if (membership.isMuted(m.mutedUntil, Date.now())) {
     throw domainErrors.forbidden("You are muted in this club.");
   }
+  // An announcement notifies and pushes every member, so only moderators may post one.
+  if (input.type === "announcement") await requireModerator(db, clubId, actor.userId);
   const club = await clubsRepo.getClubById(db, clubId);
   if (!club) throw domainErrors.notFound("Club not found.");
 
@@ -578,10 +584,4 @@ export async function removeSchedule(
   await requireModerator(db, clubId, actor.userId);
   const ok = await clubsRepo.deleteSchedule(db, scheduleId, clubId);
   if (!ok) throw domainErrors.notFound("Schedule entry not found.");
-}
-
-/** Chapter-unlock gate: a chapter is readable once its unlock date has passed. Pure
- *  read used by the thread list and the reader club layer. */
-export function isChapterUnlocked(unlockDate: Date, nowMs: number): boolean {
-  return unlockDate.getTime() <= nowMs;
 }

@@ -8,6 +8,7 @@ import type { Bindings, ClubLiveHub, Env } from "../types";
 
 const noopHub: ClubLiveHub = {
   async broadcast() {},
+  async disconnect() {},
   async connect() {
     return new Response("Live layer unavailable.", { status: 503 });
   },

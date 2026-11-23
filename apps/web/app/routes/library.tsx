@@ -22,7 +22,7 @@ import "capsomer/meter.css";
 import { Tabs, TabsList, TabsTrigger } from "capsomer/react/tabs";
 import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
-import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
+import { GoalPeriodSelect, TargetInput, useGoalDraft } from "~/components/goal-form";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, FormError } from "~/components/ui";
 import { cloudflareContext } from "~/context";
@@ -124,7 +124,7 @@ export default function Library({ loaderData }: Route.ComponentProps) {
                         />
                         {e.status === "paused" || e.status === "abandoned" ? (
                           <span className="fx-library-label-2">
-                            {e.status === "paused" ? "Paused" : "Set aside"}
+                            {e.status === "paused" ? "Paused" : "Abandoned"}
                           </span>
                         ) : null}
                         {e.status === "reading" && e.progressPct > 0 ? (
@@ -197,13 +197,13 @@ function StreakCard({ streak: s }: { streak: Streak }) {
           { k: "Longest", v: s.longestStreak },
           { k: "Finished", v: s.totalBooksFinished },
         ].map((x) => (
-          <div key={x.k}>
-            <dd className="cap-title" data-size="3">
-              {x.v}
-            </dd>
+          <div key={x.k} className="fx-stat">
             <dt className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
               {x.k}
             </dt>
+            <dd className="cap-title" data-size="3">
+              {x.v}
+            </dd>
           </div>
         ))}
       </dl>
@@ -255,16 +255,7 @@ function GoalsCard({ goals }: { goals: GoalWithProgress[] }) {
       </div>
       <div className="cap-stack" data-gap="3">
         <div className="fx-library-row-2">
-          <label className="cap-text" data-size="small" data-face="ui">
-            <span className="cap-sr-only">Books</span>
-            <input
-              type="number"
-              min={1}
-              value={draft.target}
-              onChange={(e) => draft.setTarget(Math.max(1, Number(e.target.value)))}
-              className="cap-input fx-library-input"
-            />
-          </label>
+          <TargetInput label="Books" value={draft.target} onChange={draft.setTarget} />
           <GoalPeriodSelect value={draft.period} onChange={draft.setPeriod} />
           <button
             type="button"

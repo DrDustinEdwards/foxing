@@ -57,3 +57,27 @@ export function GoalPeriodSelect({
     </label>
   );
 }
+
+/** A goal's target, a whole number of at least one, with its label for screen readers. */
+export function TargetInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (n: number) => void;
+}) {
+  return (
+    <label className="cap-text" data-size="small" data-face="ui">
+      <span className="cap-sr-only">{label}</span>
+      <input
+        type="number"
+        min={1}
+        value={value}
+        onChange={(e) => onChange(Math.max(1, Number(e.target.value)))}
+        className="cap-input fx-goals-input"
+      />
+    </label>
+  );
+}
