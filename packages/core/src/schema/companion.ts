@@ -1,5 +1,5 @@
 // AI companion history (2 tables, Phase 4). Per-book conversation threads, and the daily usage counter.
-import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { cascadeFk, createdAt, idPk } from "./_helpers";
 import { user } from "./auth";
 import { books } from "./catalog";
@@ -13,7 +13,11 @@ export const companionThreads = sqliteTable(
     mode: text("mode"),
     createdAt: createdAt(),
   },
-  (t) => [index("companion_threads_user_book_idx").on(t.userId, t.bookId)],
+  (t) => [
+    index("companion_threads_user_book_idx").on(t.userId, t.bookId),
+    // One thread per (user, book); the plain index above predates it and stays (a migration may only add).
+    uniqueIndex("companion_threads_user_book_uq").on(t.userId, t.bookId),
+  ],
 );
 
 export const companionMessages = sqliteTable(

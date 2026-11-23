@@ -316,9 +316,9 @@ app.get("/media/*", (c) =>
 );
 
 // The writes that can change a stored page beside Carrel's (siteApiStep purges after those): the admin API's (catalog,
-// picks, awards, book of the month), the admin MCP's included. Each accepted one purges every stored page; a failed
-// purge is a log line and a page stale until it expires.
-const PAGE_WRITERS = ["/api/v1/admin"];
+// picks, awards, book of the month), the admin MCP's included, and a reader's visibility (a profile that goes private
+// must drop its cached recap card). Each accepted one purges every stored page; a failed purge is a log line.
+const PAGE_WRITERS = ["/api/v1/admin", "/api/v1/me/visibility"];
 
 /** The Hono app as the Worker's step: its answer, or undefined for a path it has no route for. */
 const hono: GatewayStep<Env> = async (request, env, ctx, kit) => {

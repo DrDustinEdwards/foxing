@@ -231,8 +231,16 @@ export async function addBookToList(
       position: input.position ?? 0,
       note: input.note ?? null,
     })
+    .onConflictDoNothing()
     .returning();
-  return row;
+  if (row) return row;
+  // Already on the list (a double tap or a retry): answer with the entry that is there.
+  const [existing] = await db
+    .select()
+    .from(readingListBooks)
+    .where(and(eq(readingListBooks.listId, listId), eq(readingListBooks.bookId, input.bookId)))
+    .limit(1);
+  return existing;
 }
 
 export async function removeBookFromList(db: Db, listId: string, bookId: string): Promise<void> {

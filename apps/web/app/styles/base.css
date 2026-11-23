@@ -241,3 +241,9 @@ textarea.cap-input {
   padding-block: var(--space-3);
   line-height: var(--leading-normal);
 }
+
+/* A stat tile is <dt> then <dd> in the markup (valid), the number drawn above its label. */
+.fx-flip {
+  display: flex;
+  flex-direction: column-reverse;
+}

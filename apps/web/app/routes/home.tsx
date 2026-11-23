@@ -152,17 +152,17 @@ function StreakCard({ streak: s }: { streak: Streak }) {
         </p>
       </div>
       <dl className="cap-text fx-home-grid-2" data-align="center">
-        <div className="cap-stack" data-gap="1">
+        <div className="cap-stack fx-flip" data-gap="1">
+          <dt className="fx-home-caps">longest</dt>
           <dd className="cap-title" data-size="4">
             {s.longestStreak}
           </dd>
-          <dt className="fx-home-caps">longest</dt>
         </div>
-        <div className="cap-stack" data-gap="1">
+        <div className="cap-stack fx-flip" data-gap="1">
+          <dt className="fx-home-caps">finished</dt>
           <dd className="cap-title" data-size="4">
             {s.totalBooksFinished}
           </dd>
-          <dt className="fx-home-caps">finished</dt>
         </div>
       </dl>
     </aside>

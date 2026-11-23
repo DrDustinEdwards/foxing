@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX `reading_list_books_list_book_uq` ON `reading_list_books` (`list_id`,`book_id`);--> statement-breakpoint
+CREATE UNIQUE INDEX `companion_threads_user_book_uq` ON `companion_threads` (`user_id`,`book_id`);

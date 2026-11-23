@@ -121,7 +121,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
           <div className="items-start fx-u-profile-row">
             <Avatar src={profile.avatarUrl} name={name} size="lg" />
             <div className="cap-stack cap-shrink" data-gap="4">
-              <div className="cap-stack" data-gap="2">
+              <div className="cap-stack fx-flip" data-gap="2">
                 <h1 className="fx-u-profile-title">{name}</h1>
                 <p className="fx-u-profile-text">@{profile.username}</p>
               </div>
@@ -390,9 +390,9 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
 
 function StatTile({ label, value }: { label: string; value: number }) {
   return (
-    <div className="cap-stack" data-gap="2">
-      <dd className="fx-u-profile-title-2">{value}</dd>
+    <div className="cap-stack fx-flip" data-gap="2">
       <dt className="fx-u-profile-caps-3">{label}</dt>
+      <dd className="fx-u-profile-title-2">{value}</dd>
     </div>
   );
 }
@@ -447,7 +447,7 @@ function PrivateProfile({
     <PageShell>
       <Container className="cap-text fx-u-profile-wrap" data-align="center">
         <Avatar src={profile.avatarUrl} name={name} size="lg" />
-        <div className="cap-stack" data-gap="2">
+        <div className="cap-stack fx-flip" data-gap="2">
           <h1 className="cap-title" data-size="2">
             {name}
           </h1>
