@@ -78,40 +78,35 @@ export async function hasReacted(
   return !!row;
 }
 
-/** The owner (author) of a reaction target, so the domain can notify them. Returns null
- *  if the target does not exist or its type is not one Phase 6 supports notifying. */
-export async function resolveTargetOwner(
+/** The owner of a reaction target and who may see it, so the domain can notify the owner
+ *  and refuse a reaction on something the actor cannot read. Null when the target does not
+ *  exist or is not a type that takes reactions. */
+export async function resolveTarget(
   db: Db,
   targetType: string,
   targetId: string,
-): Promise<string | null> {
+): Promise<{ owner: string; visibility: string } | null> {
   if (targetType === "reading_list") {
     const [row] = await db
-      .select({ owner: readingLists.userId })
+      .select({ owner: readingLists.userId, isPublic: readingLists.isPublic })
       .from(readingLists)
       .where(eq(readingLists.id, targetId))
       .limit(1);
-    return row?.owner ?? null;
+    return row ? { owner: row.owner, visibility: row.isPublic ? "public" : "private" } : null;
   }
-  if (targetType === "diary_entry") {
-    const [row] = await db
-      .select({ owner: diaryEntries.userId })
-      .from(diaryEntries)
-      .where(eq(diaryEntries.id, targetId))
-      .limit(1);
-    return row?.owner ?? null;
-  }
-  if (targetType === "annotation") {
-    const [row] = await db
-      .select({ owner: annotations.userId })
-      .from(annotations)
-      .where(eq(annotations.id, targetId))
-      .limit(1);
-    return row?.owner ?? null;
-  }
-  return null;
+  const table =
+    targetType === "diary_entry" ? diaryEntries : targetType === "annotation" ? annotations : null;
+  if (!table) return null;
+  const [row] = await db
+    .select({ owner: table.userId, visibility: table.visibility })
+    .from(table)
+    .where(eq(table.id, targetId))
+    .limit(1);
+  return row ?? null;
 }
 
+/** True when the viewer is one of the owner's close friends. */
+/** True when both users are active members of one club. */
 export type LikeSummary = { likeCount: number; likedByMe: boolean };
 
 /** Per-target 'like' counts plus whether the viewer liked each, for a set of targets of

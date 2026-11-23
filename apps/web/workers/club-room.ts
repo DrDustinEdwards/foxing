@@ -87,6 +87,15 @@ export class ClubRoom extends DurableObject {
     }
   }
 
+  /** RPC: close every socket of one user (they left, were banned or were removed). */
+  async disconnect(userId: string): Promise<void> {
+    for (const ws of this.ctx.getWebSockets()) {
+      if ((ws.deserializeAttachment() as Attachment | null)?.userId !== userId) continue;
+      ws.close(1008, "No longer a member");
+    }
+    this.broadcastPresence();
+  }
+
   private send(ws: WebSocket, message: ServerMessage): void {
     try {
       ws.send(JSON.stringify(message));
@@ -117,6 +126,9 @@ export function clubRoomHub(ns: DurableObjectNamespace<ClubRoom>): ClubLiveHub {
   return {
     async broadcast(clubId, message) {
       await ns.getByName(clubId).broadcast(message);
+    },
+    async disconnect(clubId, userId) {
+      await ns.getByName(clubId).disconnect(userId);
     },
     async connect(clubId, userId, request) {
       // Pass the verified user id on the URL; new Request(url, request) preserves the

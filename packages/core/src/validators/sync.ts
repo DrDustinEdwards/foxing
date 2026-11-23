@@ -4,7 +4,13 @@
 // diary). Clubs/social are online-only v1. Payloads are validated per resource; the
 // server always scopes to the session user and never trusts payload.user_id.
 import { z } from "zod";
-import { annotationType, annotationVisibility, diaryVisibility, userBookStatus } from "../enums";
+import {
+  annotationType,
+  annotationVisibility,
+  diaryVisibility,
+  highlightColor,
+  userBookStatus,
+} from "../enums";
 
 export const syncResourceValues = [
   "annotation",
@@ -28,19 +34,17 @@ const locator = z.record(z.string(), z.unknown());
 
 const annotationPayload = z.object({
   bookId: z.string().min(1).nullable().optional(),
-  clubId: z.string().min(1).nullable().optional(),
-  type: annotationType.optional(),
+  // Never "comment": a comment is club-scoped, and a synced row is always private to its owner.
+  type: annotationType.exclude(["comment"]).optional(),
   locator: locator.nullable().optional(),
   selectedText: z.string().nullable().optional(),
-  normalizedText: z.string().nullable().optional(),
   body: z.string().nullable().optional(),
-  color: z.string().max(20).nullable().optional(),
+  color: highlightColor.nullable().optional(),
   chapter: z.string().nullable().optional(),
   sourceTitle: z.string().nullable().optional(),
   visibility: annotationVisibility.optional(),
   containsSpoilers: z.boolean().optional(),
   isPinned: z.boolean().optional(),
-  parentId: z.string().min(1).nullable().optional(),
 });
 
 const userBookPayload = z.object({

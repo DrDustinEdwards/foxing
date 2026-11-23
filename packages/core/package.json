@@ -13,7 +13,8 @@
     "./events": "./src/events/index.ts",
     "./validators": "./src/validators/index.ts",
     "./companion": "./src/companion/index.ts",
-    "./billing": "./src/billing/index.ts"
+    "./billing": "./src/billing/index.ts",
+    "./catalog-buckets": "./src/catalog-buckets.ts"
   },
   "scripts": {
     "db:generate": "drizzle-kit generate",

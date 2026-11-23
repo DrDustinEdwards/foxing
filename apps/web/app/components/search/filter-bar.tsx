@@ -5,15 +5,7 @@ import { FilterBar as CapFilterBar } from "capsomer/react/filter-bar";
 import { Link } from "capsomer/react/link";
 import { NativeSelect } from "capsomer/react/select-native";
 import { Form } from "react-router";
-import { BOOKS_ERAS } from "~/components/nav/header-panels";
-
-// The eras are the header's list (nav/header-panels), which mirrors core ERA_BUCKETS; LENGTH_BUCKETS is mirrored here
-// so the client bundle stays out of the core query layer.
-const LENGTHS = [
-  { slug: "short", label: "Short, under 40k words" },
-  { slug: "medium", label: "Medium, 40k to 120k" },
-  { slug: "long", label: "Long, 120k and up" },
-];
+import { ERA_BUCKETS, LENGTH_BUCKETS } from "@foxing/core/catalog-buckets";
 
 export type ActiveFilters = { genre?: string; era?: string; length?: string };
 
@@ -77,13 +69,13 @@ export function FilterBar({
         value={active.genre}
         options={genres.map((g) => ({ slug: g.subject, label: g.label }))}
       />
-      <Facet name="era" label="Era" any="Any era" value={active.era} options={BOOKS_ERAS} />
+      <Facet name="era" label="Era" any="Any era" value={active.era} options={ERA_BUCKETS} />
       <Facet
         name="length"
         label="Length"
         any="Any length"
         value={active.length}
-        options={LENGTHS}
+        options={LENGTH_BUCKETS}
       />
     </CapFilterBar>
   );

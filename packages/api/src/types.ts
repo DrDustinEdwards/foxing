@@ -19,6 +19,8 @@ import type {
 export type ClubLiveHub = {
   broadcast: (clubId: string, message: LiveMessage | LiveMessage[]) => Promise<void>;
   connect: (clubId: string, userId: string, request: Request) => Promise<Response>;
+  /** Close every socket a user holds in the club's room (after a leave or a ban). */
+  disconnect: (clubId: string, userId: string) => Promise<void>;
 };
 
 export type Bindings = {

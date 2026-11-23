@@ -3,6 +3,7 @@
 // when a create op was lost, and the append-only rules for sessions.
 import { describe, expect, it } from "vitest";
 import { resolveSyncOp } from "../src/domain/sync";
+import { syncPayloadSchemas } from "../src/validators/sync";
 
 const existingAt = (ms: number) => ({ updatedAt: ms });
 
@@ -38,5 +39,22 @@ describe("resolveSyncOp - append-only (sessions)", () => {
       action: "noop",
       reason: "append_only",
     });
+  });
+});
+
+describe("annotation sync payload", () => {
+  it("never carries a club id, a parent or a comment type", () => {
+    const parsed = syncPayloadSchemas.annotation.parse({
+      bookId: "b1",
+      type: "highlight",
+      color: "yellow",
+      clubId: "someone-elses-club",
+      parentId: "a1",
+      normalizedText: "faked",
+    });
+    expect(parsed).not.toHaveProperty("clubId");
+    expect(parsed).not.toHaveProperty("parentId");
+    expect(parsed).not.toHaveProperty("normalizedText");
+    expect(syncPayloadSchemas.annotation.safeParse({ type: "comment" }).success).toBe(false);
   });
 });

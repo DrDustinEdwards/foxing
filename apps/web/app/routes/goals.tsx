@@ -19,7 +19,7 @@ import { Meter } from "capsomer/react/meter";
 import "capsomer/meter.css";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
+import { GoalPeriodSelect, TargetInput, useGoalDraft } from "~/components/goal-form";
 import { ReadingActivity } from "~/components/reading/reading-activity";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, FormError, PageHeader } from "~/components/ui";
@@ -279,27 +279,3 @@ function CreateGoal() {
 
 // It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
-
-/** A goal's target, a whole number of at least one, with its label for screen readers. */
-function TargetInput({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  onChange: (n: number) => void;
-}) {
-  return (
-    <label className="cap-text" data-size="small" data-face="ui">
-      <span className="cap-sr-only">{label}</span>
-      <input
-        type="number"
-        min={1}
-        value={value}
-        onChange={(e) => onChange(Math.max(1, Number(e.target.value)))}
-        className="cap-input fx-goals-input"
-      />
-    </label>
-  );
-}
