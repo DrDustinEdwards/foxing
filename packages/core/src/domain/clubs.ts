@@ -585,9 +585,3 @@ export async function removeSchedule(
   const ok = await clubsRepo.deleteSchedule(db, scheduleId, clubId);
   if (!ok) throw domainErrors.notFound("Schedule entry not found.");
 }
-
-/** Chapter-unlock gate: a chapter is readable once its unlock date has passed. Pure
- *  read used by the thread list and the reader club layer. */
-export function isChapterUnlocked(unlockDate: Date, nowMs: number): boolean {
-  return unlockDate.getTime() <= nowMs;
-}
