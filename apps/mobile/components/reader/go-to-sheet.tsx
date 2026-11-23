@@ -71,8 +71,6 @@ export function GoToSheet({
   const [percent, setPercent] = useState<string>("0");
   const [history, setHistory] = useState<PositionEntry[]>([]);
 
-  // The host passes fresh lambdas and a moving progress every render; read them through a ref so
-  // the sheet resets only when it opens.
   const latest = useRef({ currentProgress, loadToc, loadHistory });
   useEffect(() => {
     latest.current = { currentProgress, loadToc, loadHistory };
@@ -80,22 +78,17 @@ export function GoToSheet({
 
   useEffect(() => {
     if (!visible) return;
-    const { currentProgress: progress, loadToc: toc0, loadHistory: history0 } = latest.current;
+    const cur = latest.current;
     // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
     setTab("contents");
-    setPercent(String(Math.round(progress * 100)));
+    setPercent(String(Math.round(cur.currentProgress * 100)));
     setTocLoading(true);
-    toc0()
+    cur
+      .loadToc()
       .then((items) => setToc(items))
       .catch(() => setToc([]))
       .finally(() => setTocLoading(false));
-    if (history0) {
-      history0()
-        .then(setHistory)
-        .catch(() => setHistory([]));
-    } else {
-      setHistory([]);
-    }
+    (cur.loadHistory?.() ?? Promise.resolve([])).then(setHistory).catch(() => setHistory([]));
   }, [visible]);
 
   const onGoToPercent = useCallback(() => {
@@ -241,7 +234,6 @@ export function GoToSheet({
             </Pressable>
           </View>
 
-          {/* Quick-pick presets below the input. */}
           <View className="flex-row" style={{ gap: 6, marginTop: 12 }}>
             {[0, 10, 25, 50, 75, 90].map((p) => (
               <Pressable
@@ -297,8 +289,6 @@ export function GoToSheet({
   );
 }
 
-// "My Places" merges bookmarks and recent history.
-// Bookmarks section first (curated by the user), then Recent (auto-built).
 function MyPlacesTab({
   bookmarks,
   bookmarksLoading,
