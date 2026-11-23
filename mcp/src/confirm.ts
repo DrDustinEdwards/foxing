@@ -21,7 +21,10 @@ const LABEL = "foxing-admin-mcp confirm v2";
 export type ConfirmEnv = {
   ADMIN_OPERATOR_TOKEN?: string;
   /** When present a token is spent on its first use, so a retried or replayed call cannot run twice. */
-  OAUTH_KV?: Pick<KVNamespace, "get" | "put">;
+  OAUTH_KV?: {
+    get(key: string): Promise<string | null>;
+    put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
+  };
 };
 
 /** The signing key, derived from the operator token; null when the Worker has none worth keying with. */
