@@ -98,6 +98,17 @@ describe("billing API (web -> api -> core -> D1)", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as { url: string };
     expect(body.url).toBe("https://stub.stripe/checkout");
+    // A second subscription on the same customer would bill twice.
+    await seedProfile("u_plus_checkout", { subscriptionTier: "plus" });
+    const again = await api.fetch(
+      new Request("https://test.local/billing/checkout", {
+        method: "POST",
+        headers: { "x-test-user": "u_plus_checkout", "content-type": "application/json" },
+        body: JSON.stringify({ plan: "annual" }),
+      }),
+      env as never,
+    );
+    expect(again.status).toBe(409);
   });
 
   it("checkout requires a session", async () => {

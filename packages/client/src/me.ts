@@ -90,16 +90,16 @@ export function useSetVisibility() {
 }
 
 /** The push switches every settings screen shows, keyed by the server's categories. */
-export const NOTIFICATION_LABELS: Record<string, { label: string; subtext: string }> = {
-  streak: { label: "Reading streak reminders", subtext: "A nudge when your streak is at risk." },
-  club_replies: { label: "Club replies", subtext: "When someone replies to you in a club." },
-  meetings: { label: "Club meetings", subtext: "Reminders before a club meeting." },
-  announcements: { label: "Foxing announcements", subtext: "Occasional product news." },
-  follows: { label: "New followers", subtext: "When a reader follows you." },
-  reactions: { label: "Reactions", subtext: "When someone reacts to your activity." },
-  club_activity: { label: "Club activity", subtext: "New posts and polls in your clubs." },
-  club_admin: { label: "Club admin", subtext: "Role changes and approvals in clubs you run." },
-  milestones: { label: "Reading milestones", subtext: "When you hit a reading milestone." },
+export const NOTIFICATION_LABELS: Record<string, { label: string }> = {
+  streak: { label: "Reading streak reminders" },
+  club_replies: { label: "Club replies" },
+  meetings: { label: "Club meetings" },
+  announcements: { label: "Foxing announcements" },
+  follows: { label: "New followers" },
+  reactions: { label: "Reactions" },
+  club_activity: { label: "Club activity" },
+  club_admin: { label: "Club admin" },
+  milestones: { label: "Reading milestones" },
 };
 
 export function useSetNotificationPrefs() {

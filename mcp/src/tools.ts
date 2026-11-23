@@ -33,10 +33,10 @@ import { outsideResult } from "@dustinedwards/site-runtime/mcp-server";
 import { z } from "zod";
 
 import { ApiLegError, callAdmin, type ApiCallResult, type ApiEnv } from "./api-client";
-import { confirmationFor, isConfirmed } from "./confirm";
+import { type ConfirmEnv, confirmationFor, isConfirmed } from "./confirm";
 
 import { errorMessage } from "@dustinedwards/site-runtime/log";
-export type ToolEnv = Partial<ApiEnv> & Partial<AuditEnv> & { ADMIN_EMAIL?: string };
+export type ToolEnv = Partial<ApiEnv> & Partial<AuditEnv> & Pick<ConfirmEnv, "OAUTH_KV"> & { ADMIN_EMAIL?: string };
 
 /** The MCP content shape a tool returns. */
 export type ToolOutput = {
@@ -525,7 +525,7 @@ export const TOOLS: ToolDefinition[] = [
         description: z.string().max(20000).nullable().optional(),
         publication_year: z.number().int().nullable().optional(),
         publisher: z.string().max(500).nullable().optional(),
-        subjects: z.array(z.string()).nullable().optional(),
+        subjects: z.array(z.string().regex(/^[a-z-]{1,40}$/)).max(10).nullable().optional(), // genre slugs
         staff_pick: z
           .strictObject({
             on: z.boolean().describe("true features the book as a staff pick, false removes it."),

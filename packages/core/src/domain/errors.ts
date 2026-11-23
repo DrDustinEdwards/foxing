@@ -13,6 +13,11 @@ export class DomainError extends Error {
   }
 }
 
+/** D1 reports a unique index violation in the error message; nothing else is matched. */
+export function isUniqueViolation(error: unknown): boolean {
+  return error instanceof Error && /UNIQUE constraint failed/i.test(error.message);
+}
+
 export const domainErrors = {
   notFound: (message = "Not found.") => new DomainError("not_found", message, 404),
   forbidden: (message = "Not allowed.") => new DomainError("forbidden", message, 403),

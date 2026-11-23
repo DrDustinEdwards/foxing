@@ -63,9 +63,9 @@ export default function Guide() {
           </Prose>
           <FeatureList
             items={[
-              "Shelf status per book: Want to Read, Reading, Finished, Paused, Set Aside",
+              "Shelf status per book: Want to Read, Reading, Finished, Paused, Abandoned",
               "A reading diary, a dated log of what you finished, with private or public entries",
-              "Reading goals: an annual target that fills in as you finish books",
+              "Reading goals: a target per year, month or week that fills in as you finish books",
               "Reading stats: books finished, pages read, average rating, and current streak",
             ]}
           />
@@ -74,8 +74,8 @@ export default function Guide() {
         <Section id="clubs" heading="Joining a book club">
           <Prose>
             foxing.app/clubs lists public reading clubs. Join any of them from the web. Clubs are
-            separate from the celebrity picks at foxing.app/book-clubs and from Foxing's own monthly
-            pick. Creating a club is a Plus feature, and a club can be public, private, or secret.
+            separate from the celebrity picks at foxing.app/picks and from Foxing's own monthly
+            pick. Creating a club is free, and a club can be public or private.
           </Prose>
         </Section>
 

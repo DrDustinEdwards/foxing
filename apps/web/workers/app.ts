@@ -229,15 +229,16 @@ app.get("/api/v1/search/suggest", async (c, next) => {
 
 app.route("/api/v1", api);
 
-// Exploded Readium reader assets (RWPM manifest + resources + position list),
-// served same-origin from the MEDIA R2 bucket under reader/<slug>/... Same-origin
-// means the ts-toolkit HttpFetcher needs no CORS. X-Robots-Tag: noindex keeps the
-// duplicate book text out of search indexes (the canonical page is /books/:slug).
-// Immutable long cache + edge Cache API: first hit streams from R2, the rest are
-// CDN hits with no Worker R2 read.
+// Exploded Readium reader assets, served same-origin (no CORS for the HttpFetcher) from the MEDIA R2 bucket under
+// reader/<slug>/... noindex keeps the duplicate book text out of search; immutable edge cache, so a hit never reads R2.
 app.get("/reader-assets/*", async (c) => {
   const url = new URL(c.req.url);
-  const rest = decodeURIComponent(url.pathname.replace(/^\/reader-assets\//, ""));
+  let rest: string;
+  try {
+    rest = decodeURIComponent(url.pathname.replace(/^\/reader-assets\//, ""));
+  } catch {
+    return plainNotFound(); // a malformed escape
+  }
   // Guard against traversal; keys are always reader/<slug>/<path>.
   if (!rest || rest.includes("..")) return plainNotFound();
 
@@ -541,9 +542,8 @@ export { ClubRoom } from "./club-room";
 export { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-object";
 
 // Prelum's markdownCopies: each public page has a Markdown copy at its path plus .md and answers Accept: text/markdown,
-// and /llms-full.txt is the prose pages in the sitemap's order. Only the pages a signed-out reader can read are listed
-// here. The catalog's 1,400 book pages and 650 author pages are database records an agent fetches one at a time, so each
-// has its copy but stays out of llms-full.txt, which leaves the hubs, the picks, the awards and the Journal.
+// and /llms-full.txt lists the prose pages. Only pages a signed-out reader can read are listed; the catalog's book and
+// author pages have their copies but stay out of llms-full.txt.
 /** Keeps the day each hub and code-written page last changed, from what its Markdown copy says: /sitemap.xml's lastmod. */
 async function runPageDates(env: Env) {
   // A cron has no request context; the gateway reads the Renderer from ctx.exports, so the Worker's own loopback goes there.

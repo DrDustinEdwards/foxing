@@ -6,12 +6,13 @@
 // (rate-limited in core).
 import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-path";
 import { useState } from "react";
-import { ButtonLink, Link } from "capsomer/react/link";
+import { Link } from "capsomer/react/link";
+import { Form, redirect } from "react-router";
 import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Paywall } from "~/components/paywall";
-import { Container, EmptyState, PageHeader } from "~/components/ui";
+import { Button, Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { billing, type Recommendation } from "@foxing/core";
 import { requireProfile } from "~/lib/profile.server";
@@ -26,13 +27,18 @@ export function meta() {
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user } = await requireProfile(env, request);
-  const refresh = new URL(request.url).searchParams.get("refresh") === "1";
-  const { recommendations, isPlus } = await loadRecommendations(env, user.id, {
-    refresh,
-  });
-  // No upgrade is offered while Plus cannot be bought (CLAUDE.md rule 6).
+  const { recommendations, isPlus } = await loadRecommendations(env, user.id);
+  // No upgrade is offered while Plus cannot be bought (CLAUDE.md rule 7).
   const canUpgrade = !isPlus && billing.stripeSettings(env) !== null;
   return { recommendations, canUpgrade };
+}
+
+// Refresh is a POST, so a link or redirect from another site cannot spend a reader's AI budget.
+export async function action({ context, request }: Route.ActionArgs) {
+  const { env } = context.get(cloudflareContext);
+  const { user } = await requireProfile(env, request);
+  await loadRecommendations(env, user.id, { refresh: true });
+  return redirect("/find-next-book");
 }
 
 export default function FindNextBook({ loaderData }: Route.ComponentProps) {
@@ -45,9 +51,11 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
         <PageHeader
           title="Find your next book"
           actions={
-            <ButtonLink to="/find-next-book?refresh=1" className="cap-keep">
-              Refresh
-            </ButtonLink>
+            <Form method="post">
+              <Button type="submit" variant="secondary" className="cap-keep">
+                Refresh
+              </Button>
+            </Form>
           }
         />
 

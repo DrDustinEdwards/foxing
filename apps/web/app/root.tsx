@@ -6,6 +6,7 @@ import { createApiClient, createFoxingQueryClient, FoxingDataProvider } from "@f
 import { ErrorPage, errorTitle } from "capsomer/react/error-page";
 import { LinkPrefetch } from "capsomer/react/link";
 import { themeScript } from "capsomer/theme-server";
+import { THEME_PREF_KEY } from "./lib/theme";
 import { useState } from "react";
 import { SITE_SCRIPT } from "virtual:islands";
 import {
@@ -57,7 +58,7 @@ export const links: Route.LinksFunction = () => [
 // Foxing's key; Capsomer's theme button in page-shell.tsx remembers its choice there, as the plain word); otherwise
 // follow the OS. Attribute-driven per design-system.md.
 const FOLLOW_OS = `try{document.documentElement.setAttribute("data-theme",matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");}catch(e){}`;
-const NO_FLASH = `${FOLLOW_OS}${themeScript("foxing-theme")}`;
+const NO_FLASH = `${FOLLOW_OS}${themeScript(THEME_PREF_KEY)}`;
 
 export function Layout({ children }: { children: React.ReactNode }) {
   // The CSP nonce (workers/security-headers.ts) for every script this document renders.

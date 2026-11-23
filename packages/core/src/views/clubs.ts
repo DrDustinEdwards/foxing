@@ -205,7 +205,11 @@ export async function threadPage(
   const { club, isMember } = found;
   if (clubIdOrSlug && clubIdOrSlug !== club.id && clubIdOrSlug !== club.slug) return null;
 
-  const posts = await clubsRepo.listPosts(db, t.id);
+  // A chapter-gated thread shows no posts before its chapter's unlock date, however the reader got here.
+  const unlock = t.chapter
+    ? (await clubsRepo.listSchedule(db, club.id)).find((s) => s.chapterName === t.chapter)?.unlockDate
+    : undefined;
+  const posts = unlock && unlock.getTime() > Date.now() ? [] : await clubsRepo.listPosts(db, t.id);
   const people = await getProfileSummaries(db, [t.authorId, ...posts.map((p) => p.authorId)]);
   return {
     club: { id: club.id, slug: club.slug, name: club.name },

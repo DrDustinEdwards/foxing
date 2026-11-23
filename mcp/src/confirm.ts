@@ -5,7 +5,7 @@
  * A write tool called without `confirm` changes nothing. It answers with a preview of exactly what it would send and a
  * token from site-runtime ./confirm-token: signed claims naming the tool and a fingerprint of its arguments, with an
  * expiry, keyed from the operator token this Worker already holds, so nothing is stored and no new secret is needed.
- * The same call with that token, within ten minutes, runs it. Any other argument, another tool or an old token is
+ * The same call with that token, within ten minutes, runs it once (the token is spent in KV when the Worker has one). Any other argument, another tool or an old token is
  * refused and sends nothing.
  *
  * Works on every client, unlike elicitation, which most connectors do not offer yet. The token proves the preview was
@@ -18,7 +18,11 @@ import { canonicalJson, sha256Hex } from "@dustinedwards/site-runtime/encoding";
 const TTL_SECONDS = 10 * 60;
 const LABEL = "foxing-admin-mcp confirm v2";
 
-export type ConfirmEnv = { ADMIN_OPERATOR_TOKEN?: string };
+export type ConfirmEnv = {
+  ADMIN_OPERATOR_TOKEN?: string;
+  /** When present a token is spent on its first use, so a retried or replayed call cannot run twice. */
+  OAUTH_KV?: Pick<KVNamespace, "get" | "put">;
+};
 
 /** The signing key, derived from the operator token; null when the Worker has none worth keying with. */
 async function keys(env: ConfirmEnv): Promise<string[] | null> {
@@ -58,5 +62,7 @@ export async function isConfirmed(
 ): Promise<boolean> {
   const k = await keys(env);
   if (!k) return false;
-  return (await redeemConfirm({ keys: k, token, expect: await bound(tool, args), now })).ok;
+  const kv = env.OAUTH_KV;
+  const expect = await bound(tool, args);
+  return (await redeemConfirm({ keys: k, token, expect, now, ...(kv ? { kv, prefix: "foxing-mcp-confirm:" } : {}) })).ok;
 }

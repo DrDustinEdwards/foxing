@@ -14,16 +14,6 @@ export type SourceType = z.infer<typeof sourceType>;
 export const pacingValues = tuple(["slow", "medium", "fast"] as const);
 export const pacing = z.enum(pacingValues);
 
-// book_ai_cache.action (Phase 4 populated). Fixed by spec-cf-schema.
-export const bookAiActionValues = tuple([
-  "book_description",
-  "author_bio",
-  "similar_books",
-  "reading_order",
-  "discussion_guide",
-] as const);
-export const bookAiAction = z.enum(bookAiActionValues);
-
 export const subscriptionTierValues = tuple(["free", "plus"] as const);
 export const subscriptionTier = z.enum(subscriptionTierValues);
 export type SubscriptionTier = z.infer<typeof subscriptionTier>;

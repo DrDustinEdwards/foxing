@@ -5,6 +5,7 @@
 // The reader read/write helpers (listForReader, update, delete) are user-scoped so
 // an org/classroom tenancy layer can wrap them later without touching call sites.
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { domainErrors } from "../domain/errors";
 import type { Db } from "../db";
 import { normalizeText } from "../domain/text";
 import { annotations, books } from "../schema";
@@ -130,26 +131,32 @@ export async function createAnnotation(db: Db, input: NewAnnotation): Promise<An
     input.selectedText ??
     (input.locator as { text?: { highlight?: string } } | null | undefined)?.text?.highlight ??
     null;
+  const insert = db.insert(annotations).values({
+    ...(input.id ? { id: input.id } : {}),
+    userId: input.userId,
+    type: input.type,
+    bookId: input.bookId ?? null,
+    clubId: input.clubId ?? null,
+    locator: input.locator ?? null,
+    selectedText: input.selectedText ?? null,
+    normalizedText: input.normalizedText ?? (anchorText ? normalizeText(anchorText) : null),
+    body: input.body ?? null,
+    color: input.color ?? null,
+    chapter: input.chapter ?? null,
+    sourceTitle: input.sourceTitle ?? null,
+    visibility: input.visibility,
+    containsSpoilers: input.containsSpoilers ?? false,
+    parentId: input.parentId ?? null,
+  });
+  if (!input.id) return (await insert.returning())[0];
+  // A client-supplied id makes the create idempotent: a replay returns the row already stored, an id that is
+  // another reader's row is a conflict.
+  await insert.onConflictDoNothing();
   const [row] = await db
-    .insert(annotations)
-    .values({
-      ...(input.id ? { id: input.id } : {}),
-      userId: input.userId,
-      type: input.type,
-      bookId: input.bookId ?? null,
-      clubId: input.clubId ?? null,
-      locator: input.locator ?? null,
-      selectedText: input.selectedText ?? null,
-      normalizedText: input.normalizedText ?? (anchorText ? normalizeText(anchorText) : null),
-      body: input.body ?? null,
-      color: input.color ?? null,
-      chapter: input.chapter ?? null,
-      sourceTitle: input.sourceTitle ?? null,
-      visibility: input.visibility,
-      containsSpoilers: input.containsSpoilers ?? false,
-      parentId: input.parentId ?? null,
-    })
-    .returning();
+    .select()
+    .from(annotations)
+    .where(and(eq(annotations.id, input.id), eq(annotations.userId, input.userId)));
+  if (!row) throw domainErrors.conflict("That id is already in use.");
   return row;
 }
 

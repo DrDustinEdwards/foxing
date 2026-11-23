@@ -120,11 +120,14 @@ export type BookMetaPatch = {
   subjects?: string[] | null;
 };
 
-export async function updateBookAdmin(db: Db, id: string, patch: BookMetaPatch): Promise<void> {
-  await db
+/** Whether the statement matched a row, so an unknown id is a 404 rather than a silent success. */
+const changed = (r: { meta: { changes: number } }) => r.meta.changes > 0;
+
+export async function updateBookAdmin(db: Db, id: string, patch: BookMetaPatch): Promise<boolean> {
+  return changed(await db
     .update(books)
     .set({ ...patch, updatedAt: new Date() })
-    .where(eq(books.id, id));
+    .where(eq(books.id, id)).run());
 }
 
 export async function setBookStaffPick(
@@ -132,11 +135,11 @@ export async function setBookStaffPick(
   id: string,
   on: boolean,
   note?: string | null,
-): Promise<void> {
-  await db
+): Promise<boolean> {
+  return changed(await db
     .update(books)
     .set({ isStaffPick: on, staffPickNote: note ?? null, updatedAt: new Date() })
-    .where(eq(books.id, id));
+    .where(eq(books.id, id)).run());
 }
 
 export type AdminBotmRow = typeof bookOfTheMonth.$inferSelect & {
@@ -181,16 +184,16 @@ export async function createBotm(db: Db, input: BotmInput): Promise<string> {
   return row.id;
 }
 
-export async function updateBotm(db: Db, id: string, input: Partial<BotmInput>): Promise<void> {
-  await db.update(bookOfTheMonth).set(input).where(eq(bookOfTheMonth.id, id));
+export async function updateBotm(db: Db, id: string, input: Partial<BotmInput>): Promise<boolean> {
+  return changed(await db.update(bookOfTheMonth).set(input).where(eq(bookOfTheMonth.id, id)).run());
 }
 
-export async function setBotmPublished(db: Db, id: string, on: boolean): Promise<void> {
-  await db.update(bookOfTheMonth).set({ isPublished: on }).where(eq(bookOfTheMonth.id, id));
+export async function setBotmPublished(db: Db, id: string, on: boolean): Promise<boolean> {
+  return changed(await db.update(bookOfTheMonth).set({ isPublished: on }).where(eq(bookOfTheMonth.id, id)).run());
 }
 
-export async function deleteBotm(db: Db, id: string): Promise<void> {
-  await db.delete(bookOfTheMonth).where(eq(bookOfTheMonth.id, id));
+export async function deleteBotm(db: Db, id: string): Promise<boolean> {
+  return changed(await db.delete(bookOfTheMonth).where(eq(bookOfTheMonth.id, id)).run());
 }
 
 export async function listPickClubsAdmin(db: Db) {
@@ -218,22 +221,22 @@ export async function listPicksAdmin(db: Db, clubId?: string): Promise<AdminPick
   return rows.map((r) => ({ ...r.row, clubName: r.clubName, bookTitle: r.bookTitle }));
 }
 
-export async function setPickPublished(db: Db, id: string, on: boolean): Promise<void> {
-  await db
+export async function setPickPublished(db: Db, id: string, on: boolean): Promise<boolean> {
+  return changed(await db
     .update(externalBookClubPicks)
     .set({ isPublished: on, updatedAt: new Date() })
-    .where(eq(externalBookClubPicks.id, id));
+    .where(eq(externalBookClubPicks.id, id)).run());
 }
 
 export async function updatePick(
   db: Db,
   id: string,
   patch: { notes?: string | null; curatorQuote?: string | null; category?: string | null },
-): Promise<void> {
-  await db
+): Promise<boolean> {
+  return changed(await db
     .update(externalBookClubPicks)
     .set({ ...patch, updatedAt: new Date() })
-    .where(eq(externalBookClubPicks.id, id));
+    .where(eq(externalBookClubPicks.id, id)).run());
 }
 
 export type AdminClubRow = {
@@ -272,8 +275,8 @@ export async function setClubVerified(
   id: string,
   on: boolean,
   adminId: string,
-): Promise<void> {
-  await db
+): Promise<boolean> {
+  return changed(await db
     .update(clubs)
     .set({
       isVerified: on,
@@ -281,11 +284,11 @@ export async function setClubVerified(
       verifiedBy: on ? adminId : null,
       updatedAt: new Date(),
     })
-    .where(eq(clubs.id, id));
+    .where(eq(clubs.id, id)).run());
 }
 
 /** Hard-delete a club. Members, threads, posts, polls, and meetings cascade from the
  *  clubs FK (onDelete: cascade). Operator moderation action. */
-export async function deleteClubAdmin(db: Db, id: string): Promise<void> {
-  await db.delete(clubs).where(eq(clubs.id, id));
+export async function deleteClubAdmin(db: Db, id: string): Promise<boolean> {
+  return changed(await db.delete(clubs).where(eq(clubs.id, id)).run());
 }

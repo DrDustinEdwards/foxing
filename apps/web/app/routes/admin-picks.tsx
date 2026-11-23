@@ -1,6 +1,6 @@
 // Admin: Celebrity Picks. Filter the external curator clubs (Oprah, Reese, etc.),
 // publish/unpublish their picks, and edit the curator copy on a pick. A published pick
-// with a book is what renders on the /book-clubs surfaces. Reads in-process; writes to
+// with a book is what renders on the /picks surfaces. Reads in-process; writes to
 // /api/v1/admin/picks with a visible error on failure.
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";

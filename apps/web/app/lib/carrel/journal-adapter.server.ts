@@ -59,7 +59,7 @@ import { SEARCH_FIELDS } from "@dustinedwards/site-api/frontmatter";
 import { d1ScheduledUpdates, utc, waitingUpdates } from "@dustinedwards/site-api/schedules";
 import { adminEmails } from "@dustinedwards/site-runtime/access";
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
-import { adminRepo, type catalogRepo, createDb, type Db } from "@foxing/core";
+import { adminRepo, type catalogRepo, createDb, type Db, isUniqueViolation } from "@foxing/core";
 import type { JournalPreview } from "../../context";
 import {
   HISTORY_KEYS,
@@ -217,11 +217,6 @@ function validated(slug: string, fields: JournalFields) {
   }
   const { slug: _slug, isPublished: _isPublished, ...values } = parsed.data;
   return values;
-}
-
-/** D1 reports a unique index violation in the error message; nothing else is matched. */
-function isUniqueViolation(error: unknown): boolean {
-  return error instanceof Error && /UNIQUE constraint failed/i.test(error.message);
 }
 
 async function summaryOf(

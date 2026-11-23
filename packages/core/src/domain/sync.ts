@@ -10,6 +10,7 @@
 //   - session: append-only; only create applies, updates/deletes are no-ops.
 //   - delete: idempotent; deleting a missing row is success.
 // Every op is scoped to the session user; payload.user_id is never trusted.
+import { logEvent } from "@dustinedwards/site-runtime/log";
 import type { Db } from "../db";
 import { syncAdapters, type Existing } from "../repositories/sync";
 import { syncPayloadSchemas, type SyncOp, type SyncResource } from "../validators/sync";
@@ -105,12 +106,8 @@ export async function applySync(db: Db, userId: string, ops: SyncOp[]): Promise<
       }
       results.push({ id: op.id, status: "applied", action: decision.action });
     } catch (err) {
-      results.push({
-        id: op.id,
-        status: "skipped",
-        action: "noop",
-        error: err instanceof Error ? err.message : "error",
-      });
+      logEvent("sync_apply_failed", { error: err, resource: op.resource }, { level: "error" });
+      results.push({ id: op.id, status: "skipped", action: "noop", error: "apply_failed" });
     }
   }
   return results;

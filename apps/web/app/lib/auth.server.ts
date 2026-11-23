@@ -139,6 +139,7 @@ export function getAuth(env: Env): Promise<Auth> {
   if (!auth) {
     auth = buildAuth(env);
     cache.set(env, auth);
+    auth.catch(() => cache.delete(env)); // a failed build must not stick for the isolate's life
   }
   return auth;
 }

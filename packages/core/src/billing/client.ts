@@ -12,6 +12,8 @@ export type BillingCheckoutArgs = {
   /** The Foxing user id; surfaces on checkout.session.completed to link user<->customer. */
   clientReferenceId: string;
   existingCustomerId: string | null;
+  /** The free trial applies only to a reader who has never subscribed. */
+  trial: boolean;
   successUrl: string;
   cancelUrl: string;
 };
@@ -116,7 +118,7 @@ export function createStripeBilling(config: StripeBillingConfig): BillingClient 
       const session = await call<{ url?: string }>("POST", "checkout/sessions", {
         mode: "subscription",
         line_items: [{ price: a.priceId, quantity: 1 }],
-        subscription_data: { trial_period_days: TRIAL_DAYS },
+        ...(a.trial ? { subscription_data: { trial_period_days: TRIAL_DAYS } } : {}),
         client_reference_id: a.clientReferenceId,
         ...(a.existingCustomerId
           ? { customer: a.existingCustomerId }
