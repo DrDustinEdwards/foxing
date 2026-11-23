@@ -3,14 +3,14 @@ import { View, Text, Pressable, Linking } from "react-native";
 import { CalendarBlank, GoogleLogo } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { formatMeetingTime } from "@/lib/relative-time";
 
-function formatMeetingTime(at: number): string {
-  return new Date(at).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+function isGoogleMeet(url: string | null): boolean {
+  try {
+    return !!url && new URL(url).hostname === "meet.google.com";
+  } catch {
+    return false;
+  }
 }
 
 export function ClubMeetingCard({
@@ -69,7 +69,7 @@ export function ClubMeetingCard({
               </Text>
             </View>
           </View>
-          {m.locationUrl && m.locationUrl.includes("meet.google.com") ? (
+          {isGoogleMeet(m.locationUrl) ? (
             <Pressable
               onPress={() => {
                 if (m.locationUrl) void Linking.openURL(m.locationUrl);

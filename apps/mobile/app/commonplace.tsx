@@ -1,6 +1,6 @@
 import { keys, useMyAnnotations } from "@foxing/client";
 import type * as W from "@foxing/types";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Alert,
 } from "react-native";
 import { Screen } from "@/components/ui/screen";
+import { ErrorState } from "@/components/ui/error-state";
 import { SheetScaffold } from "@/components/ui/sheet-scaffold";
 import { Plus, ShareNetwork, Trash, Eye, EyeSlash } from "phosphor-react-native";
 import { queryClient, queueWrite } from "@/lib/api";
@@ -38,6 +39,7 @@ export default function CommonplaceScreen() {
   const [bookTitle, setBookTitle] = useState("");
   const [note, setNote] = useState("");
   const [isPublic, setIsPublic] = useState(false);
+  const saving = useRef(false);
 
   const visible = useMemo(() => {
     if (filter === "all") return entries;
@@ -52,7 +54,8 @@ export default function CommonplaceScreen() {
 
   async function saveEntry() {
     const text = passage.trim().slice(0, 5000);
-    if (!text) return;
+    if (!text || saving.current) return;
+    saving.current = true;
     const entry: W.MyAnnotation = {
       id: "",
       type: "commonplace",
@@ -76,7 +79,11 @@ export default function CommonplaceScreen() {
       bookAuthor: _a,
       ...payload
     } = entry;
-    entry.id = await queueWrite({ resource: "annotation", verb: "create", payload });
+    try {
+      entry.id = await queueWrite({ resource: "annotation", verb: "create", payload });
+    } finally {
+      saving.current = false;
+    }
     patchEntries((list) => [entry, ...list]);
     setPassage("");
     setBookTitle("");
@@ -128,7 +135,7 @@ export default function CommonplaceScreen() {
           hitSlop={10}
           className="p-2"
           accessibilityRole="button"
-          accessibilityLabel="Add passage"
+          accessibilityLabel="Add entry"
         >
           <Plus color={colors.brandUi} size={22} weight="bold" />
         </Pressable>
@@ -166,6 +173,8 @@ export default function CommonplaceScreen() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={colors.brandUi} />
         </View>
+      ) : query.isError && !query.data ? (
+        <ErrorState onRetry={() => void query.refetch()} />
       ) : visible.length === 0 ? (
         <View className="flex-1 items-center justify-center px-8">
           <Text

@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { ErrorState } from "@/components/ui/error-state";
 import { BackHeader } from "@/components/ui/back-header";
 import { FollowButton } from "@/components/profile/follow-button";
 import { PersonRow } from "@/components/profile/person-row";
@@ -61,6 +62,8 @@ export default function FollowsScreen() {
           <View className="py-12 items-center">
             <ActivityIndicator color={colors.brandUi} />
           </View>
+        ) : people.isError && !people.data ? (
+          <ErrorState onRetry={() => void people.refetch()} />
         ) : (tab === "following" ? following.length : followers.length) === 0 ? (
           <Text
             style={{

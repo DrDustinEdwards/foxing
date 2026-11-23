@@ -254,16 +254,21 @@ function FlashcardMode({ rows, masteredCount, total, onMaster, onExit }: Flashca
   const card = rows[idx];
   const done = !card;
 
-  function next() {
+  function reset() {
     setFlipped(false);
     setUsage("");
+  }
+
+  function next() {
+    reset();
     setIdx((i) => i + 1);
   }
 
-  async function markMastered() {
+  // Mastering drops the card from `rows`, so the next card slides into this index.
+  function markMastered() {
     if (!card) return;
     onMaster(card.id);
-    next();
+    reset();
   }
 
   return (
@@ -419,7 +424,7 @@ function FlashcardMode({ rows, masteredCount, total, onMaster, onExit }: Flashca
                 </Text>
               </Pressable>
               <Pressable
-                onPress={() => void markMastered()}
+                onPress={markMastered}
                 className="flex-1 rounded-full py-3 items-center flex-row justify-center bg-brand-ui-light dark:bg-brand-ui-dark"
               >
                 <Text

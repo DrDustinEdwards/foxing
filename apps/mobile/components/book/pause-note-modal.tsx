@@ -3,8 +3,8 @@ import { SheetScaffold } from "@/components/ui/sheet-scaffold";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
-// Pause confirmation + optional note. Centered modal, pauses are intentional
-// and the note tends to be a sentence at most, so a small dialog fits.
+// Pause confirmation + optional note. A bottom sheet; the note tends to be a sentence
+// at most.
 export function PauseNoteModal({
   visible,
   note,

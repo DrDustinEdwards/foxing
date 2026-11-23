@@ -15,3 +15,12 @@ export function relativeTime(at: string | number): string {
   if (day < 7) return `${day}d ago`;
   return new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
+
+export function formatMeetingTime(at: number): string {
+  return new Date(at).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}

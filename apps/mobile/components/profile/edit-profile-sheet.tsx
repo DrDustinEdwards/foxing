@@ -1,6 +1,6 @@
 import { useChangeUsername, useUpdateMe, useUsernameAvailable } from "@foxing/client";
 import type * as W from "@foxing/types";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { View, Text, Pressable, TextInput, ActivityIndicator } from "react-native";
 import { SheetScaffold } from "@/components/ui/sheet-scaffold";
 import { Field, inputStyle } from "@/components/ui/form-field";
@@ -50,15 +50,20 @@ export function EditProfileSheet({ visible, profile, onClose }: Props) {
   const saving = updateMe.pending || changeUsername.pending;
   const error = updateMe.error ?? changeUsername.error;
 
-  // Reset local state whenever the sheet opens with a (possibly new) profile.
+  // Reset local state each time the sheet opens. The profile is read through a ref so a
+  // saved username or a background refetch (a new `profile` object) never wipes edits.
+  const profileRef = useRef(profile);
+  useEffect(() => {
+    profileRef.current = profile;
+  });
   useEffect(() => {
     if (!visible) return;
-    // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
-    setDisplayName(profile.displayName ?? "");
-    setUsername(profile.username);
-    setBio(profile.bio ?? "");
-    setGenres(profile.favoriteGenres);
-  }, [visible, profile]);
+    const p = profileRef.current;
+    setDisplayName(p.displayName ?? "");
+    setUsername(p.username);
+    setBio(p.bio ?? "");
+    setGenres(p.favoriteGenres);
+  }, [visible]);
 
   const changed = username !== profile.username;
   const valid = USERNAME_RE.test(username);

@@ -21,6 +21,7 @@ import {
 } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { ErrorState } from "@/components/ui/error-state";
 import { ShelfTabs } from "@/components/library/shelf-tabs";
 import { LibraryEmptyState } from "@/components/library/library-empty-state";
 import { AddBookSheet } from "@/components/library/add-book-sheet";
@@ -79,7 +80,8 @@ export default function Library() {
       };
     });
   }, [activeShelf, entries, customShelf.data]);
-  const loading = activeShelf.kind === "status" ? library.isPending : customShelf.isPending;
+  const active = activeShelf.kind === "status" ? library : customShelf;
+  const loading = active.isPending;
 
   const visible = useMemo(() => {
     const list = [...books];
@@ -277,6 +279,8 @@ export default function Library() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         {loading ? (
           <ActivityIndicator color={colors.brandUi} />
+        ) : active.isError && !active.data ? (
+          <ErrorState onRetry={() => void active.refetch()} />
         ) : visible.length === 0 ? (
           <LibraryEmptyState activeShelf={activeShelf} />
         ) : (

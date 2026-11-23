@@ -3,14 +3,7 @@ import type * as W from "@foxing/types";
 import { useCallback, useMemo, useState } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-  CaretLeft,
-  ChatCircle,
-  BookOpen,
-  UsersThree,
-  Info,
-  ShareNetwork,
-} from "phosphor-react-native";
+import { ChatCircle, BookOpen, UsersThree, Info, ShareNetwork } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { authClient } from "@/lib/api";
@@ -22,6 +15,7 @@ import {
   MembersTab,
   AboutTab,
 } from "@/components/clubs/club-detail-tabs";
+import { ErrorScreen } from "@/components/ui/error-state";
 import { NewThreadSheet } from "@/components/clubs/new-thread-sheet";
 import { BackHeader } from "@/components/ui/back-header";
 import { Screen } from "@/components/ui/screen";
@@ -85,28 +79,7 @@ export default function ClubDetailScreen() {
     );
   }
 
-  if (!page) {
-    return (
-      <Screen className="items-center justify-center px-8">
-        <Text
-          style={{
-            fontFamily: Fonts.ui,
-            fontSize: 14,
-            color: colors.textTertiary,
-            textAlign: "center",
-          }}
-        >
-          We couldn't find that club.
-        </Text>
-        <Pressable onPress={() => router.back()} className="flex-row items-center mt-3">
-          <CaretLeft color={colors.brandText} size={18} />
-          <Text style={{ fontFamily: Fonts.uiMedium, color: colors.brandText, marginLeft: 4 }}>
-            Back
-          </Text>
-        </Pressable>
-      </Screen>
-    );
-  }
+  if (!page) return <ErrorScreen query={clubPage} notFound="We couldn't find that club." />;
   const club = page.club;
 
   return (

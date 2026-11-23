@@ -6,6 +6,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { BookOpen, Lock } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { ErrorState, isNotFound } from "@/components/ui/error-state";
 import { BackHeader } from "@/components/ui/back-header";
 import { Avatar } from "@/components/ui/avatar";
 import { FollowButton } from "@/components/profile/follow-button";
@@ -29,6 +30,8 @@ export default function ProfileScreen() {
           <View className="py-12 items-center">
             <ActivityIndicator color={colors.brandUi} />
           </View>
+        ) : !page && !isNotFound(query.error) ? (
+          <ErrorState onRetry={() => void query.refetch()} />
         ) : !page ? (
           <Text
             style={{

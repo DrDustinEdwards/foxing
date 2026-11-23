@@ -52,8 +52,8 @@ export default function OnboardingScreen() {
   const handleOk = USERNAME_RE.test(handle);
   const available = useUsernameAvailable(handle, handleOk);
 
-  // One pass at the end: the profile, then the year goal and the picked books. The
-  // root layout moves on to the tabs once "me" shows the profile.
+  // One pass at the end: the profile first (a retry never meets "Already onboarded"), then
+  // the goal and picked books, best-effort. Skipped steps are cleared, so only what is set is sent.
   const finish = useCallback(
     async (save: boolean) => {
       setSubmitting(true);
@@ -63,11 +63,11 @@ export default function OnboardingScreen() {
           username: handle,
           displayName: displayName.trim() || undefined,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          favoriteGenres: save ? [...genres] : undefined,
+          favoriteGenres: genres.size > 0 ? [...genres] : undefined,
         });
         const target = parseInt(goalBooks, 10);
-        await Promise.all([
-          save && isValidGoal(goalBooks)
+        await Promise.allSettled([
+          isValidGoal(goalBooks)
             ? api.post("/goals", {
                 type: "books",
                 target,
@@ -87,15 +87,13 @@ export default function OnboardingScreen() {
   );
 
   const next = useCallback(async () => {
-    const i = STEP_ORDER.indexOf(step);
-    if (i === STEP_ORDER.length - 1) await finish(true);
-    else setStep(STEP_ORDER[i + 1]);
-  }, [finish, step]);
+    if (idx === STEP_ORDER.length - 1) await finish(true);
+    else setStep(STEP_ORDER[idx + 1]);
+  }, [finish, idx]);
 
   const back = useCallback(() => {
-    const i = STEP_ORDER.indexOf(step);
-    if (i > 0) setStep(STEP_ORDER[i - 1]);
-  }, [step]);
+    if (idx > 0) setStep(STEP_ORDER[idx - 1]);
+  }, [idx]);
 
   const canAdvance =
     step === "welcome" ||
@@ -189,10 +187,12 @@ export default function OnboardingScreen() {
       <View className="flex-row items-center justify-between px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark">
         <Pressable
           onPress={() => {
-            // Skip moves on without this step's picks; the profile itself is required.
-            const i = STEP_ORDER.indexOf(step);
-            if (i === STEP_ORDER.length - 1) void finish(false);
-            else setStep(STEP_ORDER[i + 1]);
+            if (step === "taste") {
+              setGenres(new Set());
+              setGoalBooks("");
+            }
+            if (idx === STEP_ORDER.length - 1) void finish(false);
+            else setStep(STEP_ORDER[idx + 1]);
           }}
           disabled={step === "profile" || submitting}
           accessibilityRole="button"

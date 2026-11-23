@@ -436,9 +436,7 @@ export default function BookDetail() {
           </View>
         </View>
 
-        {/* Community, rating + mood + pacing. Surfaced ABOVE Where to Read
-            and the AI sections per task.md Section 1 so the social signal
-            leads. */}
+        {/* Community, rating + mood + pacing, above Where to Read and the AI sections. */}
         <SectionHeading>Community</SectionHeading>
         <View style={{ paddingHorizontal: 20 }}>
           <View className="flex-row items-center" style={{ marginBottom: 12 }}>
@@ -545,8 +543,7 @@ export default function BookDetail() {
           </View>
         ) : null}
 
-        {/* Where to Read, surfaced high up per task.md Section D so users
-            see read/library/buy options before the AI cards. */}
+        {/* Where to Read, high up so read/library/buy options come before the AI cards. */}
         <SectionHeading>Where to read</SectionHeading>
         <View style={{ paddingHorizontal: 20, gap: 8 }}>
           {book.readable ? (
@@ -577,8 +574,7 @@ export default function BookDetail() {
           ))}
         </View>
 
-        {/* About this book, collapsed by default per task.md Section 1.
-            Lazy-loads the AI description on first expand. */}
+        {/* About this book, collapsed by default. Lazy-loads the AI description on first expand. */}
         <View style={{ paddingHorizontal: 20, marginTop: 22 }}>
           <Pressable
             onPress={() => setShowDescription((v) => !v)}
@@ -671,9 +667,7 @@ export default function BookDetail() {
           </>
         ) : null}
 
-        {/* Reviews + Similar were previously bundled under Community. Per
-            task.md Section 1 they're now distinct sections, reviews sits
-            with the social signal, similar books lives further down. */}
+        {/* Reviews sit with the social signal; similar books live further down. */}
         <SectionHeading>Recent reviews</SectionHeading>
         <View style={{ paddingHorizontal: 20 }}>
           {page.reviews.length === 0 ? (
@@ -772,8 +766,7 @@ export default function BookDetail() {
           </>
         ) : null}
 
-        {/* Similar books, extracted from the old Community block per
-            task.md Section 1. */}
+        {/* Similar books. */}
         {page.ai.similarBooks ? (
           <>
             <SectionHeading>If you like this</SectionHeading>
@@ -956,7 +949,7 @@ export default function BookDetail() {
           },
           {
             id: "link",
-            label: "Copy link",
+            label: "Share link",
             Icon: LinkIcon,
             onPress: () =>
               void Share.share({ message: `https://foxing.app/books/${book.slug}` }).catch(() => {

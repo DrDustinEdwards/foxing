@@ -6,7 +6,7 @@ import {
 } from "@foxing/client";
 import type * as W from "@foxing/types";
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, Pressable, ScrollView, Share, Modal } from "react-native";
+import { View, Text, Pressable, ScrollView, Modal, Linking } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from "expo-document-picker";
@@ -72,6 +72,13 @@ interface ReadingDefaults {
 const DEFAULT_READING_DEFAULTS: ReadingDefaults = { keepAwake: false };
 
 type Sheet = "email" | "delete" | null;
+
+const LINKS = [
+  ["Privacy policy", "https://foxing.app/privacy"],
+  ["Terms of service", "https://foxing.app/terms"],
+  ["Send feedback", "mailto:feedback@foxing.app"],
+  ["Rate Foxing", "https://foxing.app/rate"],
+] as const;
 
 export default function SettingsScreen() {
   const colors = useColors();
@@ -202,9 +209,9 @@ export default function SettingsScreen() {
     if (exporting) return;
     setExporting(true);
     setDataError(null);
+    const file = new File(Paths.cache, "foxing-export.json");
     try {
       const archive = await api.get<unknown>("/account/export");
-      const file = new File(Paths.cache, "foxing-export.json");
       await file.write(JSON.stringify(archive, null, 2));
       await Sharing.shareAsync(file.uri, {
         mimeType: "application/json",
@@ -213,6 +220,7 @@ export default function SettingsScreen() {
     } catch {
       setDataError("Could not prepare your data export. Check your connection and try again.");
     } finally {
+      if (file.exists) file.delete();
       setExporting(false);
     }
   };
@@ -410,22 +418,9 @@ export default function SettingsScreen() {
               {APP_VERSION}
             </Text>
           </View>
-          <LinkRow
-            label="Privacy policy"
-            onPress={() => void Share.share({ message: "https://foxing.app/privacy" })}
-          />
-          <LinkRow
-            label="Terms of service"
-            onPress={() => void Share.share({ message: "https://foxing.app/terms" })}
-          />
-          <LinkRow
-            label="Send feedback"
-            onPress={() => void Share.share({ message: "mailto:feedback@foxing.app" })}
-          />
-          <LinkRow
-            label="Rate Foxing"
-            onPress={() => void Share.share({ message: "https://foxing.app/rate" })}
-          />
+          {LINKS.map(([label, url]) => (
+            <LinkRow key={url} label={label} onPress={() => void Linking.openURL(url)} />
+          ))}
         </Section>
 
         <View style={{ marginTop: 24 }}>

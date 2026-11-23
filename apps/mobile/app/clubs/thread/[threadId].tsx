@@ -18,6 +18,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Sparkle, ChatCircleDots, PaperPlaneRight } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { ErrorScreen } from "@/components/ui/error-state";
 import { authClient } from "@/lib/api";
 import { PostCard } from "@/components/clubs/post-card";
 import { BackHeader } from "@/components/ui/back-header";
@@ -109,22 +110,7 @@ export default function ThreadScreen() {
       </Screen>
     );
   }
-  if (!page) {
-    return (
-      <Screen className="items-center justify-center px-8">
-        <Text
-          style={{
-            fontFamily: Fonts.ui,
-            fontSize: 14,
-            color: colors.textTertiary,
-            textAlign: "center",
-          }}
-        >
-          Thread not found.
-        </Text>
-      </Screen>
-    );
-  }
+  if (!page) return <ErrorScreen query={threadPage} notFound="Thread not found." />;
 
   const thread = page.thread;
   const canPost = page.isMember;

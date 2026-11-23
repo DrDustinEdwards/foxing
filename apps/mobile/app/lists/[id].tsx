@@ -18,6 +18,7 @@ import {
   Alert,
   Modal,
 } from "react-native";
+import { ErrorScreen } from "@/components/ui/error-state";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Plus, Trash, Eye, EyeSlash, MagnifyingGlass, PencilSimple } from "phosphor-react-native";
 import { authClient } from "@/lib/api";
@@ -119,22 +120,7 @@ export default function ListDetailScreen() {
       </Screen>
     );
   }
-  if (!info) {
-    return (
-      <Screen className="items-center justify-center px-8">
-        <Text
-          style={{
-            fontFamily: Fonts.body,
-            fontSize: 14,
-            color: colors.textTertiary,
-            textAlign: "center",
-          }}
-        >
-          List not found.
-        </Text>
-      </Screen>
-    );
-  }
+  if (!info) return <ErrorScreen query={listQuery} notFound="List not found." />;
 
   const isOwn = page?.isOwner ?? false;
 
