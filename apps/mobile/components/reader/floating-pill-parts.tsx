@@ -247,22 +247,28 @@ export function PillAction({
 }
 
 // Small lock badge overlaid on the top-right of a gated action's icon.
-function LockBadge({ colors }: { colors: ReturnType<typeof useColors> }) {
+export function LockBadge({
+  colors,
+  size = 13,
+}: {
+  colors: ReturnType<typeof useColors>;
+  size?: number;
+}) {
   return (
     <View
       style={{
         position: "absolute",
-        top: -5,
-        right: -7,
-        width: 13,
-        height: 13,
-        borderRadius: 7,
+        top: -size * 0.4,
+        right: -size * 0.5,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
         backgroundColor: colors.bgSurface,
         alignItems: "center",
         justifyContent: "center",
       }}
     >
-      <Lock color={colors.brandText} size={9} weight="fill" />
+      <Lock color={colors.brandText} size={Math.round(size * 0.7)} weight="fill" />
     </View>
   );
 }

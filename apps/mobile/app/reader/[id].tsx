@@ -724,9 +724,6 @@ export default function Reader() {
           }
         })();
         break;
-      case "go-to":
-        setGoToOpen(true);
-        break;
       case "sleep-timer":
         setSleepSheetOpen(true);
         break;

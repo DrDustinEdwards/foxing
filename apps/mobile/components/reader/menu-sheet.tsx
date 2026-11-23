@@ -20,6 +20,7 @@ import {
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { SectionLabel } from "@/components/ui/section-label";
+import { LockBadge } from "./floating-pill-parts";
 
 /** Companion tools that open as one answer sheet (the server's action names). */
 export type CompanionTool =
@@ -38,7 +39,6 @@ export type MenuAction =
   | "quote-card"
   | "my-clubs"
   | "listen"
-  | "go-to"
   | "sleep-timer";
 
 /** What each companion tool's sheet is called. */
@@ -291,7 +291,7 @@ function Row({ items, onSelect, locked }: RowProps) {
               }}
             >
               <item.Icon color={colors.brandUi} size={20} weight="regular" />
-              {isLocked ? <LockBadge colors={colors} /> : null}
+              {isLocked ? <LockBadge colors={colors} size={16} /> : null}
             </View>
             <Text
               numberOfLines={1}
@@ -306,27 +306,6 @@ function Row({ items, onSelect, locked }: RowProps) {
           </Pressable>
         );
       })}
-    </View>
-  );
-}
-
-// Small lock badge for gated AI tiles (top-right of the icon).
-function LockBadge({ colors }: { colors: ReturnType<typeof useColors> }) {
-  return (
-    <View
-      style={{
-        position: "absolute",
-        top: -3,
-        right: -3,
-        width: 16,
-        height: 16,
-        borderRadius: 8,
-        backgroundColor: colors.bgElevated,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Lock color={colors.brandText} size={10} weight="fill" />
     </View>
   );
 }

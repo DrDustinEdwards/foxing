@@ -61,22 +61,20 @@ export function ClubPanelSheet({
   const members = (page.data?.members ?? []).filter((m) => m.status === "active");
   const loading = tab === "discussion" ? layers.isPending : page.isPending;
 
-  // Slide-up animation. Translate from off-screen to 0 when visible.
+  // Slide up from the bottom each time the panel opens. It unmounts at once on close.
   const slide = useMemo(() => new Animated.Value(panelHeight), [panelHeight]);
   useEffect(() => {
+    if (!visible) return;
+    slide.setValue(panelHeight);
     Animated.timing(slide, {
-      toValue: visible ? 0 : panelHeight,
+      toValue: 0,
       duration: 220,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
   }, [visible, panelHeight, slide]);
 
-  if (!visible) {
-    // Keep the panel mounted only when visible so the Animated value
-    // doesn't churn while the reader is uninvolved.
-    return null;
-  }
+  if (!visible) return null;
 
   return (
     <Animated.View
