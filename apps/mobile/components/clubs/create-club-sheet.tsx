@@ -76,13 +76,8 @@ export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheet
 
   const goNext = useCallback(async () => {
     if (step === "pace") {
-      // Back from Invite lands here again; the club already exists.
-      if (created) {
-        setStep("invite");
-        return;
-      }
-      // Commit on transition into the Invite step so the user lands on the
-      // "created" confirmation with the real club row in hand.
+      if (created) return setStep("invite"); // Back from Invite: the club already exists
+      // Commit on transition into the Invite step, landing on the created confirmation.
       const res = await createClub.run({
         name: draft.name.trim(),
         description: draft.description.trim() || undefined,

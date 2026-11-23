@@ -84,6 +84,13 @@ const DEFAULT_READING_DEFAULTS: ReadingDefaults = {
 
 type Sheet = "email" | "delete" | null;
 
+const LINKS = [
+  ["Privacy policy", "https://foxing.app/privacy"],
+  ["Terms of service", "https://foxing.app/terms"],
+  ["Send feedback", "mailto:feedback@foxing.app"],
+  ["Rate Foxing", "https://foxing.app/rate"],
+] as const;
+
 export default function SettingsScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -225,7 +232,6 @@ export default function SettingsScreen() {
     if (exporting) return;
     setExporting(true);
     setDataError(null);
-    // The archive holds the reader's personal data, so the cache copy goes once shared.
     const file = new File(Paths.cache, "foxing-export.json");
     try {
       const archive = await api.get<unknown>("/account/export");
@@ -237,11 +243,7 @@ export default function SettingsScreen() {
     } catch {
       setDataError("Could not prepare your data export. Check your connection and try again.");
     } finally {
-      try {
-        if (file.exists) file.delete();
-      } catch {
-        // already gone
-      }
+      if (file.exists) file.delete();
       setExporting(false);
     }
   };
@@ -535,22 +537,9 @@ export default function SettingsScreen() {
               {APP_VERSION}
             </Text>
           </View>
-          <LinkRow
-            label="Privacy policy"
-            onPress={() => void Linking.openURL("https://foxing.app/privacy")}
-          />
-          <LinkRow
-            label="Terms of service"
-            onPress={() => void Linking.openURL("https://foxing.app/terms")}
-          />
-          <LinkRow
-            label="Send feedback"
-            onPress={() => void Linking.openURL("mailto:feedback@foxing.app")}
-          />
-          <LinkRow
-            label="Rate Foxing"
-            onPress={() => void Linking.openURL("https://foxing.app/rate")}
-          />
+          {LINKS.map(([label, url]) => (
+            <LinkRow key={url} label={label} onPress={() => void Linking.openURL(url)} />
+          ))}
         </Section>
 
         <View style={{ marginTop: 24 }}>

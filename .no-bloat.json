@@ -9,9 +9,9 @@
       "files": 2
     },
     "jscpd": {
-      "clones": 153,
-      "lines": 1607,
-      "percentage": 1.89,
+      "clones": 150,
+      "lines": 1560,
+      "percentage": 1.83,
       "unread": 0
     },
     "shared copies": {
@@ -20,11 +20,11 @@
     },
     "legacy": {},
     "size": {
-      "apps/mobile/app/book/[id].tsx": 1037,
-      "apps/mobile/app/lists/[id].tsx": 525,
+      "apps/mobile/app/book/[id].tsx": 1030,
+      "apps/mobile/app/lists/[id].tsx": 511,
       "apps/mobile/app/onboarding/index.tsx": 610,
       "apps/mobile/app/reader/[id].tsx": 1470,
-      "apps/mobile/app/settings/index.tsx": 623,
+      "apps/mobile/app/settings/index.tsx": 618,
       "apps/mobile/components/clubs/club-detail-tabs.tsx": 510,
       "apps/mobile/components/clubs/create-club-sheet.tsx": 548,
       "apps/mobile/components/reader/go-to-sheet.tsx": 517,
@@ -48,9 +48,9 @@
       "cases": 368
     },
     "comments": {
-      "lines": 6017,
+      "lines": 6007,
       "code": 73909,
-      "percentage": 7.53
+      "percentage": 7.51
     }
   }
 }

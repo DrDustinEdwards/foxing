@@ -18,7 +18,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { CaretLeft, Sparkle, ChatCircleDots, PaperPlaneRight } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
-import { ErrorState, isNotFound } from "@/components/ui/error-state";
+import { ErrorScreen } from "@/components/ui/error-state";
 import { authClient } from "@/lib/api";
 import { PostCard } from "@/components/clubs/post-card";
 
@@ -109,29 +109,7 @@ export default function ThreadScreen() {
       </Screen>
     );
   }
-  if (!page && threadPage.isError && !isNotFound(threadPage.error)) {
-    return (
-      <Screen>
-        <ErrorState onRetry={() => void threadPage.refetch()} />
-      </Screen>
-    );
-  }
-  if (!page) {
-    return (
-      <Screen className="items-center justify-center px-8">
-        <Text
-          style={{
-            fontFamily: Fonts.ui,
-            fontSize: 14,
-            color: colors.textTertiary,
-            textAlign: "center",
-          }}
-        >
-          Thread not found.
-        </Text>
-      </Screen>
-    );
-  }
+  if (!page) return <ErrorScreen query={threadPage} notFound="Thread not found." />;
 
   const thread = page.thread;
   const canPost = page.isMember;
@@ -139,13 +117,7 @@ export default function ThreadScreen() {
   return (
     <Screen>
       <View className="flex-row items-center px-3 py-2">
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={10}
-          className="p-2"
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-        >
+        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
           <CaretLeft color={colors.textPrimary} size={22} />
         </Pressable>
         <View style={{ flex: 1, marginLeft: 4 }}>

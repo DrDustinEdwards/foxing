@@ -122,13 +122,7 @@ export default function CommonplaceScreen() {
   return (
     <Screen>
       <View className="flex-row items-center px-3 py-2">
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={10}
-          className="p-2"
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-        >
+        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
           <CaretLeft color={colors.textPrimary} size={22} />
         </Pressable>
         <Text
