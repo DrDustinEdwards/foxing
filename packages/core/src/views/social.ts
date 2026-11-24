@@ -125,7 +125,7 @@ export async function profilePage(
       : false,
     showProgress ? libraryRepo.listCurrentlyReading(db, profile.id, 6) : [],
     libraryRepo.countFinishedBooks(db, profile.id),
-    annotationsRepo.countPublicHighlights(db, profile.id),
+    annotationsRepo.countHighlights(db, profile.id, true),
     libraryRepo.listFavoriteBooks(db, profile.id, 5),
     libraryRepo.listPublicShelves(db, profile.id),
     libraryRepo.listFinishedBooks(db, profile.id, 8),

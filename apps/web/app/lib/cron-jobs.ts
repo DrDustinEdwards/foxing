@@ -10,12 +10,13 @@
 // timeout is recorded failed and the next one starts.
 export const CRON_TRIGGERS = {
   // Nightly: dump D1, copy the MEDIA bucket's new and changed objects, prune the 404 counts and
-  // the sign-in events (site-runtime pruneAuthEvents: a deleted user's after 30 days, all after a year).
+  // the sign-in events (site-runtime pruneAuthEvents: a deleted user's after 30 days, all after a year) and the notifications and activity events older than a year.
   "17 3 * * *": [
     { name: "backup", backup: true, everyMinutes: 1440, timeoutMs: 5 * 60_000 },
     { name: "media-backup", backup: true, everyMinutes: 1440, timeoutMs: 6 * 60_000 },
     { name: "prune-404", everyMinutes: 1440, timeoutMs: 60_000 },
     { name: "prune-auth-events", everyMinutes: 1440, timeoutMs: 60_000 },
+    { name: "prune-activity", everyMinutes: 1440, timeoutMs: 60_000 },
   ],
   "*/5 * * * *": [{ name: "push-sweep", everyMinutes: 5, timeoutMs: 4 * 60_000 }],
 

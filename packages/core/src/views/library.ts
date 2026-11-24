@@ -85,19 +85,22 @@ export async function goals(db: Db, userId: string): Promise<W.GoalWithProgress[
 
 /** The day streak reads 0 once a full day has passed without reading. */
 export async function streak(db: Db, userId: string, now = Date.now()): Promise<W.Streak> {
-  const [s, profile] = await Promise.all([
+  const [s, profile, finished, highlights, words] = await Promise.all([
     libraryRepo.getStreak(db, userId),
     profilesRepo.getProfileById(db, userId),
+    libraryRepo.countFinishedBooks(db, userId),
+    annotationsRepo.countHighlights(db, userId),
+    libraryRepo.countVocabulary(db, userId),
   ]);
   const tz = profile?.timezone ?? null;
   const lapsed = !s?.lastReadDate || localDay(now, tz) - localDay(s.lastReadDate.getTime(), tz) > 1;
   return {
     currentStreak: lapsed ? 0 : (s?.currentStreak ?? 0),
     longestStreak: s?.longestStreak ?? 0,
-    totalBooksFinished: s?.totalBooksFinished ?? 0,
-    totalHighlights: s?.totalHighlights ?? 0,
+    totalBooksFinished: finished,
+    totalHighlights: highlights,
     totalPagesRead: s?.totalPagesRead ?? 0,
-    totalWordsLookedUp: s?.totalWordsLookedUp ?? 0,
+    totalWordsLookedUp: words,
     lastReadDate: ms(s?.lastReadDate),
   };
 }

@@ -4,7 +4,7 @@
 // written into the anonymous cache. Reads run in-process via core (the standing
 // rule: loaders never self-fetch the Worker's own /api/v1).
 import { isAdminEmail } from "@dustinedwards/site-runtime/access";
-import { catalogRepo, createDb, libraryRepo, profilesRepo } from "@foxing/core";
+import { catalogRepo, createDb, libraryRepo, profilesRepo, views } from "@foxing/core";
 import { sessionUserFromRequest } from "./auth.server";
 
 export interface NavUser {
@@ -34,7 +34,7 @@ export async function getNavUser(env: Env, request: Request): Promise<NavUser | 
 
   const year = new Date().getUTCFullYear();
   const [streak, booksThisYear, vocabularyToMaster] = await Promise.all([
-    libraryRepo.getStreak(db, user.id),
+    views.streak(db, user.id),
     libraryRepo.countFinishedInPeriod(db, user.id, { periodType: "year", year }),
     libraryRepo.countVocabularyToMaster(db, user.id),
   ]);
@@ -47,8 +47,8 @@ export async function getNavUser(env: Env, request: Request): Promise<NavUser | 
     isAdmin: isAdminEmail(env, user.email),
     stats: {
       booksThisYear,
-      dayStreak: streak?.currentStreak ?? 0,
-      highlights: streak?.totalHighlights ?? 0,
+      dayStreak: streak.currentStreak,
+      highlights: streak.totalHighlights,
     },
     vocabularyToMaster,
   };

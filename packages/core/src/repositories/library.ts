@@ -341,6 +341,15 @@ export async function countVocabularyToMaster(db: Db, userId: string): Promise<n
   return Number(row?.n ?? 0);
 }
 
+/** Count of all the words a user has saved. */
+export async function countVocabulary(db: Db, userId: string): Promise<number> {
+  const [row] = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(vocabulary)
+    .where(eq(vocabulary.userId, userId));
+  return Number(row?.n ?? 0);
+}
+
 /** A user's saved words, newest first. Backs the /vocabulary page. */
 export async function listVocabulary(db: Db, userId: string): Promise<VocabularyEntry[]> {
   return db
@@ -617,20 +626,6 @@ export async function getStreak(db: Db, userId: string): Promise<ReadingStreak |
     .where(eq(readingStreaks.userId, userId))
     .limit(1);
   return rows[0] ?? null;
-}
-
-/** Bump total_books_finished on a fresh finish (upserting the streak row). */
-export async function incrementBooksFinished(db: Db, userId: string): Promise<void> {
-  const now = new Date();
-  const existing = await getStreak(db, userId);
-  if (!existing) {
-    await db.insert(readingStreaks).values({ userId, totalBooksFinished: 1, updatedAt: now });
-    return;
-  }
-  await db
-    .update(readingStreaks)
-    .set({ totalBooksFinished: existing.totalBooksFinished + 1, updatedAt: now })
-    .where(eq(readingStreaks.userId, userId));
 }
 
 /** Write the day streak and add a session's pages, upserting the streak row. */

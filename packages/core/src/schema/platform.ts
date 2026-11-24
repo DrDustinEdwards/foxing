@@ -17,7 +17,10 @@ export const notifications = sqliteTable(
     isRead: bool("is_read").notNull().default(false),
     createdAt: createdAt(),
   },
-  (t) => [index("notifications_user_idx").on(t.userId, t.isRead)],
+  (t) => [
+    index("notifications_user_idx").on(t.userId, t.isRead),
+    index("notifications_created_idx").on(t.createdAt),
+  ],
 );
 
 export const reports = sqliteTable(

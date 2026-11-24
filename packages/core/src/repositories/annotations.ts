@@ -15,9 +15,9 @@ export type Annotation = typeof annotations.$inferSelect;
 
 const READER_TYPES = ["highlight", "note", "bookmark"] as const;
 
-/** Count of a user's public highlights, for the public profile "Highlights" stat.
- *  Public-only so the number never reveals private annotations. */
-export async function countPublicHighlights(db: Db, userId: string): Promise<number> {
+/** Count of a user's highlights. `publicOnly` is the public profile "Highlights" stat, which never reveals private
+ *  annotations; the reader's own totals count all of them. */
+export async function countHighlights(db: Db, userId: string, publicOnly = false): Promise<number> {
   const [row] = await db
     .select({ n: sql<number>`count(*)` })
     .from(annotations)
@@ -25,7 +25,7 @@ export async function countPublicHighlights(db: Db, userId: string): Promise<num
       and(
         eq(annotations.userId, userId),
         eq(annotations.type, "highlight"),
-        eq(annotations.visibility, "public"),
+        publicOnly ? eq(annotations.visibility, "public") : undefined,
       ),
     );
   return Number(row?.n ?? 0);

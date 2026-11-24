@@ -80,6 +80,7 @@ export const userBooks = sqliteTable(
   (t) => [
     unique("user_books_user_book_uq").on(t.userId, t.bookId),
     index("user_books_user_idx").on(t.userId),
+    index("user_books_book_idx").on(t.bookId),
     index("user_books_updated_idx").on(t.updatedAt),
   ],
 );

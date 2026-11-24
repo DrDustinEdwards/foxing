@@ -26,7 +26,7 @@ Per text, answer "ok" only when it already reads that way and every claim holds,
 ${UNTRUSTED_DATA_RULE}
 
 Write no commentary between searches. End with one JSON object in a \`\`\`json fence and nothing after it:
-{"texts": {"<action>": {"verdict": "ok" | "fixed", "issues": ["what was wrong, short"], "corrected": "the full rewritten text, only when fixed"}}, "sources": ["https://..."]}
+{"texts": {"<action>": {"verdict": "ok" | "fixed", "issues": ["what was wrong, short"], "corrected": "the full rewritten text, only when fixed"}}}
 Include every action you were given and no other.`;
 
 export type FactCheckBook = {
@@ -63,7 +63,7 @@ function parseJson(raw: string): unknown {
 /** The JSON object in the reply's last json fence (or the first `{` to the last `}`), validated; `{ error }` names what does not fit. */
 export function parseFactCheck(
   text: string,
-): { texts: Record<string, Verdict>; sources: string[] } | { error: string } {
+): { texts: Record<string, Verdict> } | { error: string } {
   const fences = [...text.matchAll(/```json\s*([\s\S]*?)```/g)];
   const raw = fences.length
     ? fences[fences.length - 1][1]
@@ -76,19 +76,11 @@ export function parseFactCheck(
       error: `the JSON does not parse (${err instanceof Error ? err.message : err})`,
     };
   }
-  const body = value as {
-    texts?: Record<string, Record<string, unknown>>;
-    sources?: unknown;
-  };
+  const body = value as { texts?: Record<string, Record<string, unknown>> };
   if (!body || typeof body.texts !== "object" || body.texts === null)
     return { error: 'the JSON has no "texts" object' };
-  // A reply that forgets the brace closing "texts" puts "sources" inside it (every failed reply on 2026-11-18 ended
-  // `]}}`); the array is the sources, not an action.
-  const nested = body.texts.sources;
-  const sourceList = body.sources ?? (Array.isArray(nested) ? nested : undefined);
   const texts: Record<string, Verdict> = {};
   for (const [action, v] of Object.entries(body.texts)) {
-    if (v === nested && Array.isArray(nested)) continue;
     const issues = Array.isArray(v?.issues) ? v.issues.filter((i) => typeof i === "string") : [];
     if (v?.verdict === "ok") texts[action] = { verdict: "ok", issues };
     else if (v?.verdict === "fixed") {
@@ -100,10 +92,7 @@ export function parseFactCheck(
         error: `${action} has the verdict ${JSON.stringify(v?.verdict)}`,
       };
   }
-  const sources = Array.isArray(sourceList)
-    ? sourceList.filter((s): s is string => typeof s === "string").slice(0, 12)
-    : [];
-  return { texts, sources };
+  return { texts };
 }
 
 export type FactCheckResult = {
@@ -187,8 +176,6 @@ export async function factCheckBook(
       issues: v.issues,
       original: next === null ? null : row.content,
       next,
-      sources: parsed.sources,
-      searches: reply.searches,
       costMicros: share,
       model,
     });

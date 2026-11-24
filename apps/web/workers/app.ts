@@ -44,6 +44,7 @@ import {
   companionRepo,
   createDb,
   push,
+  socialRepo,
 } from "@foxing/core";
 import { Hono } from "hono";
 import type { ServerBuild } from "react-router";
@@ -412,15 +413,14 @@ async function enqueueFactCheck(env: Env): Promise<void> {
     });
 }
 
-// Each job's work, by name; app/lib/cron-jobs.ts names each trigger's jobs with their intervals and
-// timeouts, which /health's cron check reads too. A failed job fails the invocation (Cron Events
-// shows it) after the others have run.
+// Each job's work, by name; app/lib/cron-jobs.ts has their intervals, which /health reads too.
 const CRON_RUNS: Record<CronJobName, (env: Env) => Promise<unknown>> = {
   backup: runBackup,
   "media-backup": runMediaBackup,
   "covers-backup": runCoversBackup,
   "prune-404": (env) => pruneNotFound(env.DB),
   "prune-auth-events": (env) => pruneAuthEvents(env.DB),
+  "prune-activity": (env) => socialRepo.pruneActivity(createDb(env.DB)),
   "push-sweep": runPushSweep,
   "carrel-schedules": (env) => runCarrelSchedules(env, new Date()),
   "companion-cache": enqueueCompanionCache,

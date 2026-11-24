@@ -4,7 +4,7 @@
 // in-process from web/mobile loaders; writes are called by the API after the domain
 // layer authorized them.
 import { inList, olderThan } from "@dustinedwards/site-runtime/d1";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
 import type { Db } from "../db";
 import { uniqueSlug } from "@drdustinedwards/site-helpers/slug";
 import {
@@ -12,6 +12,7 @@ import {
   books,
   closeFriends,
   follows,
+  notifications,
   readingListBooks,
   readingLists,
 } from "../schema";
@@ -298,4 +299,13 @@ export async function listActivityForUser(
     )
     .orderBy(desc(activityEvents.createdAt))
     .limit(Math.min(opts.limit ?? 30, 100));
+}
+
+/** The nightly retention prune: notifications and activity events older than a year, as for the sign-in events. */
+export async function pruneActivity(db: Db, now = Date.now()): Promise<void> {
+  const cutoff = new Date(now - 365 * 86_400_000);
+  await db.batch([
+    db.delete(activityEvents).where(lt(activityEvents.createdAt, cutoff)),
+    db.delete(notifications).where(lt(notifications.createdAt, cutoff)),
+  ]);
 }

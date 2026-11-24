@@ -6,6 +6,7 @@ import { toDate } from "@dustinedwards/site-runtime/time";
 import { and, eq, gt, sql } from "drizzle-orm";
 import type { Db } from "../db";
 import { normalizeText } from "../domain/text";
+import { recomputeBookRating } from "./diary";
 import { annotations, diaryEntries, readingSessions, userBooks, vocabulary } from "../schema";
 import type { SyncOp } from "../validators/sync";
 
@@ -237,6 +238,21 @@ const vocabularyAdapter: SyncAdapter = {
   },
 };
 
+async function entryBookId(db: Db, userId: string, id: string) {
+  const [row] = await db
+    .select({ bookId: diaryEntries.bookId })
+    .from(diaryEntries)
+    .where(and(eq(diaryEntries.id, id), eq(diaryEntries.userId, userId)))
+    .limit(1);
+  return row?.bookId;
+}
+
+/** A synced rating changes the book's weighted rating, as a web diary write does (domain/diary.ts). */
+async function recomputeEntryBook(db: Db, userId: string, id: string) {
+  const bookId = await entryBookId(db, userId, id);
+  if (bookId) await recomputeBookRating(db, bookId);
+}
+
 const diaryAdapter: SyncAdapter = {
   async probe(db, userId, op) {
     const [row] = await db
@@ -259,6 +275,7 @@ const diaryAdapter: SyncAdapter = {
       visibility: (p.visibility as string) ?? "private",
       updatedAt: new Date(op.clientTs),
     });
+    await recomputeBookRating(db, p.bookId as string);
   },
   async update(db, userId, op) {
     const p = (op.payload ?? {}) as Record<string, unknown>;
@@ -271,11 +288,14 @@ const diaryAdapter: SyncAdapter = {
       .update(diaryEntries)
       .set(set)
       .where(and(eq(diaryEntries.id, op.id), eq(diaryEntries.userId, userId)));
+    if ("ratingHalf" in p || "logDate" in p) await recomputeEntryBook(db, userId, op.id);
   },
   async remove(db, userId, op) {
+    const bookId = await entryBookId(db, userId, op.id);
     await db
       .delete(diaryEntries)
       .where(and(eq(diaryEntries.id, op.id), eq(diaryEntries.userId, userId)));
+    if (bookId) await recomputeBookRating(db, bookId);
   },
   async listChanged(db, userId, sinceMs) {
     return db
