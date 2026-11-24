@@ -374,7 +374,7 @@ export interface FeedPage {
   nextCursor: string | null;
 }
 
-/** A book on a profile strip (favorites, finished, currently reading). */
+/** A book on a profile strip (finished, currently reading). */
 export interface ProfileBook {
   bookId: string;
   title: string;
@@ -447,7 +447,6 @@ export type ProfilePage =
       followingCount: number;
       booksRead: number;
       highlightCount: number;
-      favorites: ProfileBook[];
       publicShelves: { id: string; name: string; bookCount: number }[];
       finishedBooks: ProfileBook[];
       publicHighlights: {

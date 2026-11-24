@@ -37,6 +37,15 @@ async function logReview(page: Page, reviewText: string, visibility: string) {
 }
 
 test.describe("social feed visibility (two real users)", () => {
+  // The Plus account exists only for e2e: its diary is emptied after each run, whether the test passed or not.
+  test.afterEach(async ({ page, baseURL }) => {
+    const headers = { origin: baseURL ?? "" };
+    const list = await page.request.get("/api/v1/diary", { headers });
+    if (!list.ok()) return;
+    const { entries } = (await list.json()) as { entries: { id: string }[] };
+    for (const e of entries) await page.request.delete(`/api/v1/diary/${e.id}`, { headers });
+  });
+
   test("public visible, friends gated on close-friend, private never", async ({
     page,
     browser,

@@ -109,7 +109,6 @@ export async function profilePage(
     currentlyReading,
     booksRead,
     highlightCount,
-    favorites,
     publicShelves,
     finishedBooks,
     publicHighlights,
@@ -126,7 +125,6 @@ export async function profilePage(
     showProgress ? libraryRepo.listCurrentlyReading(db, profile.id, 6) : [],
     libraryRepo.countFinishedBooks(db, profile.id),
     annotationsRepo.countHighlights(db, profile.id, true),
-    libraryRepo.listFavoriteBooks(db, profile.id, 5),
     libraryRepo.listPublicShelves(db, profile.id),
     libraryRepo.listFinishedBooks(db, profile.id, 8),
     annotationsRepo.listPublicHighlights(db, profile.id, 6),
@@ -150,7 +148,6 @@ export async function profilePage(
     followingCount,
     booksRead,
     highlightCount,
-    favorites,
     publicShelves,
     finishedBooks,
     publicHighlights: publicHighlights.map((h) => ({

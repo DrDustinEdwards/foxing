@@ -23,22 +23,6 @@ export const notifications = sqliteTable(
   ],
 );
 
-export const reports = sqliteTable(
-  "reports",
-  {
-    id: idPk(),
-    reporterId: cascadeFk("reporter_id", () => user.id),
-    targetType: text("target_type").notNull(),
-    targetId: text("target_id").notNull(),
-    reason: text("reason").notNull(),
-    status: text("status").notNull().default("open"),
-    reviewedBy: text("reviewed_by").references(() => user.id, { onDelete: "set null" }),
-    reviewedAt: ts("reviewed_at"),
-    createdAt: createdAt(),
-  },
-  (t) => [index("reports_status_idx").on(t.status)],
-);
-
 // Site content / announcements, managed from /admin/content. An announcement is live
 // when is_active AND now is within [starts_at, ends_at] (null bounds = open-ended).
 // Placement selects the surface: banner (site-wide strip), home, or journal.

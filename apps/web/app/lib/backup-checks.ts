@@ -15,7 +15,7 @@
 //                 Restoring an older copy would bring back a link revoked since; a lost link
 //                 is made again in Carrel.
 // KEPT: user, profiles, books, annotations, journal_posts and every other table.
-// The FTS5 tables (books_fts, annotations_fts) are not excluded: d1-dump never dumps their
+// The FTS5 tables (books_fts) are not excluded: d1-dump never dumps their
 // shadow tables and dumps these internal-content ones through their columns with rowid.
 // d1-dump's credential-column check (runBackup's `credentials`) fails the night on a dumped table
 // with a column named for a token, password, secret or key hash, so a new one is excluded here or
@@ -49,8 +49,6 @@ export const BACKUP_REQUIRED_TABLES = [
   "external_book_club_picks",
   "annotations",
   "user_books",
-  "user_book_tags",
-  "user_favorites",
   "custom_shelves",
   "custom_shelf_books",
   "reading_lists",

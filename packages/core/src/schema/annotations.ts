@@ -66,14 +66,3 @@ export const reactions = sqliteTable(
     index("reactions_target_idx").on(t.targetType, t.targetId),
   ],
 );
-
-export const saves = sqliteTable(
-  "saves",
-  {
-    userId: cascadeFk("user_id", () => user.id),
-    targetType: text("target_type").notNull(),
-    targetId: text("target_id").notNull(),
-    createdAt: createdAt(),
-  },
-  (t) => [primaryKey({ columns: [t.userId, t.targetType, t.targetId] })],
-);

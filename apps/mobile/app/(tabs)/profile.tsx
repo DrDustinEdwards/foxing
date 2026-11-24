@@ -11,7 +11,6 @@ import { authClient, queryClient } from "@/lib/api";
 import { clearQueue } from "@/lib/sync-queue";
 import { EditProfileSheet } from "@/components/profile/edit-profile-sheet";
 import { ProfileHeader } from "@/components/profile/profile-header";
-import { FavoritesStrip } from "@/components/profile/favorites-strip";
 import { RecentHighlightsSection } from "@/components/profile/recent-highlights-section";
 import { Section } from "@/components/profile/profile-section";
 import { Divider, StatTile } from "@/components/profile/stat-tile";
@@ -64,11 +63,6 @@ export default function ProfileScreen() {
         ) : (
           <>
             <ProfileHeader profile={profile} onEdit={() => setEditing(true)} />
-
-            <FavoritesStrip
-              books={publicPage?.favorites ?? []}
-              onOpen={(slug) => router.push(`/book/${slug}` as never)}
-            />
 
             <View
               className="flex-row mb-6 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
