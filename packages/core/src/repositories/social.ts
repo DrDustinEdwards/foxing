@@ -12,6 +12,7 @@ import {
   books,
   closeFriends,
   follows,
+  notifications,
   readingListBooks,
   readingLists,
 } from "../schema";
