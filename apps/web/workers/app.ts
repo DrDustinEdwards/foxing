@@ -43,7 +43,9 @@ import {
   companion,
   companionRepo,
   createDb,
+  notificationsRepo,
   push,
+  socialRepo,
 } from "@foxing/core";
 import { Hono } from "hono";
 import type { ServerBuild } from "react-router";
@@ -412,6 +414,16 @@ async function enqueueFactCheck(env: Env): Promise<void> {
     });
 }
 
+const RETENTION_MS = 365 * 86_400_000;
+
+/** Notifications and activity events older than a year, the same retention as the sign-in events. */
+async function pruneActivity(env: Env) {
+  const db = createDb(env.DB);
+  const cutoff = Date.now() - RETENTION_MS;
+  await notificationsRepo.pruneBefore(db, cutoff);
+  await socialRepo.pruneActivityBefore(db, cutoff);
+}
+
 // Each job's work, by name; app/lib/cron-jobs.ts names each trigger's jobs with their intervals and
 // timeouts, which /health's cron check reads too. A failed job fails the invocation (Cron Events
 // shows it) after the others have run.
@@ -421,6 +433,7 @@ const CRON_RUNS: Record<CronJobName, (env: Env) => Promise<unknown>> = {
   "covers-backup": runCoversBackup,
   "prune-404": (env) => pruneNotFound(env.DB),
   "prune-auth-events": (env) => pruneAuthEvents(env.DB),
+  "prune-activity": pruneActivity,
   "push-sweep": runPushSweep,
   "carrel-schedules": (env) => runCarrelSchedules(env, new Date()),
   "companion-cache": enqueueCompanionCache,

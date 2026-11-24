@@ -16,6 +16,8 @@ import { CRON_WATCHED } from "~/lib/cron-jobs";
 import { COVER_ORIGIN } from "~/lib/origins";
 import type { Route } from "./+types/health";
 
+const CATALOG_DATA_KEY = "health:catalog-data";
+
 // GET /health for uptime monitors and the Capsid console: site-runtime's siteHealthResponse. FAIL LEVEL IS D1
 // ALONE: without it no page, sign-in or API answer works, so 503 is true. Everything else warns,
 // because the catalog still renders without it: the newest dump or a files pass older than 26 hours
@@ -50,12 +52,21 @@ export function loader({ context }: Route.LoaderArgs) {
       authSpikeCheck(env.DB),
       {
         name: "catalog-data",
+        // The check reads every book, so the monitor's polls share one result an hour.
         run: async () => {
+          const cached = await env.APP_KV.get(CATALOG_DATA_KEY);
+          if (cached !== null) {
+            if (cached) throw new Error(cached);
+            return;
+          }
           const { checks } = await adminRepo.getCatalogHealth(createDb(env.DB), {
             coverOrigin: COVER_ORIGIN,
+            skipAiText: true,
           });
           const bad = checks.filter((c) => c.count > 0 && /isbn|retailer/.test(c.check));
-          if (bad.length) throw new Error(bad.map((c) => c.check).join(", "));
+          const problem = bad.map((c) => c.check).join(", ");
+          await env.APP_KV.put(CATALOG_DATA_KEY, problem, { expirationTtl: 3600 });
+          if (problem) throw new Error(problem);
         },
       },
     ].map((check) => ({ ...check, level: "warn" as const })),

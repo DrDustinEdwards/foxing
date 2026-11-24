@@ -4,7 +4,7 @@
 // in-process from web/mobile loaders; writes are called by the API after the domain
 // layer authorized them.
 import { inList, olderThan } from "@dustinedwards/site-runtime/d1";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
 import type { Db } from "../db";
 import { uniqueSlug } from "@drdustinedwards/site-helpers/slug";
 import {
@@ -298,4 +298,9 @@ export async function listActivityForUser(
     )
     .orderBy(desc(activityEvents.createdAt))
     .limit(Math.min(opts.limit ?? 30, 100));
+}
+
+/** Delete activity events created before a cutoff (the nightly retention prune). */
+export async function pruneActivityBefore(db: Db, cutoffMs: number): Promise<void> {
+  await db.delete(activityEvents).where(lt(activityEvents.createdAt, new Date(cutoffMs)));
 }

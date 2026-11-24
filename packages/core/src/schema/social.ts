@@ -32,7 +32,10 @@ export const closeFriends = sqliteTable(
     friendId: cascadeFk("friend_id", () => user.id),
     createdAt: createdAt(),
   },
-  (t) => [primaryKey({ columns: [t.userId, t.friendId] })],
+  (t) => [
+    primaryKey({ columns: [t.userId, t.friendId] }),
+    index("close_friends_friend_idx").on(t.friendId),
+  ],
 );
 
 export const readingLists = sqliteTable(

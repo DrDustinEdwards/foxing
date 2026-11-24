@@ -63,7 +63,7 @@ export type CatalogHealth = {
  */
 export async function getCatalogHealth(
   db: Db,
-  opts: { coverOrigin: string; only?: CatalogCheck },
+  opts: { coverOrigin: string; only?: CatalogCheck; skipAiText?: boolean },
 ): Promise<CatalogHealth> {
   const rows: HealthBook[] = await db
     .select({
@@ -84,10 +84,13 @@ export async function getCatalogHealth(
       bookshopUrl: books.bookshopUrl,
     })
     .from(books);
-  const generated = await db
-    .select({ bookId: bookAiCache.bookId, content: bookAiCache.content })
-    .from(bookAiCache)
-    .where(eq(bookAiCache.action, "book_description"));
+  // The generated texts are the large rows; a caller that does not read the description check leaves them out.
+  const generated = opts.skipAiText
+    ? []
+    : await db
+        .select({ bookId: bookAiCache.bookId, content: bookAiCache.content })
+        .from(bookAiCache)
+        .where(eq(bookAiCache.action, "book_description"));
   const aiText = new Map(
     generated.flatMap((g) =>
       typeof g.content === "string" ? [[g.bookId, g.content] as const] : [],

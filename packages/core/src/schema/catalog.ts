@@ -223,25 +223,14 @@ export const bookAiCache = sqliteTable(
     content: text("content", { mode: "json" }).notNull(),
     model: text("model"),
     generatedAt: ts("generated_at").notNull(),
+    // The fact-check of this text (companion/fact-check.ts); checked_at is null until it runs. `original` keeps the
+    // text a correction replaced, so a check can be audited or undone; it is null when the text was left as it was.
+    verdict: text("verdict"), // ok | fixed | withheld
+    issues: json<string[]>("issues"),
+    original: text("original", { mode: "json" }),
+    costMicros: integer("cost_micros"),
+    checkedAt: ts("checked_at"),
   },
   (t) => [primaryKey({ columns: [t.bookId, t.action] })],
 );
 
-// One fact-check of one cached text (companion/fact-check.ts). `original` keeps the text a correction replaced, so a
-// check can be audited or undone; it is null when the text was left as it was.
-export const bookAiReview = sqliteTable(
-  "book_ai_review",
-  {
-    bookId: cascadeFk("book_id", () => books.id),
-    action: text("action").notNull(),
-    verdict: text("verdict").notNull(), // ok | fixed | withheld
-    issues: json<string[]>("issues"),
-    original: text("original", { mode: "json" }),
-    sources: json<string[]>("sources"),
-    searches: integer("searches").notNull(),
-    costMicros: integer("cost_micros").notNull(),
-    model: text("model").notNull(),
-    checkedAt: ts("checked_at").notNull(),
-  },
-  (t) => [primaryKey({ columns: [t.bookId, t.action] })],
-);

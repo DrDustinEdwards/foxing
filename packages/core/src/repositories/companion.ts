@@ -7,7 +7,6 @@ import { COMPANION_QUOTA } from "../config/companion";
 import type { Db } from "../db";
 import {
   bookAiCache,
-  bookAiReview,
   books,
   companionMessages,
   companionThreads,
@@ -123,8 +122,8 @@ export async function upsertCachedAction(
 }
 
 /**
- * Record one fact-check. A correction (`next` a string, blank for a withheld text) replaces the cached text and keeps
- * the old one in `original`; `next` null leaves the text as it was. One batch, so the text and its record never part.
+ * Record one fact-check on the cached text. A correction (`next` a string, blank for a withheld text) replaces the
+ * text and keeps the old one in `original`; `next` null leaves the text as it was.
  */
 export async function saveFactCheck(
   db: Db,
@@ -135,36 +134,22 @@ export async function saveFactCheck(
     issues: string[];
     original: unknown;
     next: string | null;
-    sources: string[];
-    searches: number;
     costMicros: number;
     model: string;
   },
 ): Promise<void> {
-  const review = db
-    .insert(bookAiReview)
-    .values({
-      bookId: r.bookId,
-      action: r.action,
+  const now = new Date();
+  await db
+    .update(bookAiCache)
+    .set({
+      ...(r.next === null ? {} : { content: r.next, model: r.model, generatedAt: now }),
       verdict: r.verdict,
       issues: r.issues,
       original: r.original,
-      sources: r.sources,
-      searches: r.searches,
       costMicros: r.costMicros,
-      model: r.model,
-      checkedAt: new Date(),
+      checkedAt: now,
     })
-    .onConflictDoNothing();
-  if (r.next === null) await review;
-  else
-    await db.batch([
-      db
-        .update(bookAiCache)
-        .set({ content: r.next, model: r.model, generatedAt: new Date() })
-        .where(and(eq(bookAiCache.bookId, r.bookId), eq(bookAiCache.action, r.action))),
-      review,
-    ]);
+    .where(and(eq(bookAiCache.bookId, r.bookId), eq(bookAiCache.action, r.action)));
 }
 
 /** Catalog books with cached texts and no fact-check yet, in id order, limited to `only` when it is given. */
@@ -175,8 +160,7 @@ export async function findBooksNeedingFactCheck(db: Db, limit: number, only?: st
     .where(
       and(
         eq(books.sourceType, "catalog"),
-        sql`EXISTS (SELECT 1 FROM book_ai_cache WHERE book_ai_cache.book_id = ${books.id})`,
-        sql`NOT EXISTS (SELECT 1 FROM book_ai_review WHERE book_ai_review.book_id = ${books.id})`,
+        sql`EXISTS (SELECT 1 FROM book_ai_cache WHERE book_ai_cache.book_id = ${books.id} AND book_ai_cache.checked_at IS NULL)`,
         only ? inArray(books.id, only) : undefined,
       ),
     )

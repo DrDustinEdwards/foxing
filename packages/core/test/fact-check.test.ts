@@ -10,7 +10,7 @@ function read(reply: string) {
 }
 
 describe("parseFactCheck", () => {
-  it("reads the last json fence, with corrections and sources, and a reply that is not quite JSON", () => {
+  it("reads the last json fence, with corrections, and a reply that is not quite JSON", () => {
     const reply = fence(
       JSON.stringify({
         texts: {
@@ -21,7 +21,6 @@ describe("parseFactCheck", () => {
           },
           author_bio: { verdict: "ok", issues: [] },
         },
-        sources: ["https://en.wikipedia.org/wiki/The_Mysterious_Affair_at_Styles"],
       }),
     );
     const parsed = read(reply);
@@ -36,12 +35,6 @@ describe("parseFactCheck", () => {
     const json = '{"texts":{"a":{"verdict":"fixed","issues":[],"corrected":"One.\n\nTwo."}}}';
     expect(read(fence(json)).texts.a.corrected).toBe("One.\n\nTwo.");
     expect(read(`${json}\nDone.`).texts.a.verdict).toBe("fixed");
-
-    // A reply that leaves "texts" open puts "sources" inside it: the array is the sources, not an action.
-    const open = '{"texts":{"a":{"verdict":"ok","issues":[]},"sources":["https://example.com/a"]}}';
-    const nested = read(fence(open));
-    expect(Object.keys(nested.texts)).toEqual(["a"]);
-    expect(nested.sources).toEqual(["https://example.com/a"]);
   });
 
   it("reads a fix with no corrected text as an empty text, and refuses an unknown verdict and a reply that is not JSON", () => {

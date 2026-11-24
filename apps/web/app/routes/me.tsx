@@ -1,7 +1,7 @@
 // The signed-in user's own profile at /me, rendered in the app shell. Reads run
 // in-process via core; requireProfile sends anonymous visitors to /login and
 // signed-in-without-profile users to /onboarding (never renders a null profile).
-import { createDb, libraryRepo } from "@foxing/core";
+import { createDb, views } from "@foxing/core";
 import { ButtonLink, Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Avatar, Chip, Container } from "~/components/ui";
@@ -17,7 +17,7 @@ export function meta() {
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user, profile } = await requireProfile(env, request);
-  const streak = await libraryRepo.getStreak(createDb(env.DB), user.id);
+  const streak = await views.streak(createDb(env.DB), user.id);
   const joined = profile.createdAt
     ? new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(profile.createdAt)
     : null;
@@ -31,9 +31,9 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     },
     joined,
     stats: {
-      booksFinished: streak?.totalBooksFinished ?? 0,
-      dayStreak: streak?.currentStreak ?? 0,
-      highlights: streak?.totalHighlights ?? 0,
+      booksFinished: streak.totalBooksFinished,
+      dayStreak: streak.currentStreak,
+      highlights: streak.totalHighlights,
     },
   };
 }

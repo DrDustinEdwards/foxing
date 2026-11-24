@@ -28,6 +28,7 @@
     "0023_shared_media_store.sql": "fd27cd74cff0567ca5237111b67f2683e47ccd58b60224a43c3891a73c61e21c",
     "0024_drop_journal_media.sql": "6e40cb01e6e46d6622466ed9c3b5130e5592651271cccc58b30b27231a8944c3",
     "0025_book_ai_review.sql": "c2e16ae5da92f9a01cb33cbbad1f40e5654d8b006c67f83d712c79dbe737352b",
-    "0026_one_thread_one_list_entry.sql": "b307e8e3b3bcfa85119773ed9001c2491529bfb76ea1d373f8e72ed81e0bba4c"
+    "0026_one_thread_one_list_entry.sql": "b307e8e3b3bcfa85119773ed9001c2491529bfb76ea1d373f8e72ed81e0bba4c",
+    "0027_ai_review_columns_indexes.sql": "522b3218f970aaa56349a08a3fd669dc60835278b43932399ba95baac0d40006"
   }
 }

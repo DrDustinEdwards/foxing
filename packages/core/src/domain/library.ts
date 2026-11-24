@@ -35,7 +35,6 @@ export async function changeBookStatus(
   } else if (status === "finished" && !wasFinished) {
     const title = await bookTitle(db, bookId);
     await emit(db, "library.status.finished", actor, { bookId, title });
-    await libraryRepo.incrementBooksFinished(db, actor.userId);
 
     // goal_met: a books-type goal whose finished count now equals its target, its period in the reader's days.
     const [goals, profile] = await Promise.all([
