@@ -8,7 +8,7 @@ import { publicPageHeaders } from "@dustinedwards/site-runtime/edge-cache";
 import { loaderBase } from "~/lib/loader.server";
 import { itemList, jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { SITE_ORIGIN } from "~/lib/origins";
-import { buildMeta } from "~/lib/seo";
+import { absoluteUrl, buildMeta } from "~/lib/seo";
 import "~/styles/books.css";
 import type { Route } from "./+types/books";
 
@@ -60,14 +60,20 @@ export const headers = () => publicPageHeaders({ freshSeconds: 1800, staleSecond
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Books | Foxing" }];
-  const label = data.filters.subject
-    ? `${catalogRepo.genreLabel(data.filters.subject)} books`
+  const { filters, result } = data;
+  const label = filters.subject
+    ? `${catalogRepo.genreLabel(filters.subject)} books`
     : "Browse the library";
+  // Only a genre and its pages are indexed; era, length and sort are kept from crawlers in robots.txt (ROBOTS_DISALLOW).
+  // Each page is its own canonical, as Google's pagination guidance asks, never page 1.
+  const canonicalPath = query({ subject: filters.subject, page: filters.page }, {});
   return [
     ...buildMeta({
-      title: label,
-      description: `Browse ${formatCount(data.result.total)} readable classics on Foxing. Filter by genre, era, and length.`,
+      title: filters.page > 1 ? `${label}, page ${filters.page}` : label,
+      description: `Browse ${formatCount(result.total)} readable classics on Foxing. Filter by genre, era, and length.`,
       pathname: location.pathname,
+      canonical: absoluteUrl(canonicalPath),
+      noindex: filters.page > result.pageCount,
       pageType: "CollectionPage",
     }),
     jsonLd(
