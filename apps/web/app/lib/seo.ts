@@ -190,5 +190,13 @@ export function articleLd(post: {
   });
 }
 
-/** Paths no crawler needs, in /robots.txt and /ai.txt alike. */
-export const ROBOTS_DISALLOW = ["/me", "/onboarding", "/search"];
+/** Paths no crawler needs, in /robots.txt and /ai.txt alike. The /books era, length and sort combinations multiply into
+ *  thousands of near-duplicate lists; a genre and its pages stay crawlable, and every book is in the sitemap. */
+export const ROBOTS_DISALLOW = [
+  "/me",
+  "/onboarding",
+  "/search",
+  "/books?*era=",
+  "/books?*length=",
+  "/books?*sort=",
+];
