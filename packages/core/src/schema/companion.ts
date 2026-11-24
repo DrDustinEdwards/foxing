@@ -21,8 +21,7 @@ export const companionThreads = sqliteTable(
     createdAt: createdAt(),
   },
   (t) => [
-    index("companion_threads_user_book_idx").on(t.userId, t.bookId),
-    // One thread per (user, book); the plain index above predates it and stays (a migration may only add).
+    // One thread per (user, book).
     uniqueIndex("companion_threads_user_book_uq").on(t.userId, t.bookId),
   ],
 );

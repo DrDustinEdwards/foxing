@@ -19,18 +19,14 @@ export const books = sqliteTable(
     epubUrl: text("epub_url"),
     source: text("source").notNull(),
     sourceType: text("source_type").notNull(), // catalog | community
-    externalUrl: text("external_url"),
     language: text("language").notNull(),
     subjects: json<string[]>("subjects"),
-    themes: json<string[]>("themes"),
     moodTags: json<string[]>("mood_tags"),
     contentWarnings: json<string[]>("content_warnings"),
     pacing: text("pacing"),
-    readingDifficulty: real("reading_difficulty"),
     wordCount: integer("word_count"),
     publicationYear: integer("publication_year"),
     publisher: text("publisher"),
-    country: text("country"),
     seriesName: text("series_name"),
     seriesOrder: real("series_order"),
     isbn: text("isbn"),
@@ -46,7 +42,6 @@ export const books = sqliteTable(
     updatedAt: updatedAt(),
   },
   (t) => [
-    index("books_author_slug_idx").on(t.authorSlug),
     index("books_source_type_idx").on(t.sourceType),
     index("books_isbn13_idx").on(t.isbn13),
     index("books_author_source_idx").on(t.authorSlug, t.sourceType, t.publicationYear),
@@ -63,7 +58,6 @@ export const bookAwards = sqliteTable(
     year: integer("year"),
     distinction: text("distinction").notNull(),
     scope: text("scope").notNull(),
-    country: text("country"),
     url: text("url"),
     createdAt: createdAt(),
   },
@@ -110,10 +104,7 @@ export const externalBookClubPicks = sqliteTable(
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [
-    index("external_picks_club_id_idx").on(t.clubId),
-    index("external_picks_club_published_idx").on(t.clubId, t.isPublished),
-  ],
+  (t) => [index("external_picks_club_published_idx").on(t.clubId, t.isPublished)],
 );
 
 export const bookOfTheMonth = sqliteTable("book_of_the_month", {

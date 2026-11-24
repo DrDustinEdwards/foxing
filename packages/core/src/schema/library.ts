@@ -71,7 +71,6 @@ export const userBooks = sqliteTable(
     pausedAt: ts("paused_at"),
     pausedNote: text("paused_note"),
     abandonedAt: ts("abandoned_at"),
-    formatRead: text("format_read"),
     moodTags: json<string[]>("mood_tags"),
     personalNotes: text("personal_notes"),
     createdAt: createdAt(),
@@ -79,7 +78,6 @@ export const userBooks = sqliteTable(
   },
   (t) => [
     unique("user_books_user_book_uq").on(t.userId, t.bookId),
-    index("user_books_user_idx").on(t.userId),
     index("user_books_book_idx").on(t.bookId),
     index("user_books_updated_idx").on(t.updatedAt),
   ],
@@ -130,11 +128,7 @@ export const readingStreaks = sqliteTable("reading_streaks", {
   currentStreak: integer("current_streak").notNull().default(0),
   longestStreak: integer("longest_streak").notNull().default(0),
   lastReadDate: ts("last_read_date"),
-  streakFreezeCredits: integer("streak_freeze_credits").notNull().default(0),
-  totalBooksFinished: integer("total_books_finished").notNull().default(0),
   totalPagesRead: integer("total_pages_read").notNull().default(0),
-  totalHighlights: integer("total_highlights").notNull().default(0),
-  totalWordsLookedUp: integer("total_words_looked_up").notNull().default(0),
   updatedAt: updatedAt(),
 });
 
@@ -171,29 +165,7 @@ export const vocabulary = sqliteTable(
     // NOT NULL ADD COLUMN without one). Sync coalesces null -> created_at for LWW/pull.
     updatedAt: ts("updated_at"),
   },
-  (t) => [
-    index("vocabulary_user_idx").on(t.userId),
-    index("vocabulary_updated_idx").on(t.userId, t.updatedAt),
-  ],
-);
-
-export const badges = sqliteTable("badges", {
-  id: idPk(),
-  slug: text("slug").notNull().unique(),
-  name: text("name").notNull(),
-  description: text("description"),
-  icon: text("icon"),
-  category: text("category"),
-});
-
-export const userBadges = sqliteTable(
-  "user_badges",
-  {
-    userId: cascadeFk("user_id", () => user.id),
-    badgeId: cascadeFk("badge_id", () => badges.id),
-    earnedAt: ts("earned_at").notNull(),
-  },
-  (t) => [primaryKey({ columns: [t.userId, t.badgeId] })],
+  (t) => [index("vocabulary_updated_idx").on(t.userId, t.updatedAt)],
 );
 
 export const customShelves = sqliteTable(
@@ -219,24 +191,4 @@ export const customShelfBooks = sqliteTable(
     addedAt: ts("added_at").notNull(),
   },
   (t) => [primaryKey({ columns: [t.shelfId, t.bookId] })],
-);
-
-export const userFavorites = sqliteTable(
-  "user_favorites",
-  {
-    userId: cascadeFk("user_id", () => user.id),
-    bookId: cascadeFk("book_id", () => books.id),
-    position: integer("position").notNull().default(0),
-  },
-  (t) => [primaryKey({ columns: [t.userId, t.bookId] })],
-);
-
-export const userBookTags = sqliteTable(
-  "user_book_tags",
-  {
-    userId: cascadeFk("user_id", () => user.id),
-    bookId: cascadeFk("book_id", () => books.id),
-    tag: text("tag").notNull(),
-  },
-  (t) => [primaryKey({ columns: [t.userId, t.bookId, t.tag] })],
 );

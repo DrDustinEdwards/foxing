@@ -48,7 +48,6 @@ export const readingLists = sqliteTable(
     description: text("description"),
     coverUrl: text("cover_url"),
     isPublic: bool("is_public").notNull().default(false),
-    isFeatured: bool("is_featured").notNull().default(false),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -65,10 +64,7 @@ export const readingListBooks = sqliteTable(
     note: text("note"),
     addedAt: ts("added_at"),
   },
-  (t) => [
-    index("reading_list_books_list_idx").on(t.listId),
-    uniqueIndex("reading_list_books_list_book_uq").on(t.listId, t.bookId),
-  ],
+  (t) => [uniqueIndex("reading_list_books_list_book_uq").on(t.listId, t.bookId)],
 );
 
 export const activityEvents = sqliteTable(

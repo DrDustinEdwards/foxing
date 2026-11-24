@@ -12,7 +12,6 @@ import {
   readingSessions,
   readingStreaks,
   userBooks,
-  userFavorites,
   vocabulary,
 } from "../schema";
 import type { SaveProgressInput } from "../validators/annotation";
@@ -191,20 +190,6 @@ export async function countFinishedBooks(db: Db, userId: string): Promise<number
     .from(userBooks)
     .where(and(eq(userBooks.userId, userId), eq(userBooks.status, "finished")));
   return Number(row?.n ?? 0);
-}
-
-/** The user's favorite books (user_favorites), ordered, for the profile cover row. */
-export async function listFavoriteBooks(db: Db, userId: string, limit = 5): Promise<ProfileBook[]> {
-  return db
-    .select({
-      bookId: userFavorites.bookId,
-      ...bookRef,
-    })
-    .from(userFavorites)
-    .innerJoin(books, eq(userFavorites.bookId, books.id))
-    .where(eq(userFavorites.userId, userId))
-    .orderBy(asc(userFavorites.position))
-    .limit(limit);
 }
 
 /** How many readers have the book in their library, on any shelf. */

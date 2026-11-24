@@ -103,7 +103,6 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
     followingCount,
     booksRead,
     highlightCount,
-    favorites,
     publicShelves,
     finishedBooks,
     publicHighlights,
@@ -158,15 +157,6 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
             </div>
           )}
         </header>
-
-        {favorites.length > 0 ? (
-          <section className="cap-stack">
-            <h2 className="cap-title" data-size="3">
-              Favorite books
-            </h2>
-            <ProfileCovers books={favorites} />
-          </section>
-        ) : null}
 
         {currentlyReading.length > 0 ? (
           <section className="cap-stack">

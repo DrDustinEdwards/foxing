@@ -28,6 +28,18 @@ async function gotoLive(page: Page, url: string): Promise<void> {
 }
 
 test.describe("clubs live layer (signed in, plus)", () => {
+  let clubSlug = "";
+
+  // The test club, with its threads, polls and votes, is deleted whether the test passed or not.
+  test.afterEach(async ({ page, baseURL }) => {
+    if (!clubSlug) return;
+    const headers = { origin: baseURL ?? "" };
+    const found = await page.request.get(`/api/v1/clubs/${clubSlug}`, { headers });
+    const id = found.ok() ? ((await found.json()) as { club?: { id?: string } }).club?.id : null;
+    if (id) await page.request.delete(`/api/v1/clubs/${id}`, { headers });
+    clubSlug = "";
+  });
+
   test("live posts and live poll tallies fan out across two contexts", async ({
     page,
     browser,
@@ -47,6 +59,7 @@ test.describe("clubs live layer (signed in, plus)", () => {
     await expect(page).toHaveURL(/\/clubs\/[a-z0-9-]+$/);
     await expect(page).not.toHaveURL(/\/clubs\/new$/);
     const clubUrl = page.url();
+    clubSlug = clubUrl.split("/").pop() ?? "";
 
     // Start a thread and open it.
     await page.getByRole("button", { name: /^new thread$/i }).click();

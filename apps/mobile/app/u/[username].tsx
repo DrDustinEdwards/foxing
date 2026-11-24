@@ -219,7 +219,6 @@ function PublicProfile({ page }: { page: Extract<W.ProfilePage, { isPrivate: fal
         </Section>
       ) : null}
 
-      <BookStrip title="Favorites" books={page.favorites} onOpen={openBook} />
       <BookStrip title="Finished" books={page.finishedBooks} onOpen={openBook} />
 
       {page.publicHighlights.length > 0 ? (
