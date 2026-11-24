@@ -10,7 +10,8 @@ export async function renderJournalBody(db: Db, slug: string, content: string): 
   const { resolveImage, media } = await journalBodyImages(db, content);
   const { html } = await render({
     file: `journal/${slug}`,
-    body: content,
+    // Posts link books at the old /book/<slug>, which redirects; the link names the page itself.
+    body: content.replace(/([("])\/book\//g, "$1/books/"),
     resolveImage,
     options: { media, assertSafe: true },
   });
