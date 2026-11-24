@@ -64,9 +64,6 @@ export default defineConfig(async () => {
       // are a separate runner (default vitest globs would otherwise grab e2e/*.spec.ts).
       include: ["test/**/*.test.ts"],
       setupFiles: ["./test/apply-migrations.ts"],
-      // Off: vitest 5's file module cache sends each fresh isolate a snapshot of every cached module, and the Workers pool
-      // inlines it into one WebSocket message that grows with the app, past workerd's limit ("Message is too large").
-      fsModuleCache: false,
     },
   };
 });
