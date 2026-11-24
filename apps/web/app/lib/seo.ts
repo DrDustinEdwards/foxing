@@ -74,10 +74,21 @@ type MetaInput = {
   breadcrumbs?: Array<{ name: string; path: string }>;
 };
 
+/** The route's own lowercase address for a requested one: the router matches `/About` to the About page, but its canonical is
+ *  `/about`. Only the first segment (and `journal/archive|tag|series`) is lowercased; a username, tag or id after it keeps its case. */
+function canonicalPathname(pathname: string): string {
+  const parts = pathname.split("/");
+  const lower =
+    parts[1]?.toLowerCase() === "journal" && /^(archive|tag|series)$/i.test(parts[2] ?? "") ? 3 : 2;
+  return [...parts.slice(0, lower).map((part) => part.toLowerCase()), ...parts.slice(lower)].join(
+    "/",
+  );
+}
+
 /** The full standard head from Prelum's defineHead: title, description, canonical, Open Graph, Twitter. Routes pass
  *  location.pathname; Prelum drops a trailing slash, so /x/ names /x as canonical. */
 export function buildMeta({ pathname, ...page }: MetaInput): MetaDescriptor[] {
-  return head({ ...page, path: pathname });
+  return head({ ...page, path: canonicalPathname(pathname) });
 }
 
 /** The head of a page that stays out of the index (a signed-in screen, a sign-in step): its title and nothing else. */
@@ -166,7 +177,10 @@ export function articleLd(post: {
     url: absoluteUrl(`/journal/${post.slug}`),
     headline: post.title,
     description: post.excerpt,
-    image: post.articleImages?.length ? post.articleImages : (post.coverImageUrl ?? undefined),
+    // A post with no picture of its own is shown with the site's share card, so every Article has an image.
+    image: post.articleImages?.length
+      ? post.articleImages
+      : (post.coverImageUrl ?? absoluteUrl("/og/site")),
     published: post.publishedAt,
     modified: post.updatedAt,
     author: post.author
