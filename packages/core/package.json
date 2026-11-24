@@ -27,7 +27,7 @@
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.48.0",
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.180.0",
     "@foxing/types": "*",
-    "capsomer": "github:DrDustinEdwards/capsomer#v0.164.9",
+    "capsomer": "github:DrDustinEdwards/capsomer#v0.164.10",
     "drizzle-orm": "0.45.4",
     "entities": "8.1.0",
     "hastscript": "9.0.3",
