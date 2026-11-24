@@ -73,7 +73,13 @@ async function addMember(
 async function addPastClubBook(clubId: string, bookId: string) {
   await db()
     .insert(schema.clubBooks)
-    .values({ id: `${clubId}-${bookId}`, clubId, bookId, startedAt: new Date(), finishedAt: new Date() });
+    .values({
+      id: `${clubId}-${bookId}`,
+      clubId,
+      bookId,
+      startedAt: new Date(),
+      finishedAt: new Date(),
+    });
 }
 
 let annSeq = 0;
