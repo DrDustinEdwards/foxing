@@ -59,18 +59,11 @@ const handlers: EventHandlers = {
   },
 
   "goal.met": (actor, payload) => {
-    const { goalId, goalType, target } = payload as {
-      goalId: string;
+    const { goalType, target } = payload as {
       goalType: string;
       target: number;
     };
     return {
-      activity: {
-        type: "goal_met",
-        targetId: goalId,
-        data: { goalType, target },
-        visibility: "public",
-      },
       notifications: [
         {
           userId: actor.userId,

@@ -94,10 +94,8 @@ export async function updateClub(
     if (!exists) throw domainErrors.notFound("Book not found.");
     await clubsRepo.setCurrentBook(db, clubId, currentBookId);
   }
-  const updated = await clubsRepo.updateClub(db, clubId, {
-    ...rest,
-    ...(currentBookId === null ? { currentBookId: null } : {}),
-  });
+  if (currentBookId === null) await clubsRepo.setCurrentBook(db, clubId, null);
+  const updated = await clubsRepo.updateClub(db, clubId, rest);
   if (!updated) throw domainErrors.notFound("Club not found.");
   return updated;
 }

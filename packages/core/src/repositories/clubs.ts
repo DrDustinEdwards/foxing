@@ -5,7 +5,7 @@ import { likeContains } from "@dustinedwards/site-runtime/d1";
 // the domain layer has authorized them. All fan-out to the live layer happens AFTER
 // these commit -- this file never touches a Durable Object. Threads and posts live in
 // clubs-threads.ts, polls, meetings and schedule in clubs-events.ts (re-exported below).
-import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { customAlphabet, nanoid } from "nanoid";
 import { chunked, type Db } from "../db";
 import { uniqueSlug } from "@drdustinedwards/site-helpers/slug";
@@ -99,6 +99,9 @@ export async function createClub(
       updatedAt: now,
     })
     .returning();
+  if (input.currentBookId) {
+    await db.insert(clubBooks).values({ clubId: id, bookId: input.currentBookId, startedAt: now });
+  }
   // The creator is the first, owning member.
   await db.insert(clubMembers).values({
     clubId: id,
@@ -181,14 +184,16 @@ export async function deleteClub(db: Db, id: string): Promise<void> {
   await db.delete(clubs).where(eq(clubs.id, id));
 }
 
-/** Point the club at an existing book (catalog or community) and log it in history. */
-export async function setCurrentBook(db: Db, clubId: string, bookId: string): Promise<void> {
+/** Point the club at a book (or at none) and keep the history. clubs.current_book_id is the
+ *  one record of the current read; club_books is the history, its open row (no finished_at)
+ *  being the book now being read. */
+export async function setCurrentBook(db: Db, clubId: string, bookId: string | null): Promise<void> {
   const now = new Date();
   await db
     .update(clubBooks)
-    .set({ isCurrent: false })
-    .where(and(eq(clubBooks.clubId, clubId), eq(clubBooks.isCurrent, true)));
-  await db.insert(clubBooks).values({ clubId, bookId, startedAt: now, isCurrent: true });
+    .set({ finishedAt: now })
+    .where(and(eq(clubBooks.clubId, clubId), isNull(clubBooks.finishedAt)));
+  if (bookId) await db.insert(clubBooks).values({ clubId, bookId, startedAt: now });
   await db.update(clubs).set({ currentBookId: bookId, updatedAt: now }).where(eq(clubs.id, clubId));
 }
 
