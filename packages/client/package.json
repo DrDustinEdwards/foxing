@@ -16,7 +16,7 @@
     "capsomer": "github:DrDustinEdwards/capsomer#v0.164.3"
   },
   "devDependencies": {
-    "@tanstack/react-query": "5.107.1",
+    "@tanstack/react-query": "5.108.2",
     "@types/react": "19.3.0",
     "typescript": "5.9.3"
   },
