@@ -5,13 +5,7 @@ import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { quotaDay } from "../companion/quota";
 import { COMPANION_QUOTA } from "../config/companion";
 import type { Db } from "../db";
-import {
-  bookAiCache,
-  books,
-  companionMessages,
-  companionThreads,
-  companionUsage,
-} from "../schema";
+import { bookAiCache, books, companionMessages, companionThreads, companionUsage } from "../schema";
 
 export type CompanionThread = typeof companionThreads.$inferSelect;
 export type CompanionMessageRow = typeof companionMessages.$inferSelect;

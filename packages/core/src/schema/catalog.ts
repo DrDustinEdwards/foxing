@@ -233,4 +233,3 @@ export const bookAiCache = sqliteTable(
   },
   (t) => [primaryKey({ columns: [t.bookId, t.action] })],
 );
-
