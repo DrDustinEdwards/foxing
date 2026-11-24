@@ -5,9 +5,9 @@
 // user set the viewer is entitled to), so an unauthorized row is never fetched, let
 // alone returned. The domain layer (domain/reader-annotations) composes these and
 // applies the courtesy spoiler/progress gate; it never widens what the SQL admits.
-import { and, eq, gte, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import { chunked, type Db } from "../db";
-import { annotations, clubBooks, clubMembers, clubs, closeFriends, profiles } from "../schema";
+import { annotations, clubMembers, clubs, closeFriends, profiles } from "../schema";
 
 // Only highlights and notes carry a reader decoration; bookmarks and commonplace are
 // never part of another reader's layer.
@@ -82,7 +82,7 @@ function toRow(
 }
 
 /** V: the viewer's ACTIVE clubs whose CURRENT read is this book. Restricted to the
- *  current read (clubs.current_book_id OR club_books.is_current), so a finished-book
+ *  current read (clubs.current_book_id), so a finished-book
  *  club_books row does NOT keep a passage layer alive. This one set defines both who
  *  the viewer co-reads with and which passage discussion they may see. */
 export async function viewerClubIdsReadingBook(
@@ -105,19 +105,11 @@ export async function shareableClubsForBook(
     .select({ id: clubs.id, name: clubs.name })
     .from(clubMembers)
     .innerJoin(clubs, eq(clubs.id, clubMembers.clubId))
-    .leftJoin(
-      clubBooks,
-      and(
-        eq(clubBooks.clubId, clubMembers.clubId),
-        eq(clubBooks.bookId, bookId),
-        eq(clubBooks.isCurrent, true),
-      ),
-    )
     .where(
       and(
         eq(clubMembers.userId, viewerId),
         eq(clubMembers.status, "active"),
-        or(eq(clubs.currentBookId, bookId), isNotNull(clubBooks.id)),
+        eq(clubs.currentBookId, bookId),
       ),
     );
   const seen = new Map<string, string>();

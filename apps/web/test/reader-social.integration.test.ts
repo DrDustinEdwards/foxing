@@ -70,10 +70,16 @@ async function addMember(
     .values({ clubId, userId, status, role, joinedAt: new Date() });
 }
 
-async function addClubBook(clubId: string, bookId: string, isCurrent: boolean) {
+async function addPastClubBook(clubId: string, bookId: string) {
   await db()
     .insert(schema.clubBooks)
-    .values({ id: `${clubId}-${bookId}`, clubId, bookId, isCurrent, startedAt: new Date() });
+    .values({
+      id: `${clubId}-${bookId}`,
+      clubId,
+      bookId,
+      startedAt: new Date(),
+      finishedAt: new Date(),
+    });
 }
 
 let annSeq = 0;
@@ -223,7 +229,7 @@ describe("reader social-layer resolution matrix (local D1)", () => {
     await seedClub("c2", { currentBookId: OTHER_BOOK, creatorId: "viewer" });
     await addMember("c2", "viewer", "active", "owner");
     await addMember("c2", "clubmate", "active");
-    await addClubBook("c2", BOOK, false); // finished past read, must not revive the layer
+    await addPastClubBook("c2", BOOK); // finished past read, must not revive the layer
     await ann({ userId: "clubmate", visibility: "club" });
 
     const out = await resolve("viewer");

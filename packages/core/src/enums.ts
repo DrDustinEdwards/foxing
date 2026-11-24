@@ -153,7 +153,6 @@ export const activityTypeValues = tuple([
   "rated",
   "reviewed",
   "highlighted",
-  "goal_met",
   "badge_earned",
   "joined_club",
   "list_created",

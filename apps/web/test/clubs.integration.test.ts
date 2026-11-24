@@ -91,6 +91,38 @@ describe("clubs API (web -> api -> core -> D1)", () => {
     expect(member.status).toBe("active");
   });
 
+  it("the club's current book is clubs.current_book_id; club_books keeps the history", async () => {
+    await seedUser("reader1", "free");
+    const db = createDb(env.DB);
+    const base = {
+      author: "A",
+      authorSlug: "a",
+      source: "gutenberg",
+      sourceType: "catalog",
+      language: "en",
+    };
+    await db.insert(schema.books).values([
+      { ...base, id: "b1", title: "One", slug: "one" },
+      { ...base, id: "b2", title: "Two", slug: "two" },
+    ]);
+    const { body } = await createClub("reader1", { currentBookId: "b1" });
+    const id = body.club.id;
+    const patch = (currentBookId: string | null) =>
+      call(`/clubs/${id}`, { method: "PATCH", user: "reader1", body: { currentBookId } });
+    const state = async () => ({
+      current: (await db.select().from(schema.clubs).where(eq(schema.clubs.id, id)))[0]
+        .currentBookId,
+      open: (await db.select().from(schema.clubBooks).where(eq(schema.clubBooks.clubId, id)))
+        .filter((r) => !r.finishedAt)
+        .map((r) => r.bookId),
+    });
+    expect(await state()).toEqual({ current: "b1", open: ["b1"] });
+    await patch("b2");
+    expect(await state()).toEqual({ current: "b2", open: ["b2"] });
+    await patch(null);
+    expect(await state()).toEqual({ current: null, open: [] });
+  });
+
   it("open club: a free user joins directly and becomes active", async () => {
     await seedUser("owner2", "plus");
     await seedUser("joiner", "free");

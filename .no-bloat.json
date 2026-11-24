@@ -4,7 +4,7 @@
     "jscpd": "jscpd@5.3.2"
   },
   "baseline": {
-    "measured_at": "0262d1e7",
+    "measured_at": "f7fcac7",
     "knip": {
       "files": 2
     },
@@ -34,18 +34,18 @@
       "apps/web/workers/app.ts": 694,
       "mcp/src/tools.ts": 990,
       "packages/api/src/routes/admin.ts": 516,
-      "packages/core/src/domain/clubs.ts": 587,
+      "packages/core/src/domain/clubs.ts": 585,
       "packages/core/src/repositories/library.ts": 661,
       "packages/types/src/index.ts": 735
     },
     "tests": {
       "files": 70,
-      "cases": 371
+      "cases": 372
     },
     "comments": {
-      "lines": 5850,
-      "code": 72624,
-      "percentage": 7.45
+      "lines": 5852,
+      "code": 72639,
+      "percentage": 7.46
     }
   }
 }

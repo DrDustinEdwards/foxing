@@ -199,7 +199,6 @@ export const clubBooks = sqliteTable(
     bookId: cascadeFk("book_id", () => books.id),
     startedAt: ts("started_at"),
     finishedAt: ts("finished_at"),
-    isCurrent: bool("is_current").notNull().default(false),
   },
   (t) => [index("club_books_club_idx").on(t.clubId)],
 );
