@@ -190,6 +190,20 @@ describe("social API (web -> api -> core -> D1)", () => {
         and(eq(schema.notifications.userId, "alice"), eq(schema.notifications.type, "reaction")),
       );
     expect(aliceNotifs).toHaveLength(1);
+
+    // A private list answers like a missing one.
+    const hidden = await call("/lists", {
+      method: "POST",
+      user: "alice",
+      body: { title: "Hidden", isPublic: false },
+    });
+    const { list: priv } = (await hidden.json()) as { list: { id: string } };
+    const denied = await call("/reactions", {
+      method: "PUT",
+      user: "bob",
+      body: { targetType: "reading_list", targetId: priv.id, kind: "like" },
+    });
+    expect(denied.status).toBe(404);
   });
 
   it("a public list emits a list_created activity event; a private list does not", async () => {
