@@ -2,7 +2,7 @@
 // core event emitter; this repo is the read + mark-read surface the mobile client and
 // in-app UI use. Push delivery of these is gated in domain/push.ts.
 import { olderThan } from "@dustinedwards/site-runtime/d1";
-import { and, desc, eq, gt, inArray, lt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import type { Db } from "../db";
 import { notifications } from "../schema";
 
@@ -65,9 +65,4 @@ export async function listCreatedSince(db: Db, sinceMs: number): Promise<Notific
     .where(gt(notifications.createdAt, new Date(sinceMs)))
     .orderBy(desc(notifications.createdAt))
     .limit(500);
-}
-
-/** Delete notifications created before a cutoff (the nightly retention prune). */
-export async function pruneBefore(db: Db, cutoffMs: number): Promise<void> {
-  await db.delete(notifications).where(lt(notifications.createdAt, new Date(cutoffMs)));
 }

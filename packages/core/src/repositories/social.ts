@@ -300,7 +300,11 @@ export async function listActivityForUser(
     .limit(Math.min(opts.limit ?? 30, 100));
 }
 
-/** Delete activity events created before a cutoff (the nightly retention prune). */
-export async function pruneActivityBefore(db: Db, cutoffMs: number): Promise<void> {
-  await db.delete(activityEvents).where(lt(activityEvents.createdAt, new Date(cutoffMs)));
+/** The nightly retention prune: notifications and activity events older than a year, as for the sign-in events. */
+export async function pruneActivity(db: Db, now = Date.now()): Promise<void> {
+  const cutoff = new Date(now - 365 * 86_400_000);
+  await db.batch([
+    db.delete(activityEvents).where(lt(activityEvents.createdAt, cutoff)),
+    db.delete(notifications).where(lt(notifications.createdAt, cutoff)),
+  ]);
 }
