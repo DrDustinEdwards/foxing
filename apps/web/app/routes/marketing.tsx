@@ -21,7 +21,7 @@ import type { Route } from "./+types/marketing";
 // FAQ structured data (schema.org FAQPage). Restores the rich result the legacy
 // landing emitted. Availability is phrased for web-now, apps-coming-soon since the
 // mobile app is not shipping yet. Plus is described as Settings describes it: not open for sign-up
-// until it can be bought (CLAUDE.md rule 6), so no price or trial is stated here.
+// until it can be bought (CLAUDE.md rule 7), so no price or trial is stated here.
 const FAQ_SCHEMA = faqPage([
   {
     question: "Where can I read classic books for free?",

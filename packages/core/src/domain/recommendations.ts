@@ -11,6 +11,7 @@
 // Tiers 1+2 are pure data (rankCandidates); tier 3 is an overlay. The composition reads
 // in-process via the repos; the caller/KV are injected so this stays testable with a
 // stubbed model and a fake KV, no network and no binding.
+import { logEvent } from "@dustinedwards/site-runtime/log";
 import { UNTRUSTED_DATA_RULE, untrusted } from "@dustinedwards/site-runtime/anthropic";
 import { checkProse } from "@dustinedwards/site-runtime/prose";
 import { MODELS, estimateCostCents, reserveCents, type StructuredCaller } from "../companion";
@@ -452,14 +453,14 @@ export async function getRecommendations(
   const dataRanked = rankCandidates(candidates, signals, awardIds);
   const dataTop = dataRanked.slice(0, TARGET).map(toRec);
 
-  // Tier 3: Plus + key only. Any failure inside falls back to the data ranking silently.
+  // Tier 3: Plus + key only. Any failure inside is logged and falls back to the data ranking.
   if (isPlus && deps.caller) {
     try {
       const profilePrompt = buildProfilePrompt(favoriteGenres, finished, rated, signals);
       const ai = await aiOverlay(db, userId, deps, dataRanked, profilePrompt);
       if (ai && ai.length) return { recommendations: ai, aiPersonalized: true, isPlus };
-    } catch {
-      // fall through to the data ranking
+    } catch (err) {
+      logEvent("recommendations_ai_failed", { error: err }, { level: "error" }); // falls back to the data ranking
     }
   }
 

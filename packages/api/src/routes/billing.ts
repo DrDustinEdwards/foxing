@@ -24,6 +24,12 @@ billingRoutes.post("/billing/checkout", rateLimit("write"), async (c) => {
   const input = await parseJson(c, billingCheckoutInput);
   const { client, prices } = c.get("billing");
   const origin = new URL(c.req.url).origin;
+  // A second checkout would start a second subscription on the same customer.
+  if (
+    profile?.subscriptionTier === "plus" ||
+    ["active", "trialing", "past_due"].includes(profile?.subscriptionStatus ?? "")
+  )
+    throw errors.conflict("You already have a subscription. Manage it from the billing portal.");
 
   try {
     const { url } = await client.createCheckoutSession({
@@ -31,6 +37,7 @@ billingRoutes.post("/billing/checkout", rateLimit("write"), async (c) => {
       customerEmail: session.email,
       clientReferenceId: session.id,
       existingCustomerId: profile?.stripeCustomerId ?? null,
+      trial: !profile?.stripeCustomerId,
       successUrl: `${origin}/settings?billing=success`,
       cancelUrl: `${origin}/settings?billing=canceled`,
     });

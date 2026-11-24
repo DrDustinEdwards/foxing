@@ -3,6 +3,7 @@
 // Handlers stay thin: validate, call a core function, return.
 import { Hono } from "hono";
 import {
+  isUniqueViolation,
   onboardInput,
   onboardProfile,
   profilesRepo,
@@ -18,6 +19,11 @@ import { rateLimit } from "../middleware/rate-limit";
 import type { Env } from "../types";
 
 export const profileRoutes = new Hono<Env>();
+
+/** The loser of a username race hits the unique index: that is the same 409 as a name seen taken. */
+function usernameRace(err: unknown): never {
+  throw isUniqueViolation(err) ? errors.conflict("That username is taken.") : err;
+}
 
 // GET /me - the reader's account; profile is null until onboarding.
 profileRoutes.get("/me", (c) => {
@@ -38,7 +44,7 @@ profileRoutes.post("/me/onboard", rateLimit("write"), async (c) => {
   const input = await parseJson(c, onboardInput);
   const taken = await profilesRepo.getProfileByUsername(c.get("db"), input.username);
   if (taken) throw errors.conflict("That username is taken.");
-  const profile = await onboardProfile(c.get("db"), session.id, input);
+  const profile = await onboardProfile(c.get("db"), session.id, input).catch(usernameRace);
   return c.json({ profile: views.myProfile(profile) }, 201);
 });
 
@@ -70,7 +76,9 @@ profileRoutes.patch("/me/username", rateLimit("write"), async (c) => {
   const { username } = await parseJson(c, z.object({ username: usernameSchema }));
   const existing = await profilesRepo.getProfileByUsername(c.get("db"), username);
   if (existing && existing.id !== session.id) throw errors.conflict("That username is taken.");
-  const profile = await profilesRepo.updateUsername(c.get("db"), session.id, username);
+  const profile = await profilesRepo
+    .updateUsername(c.get("db"), session.id, username)
+    .catch(usernameRace);
   return c.json({ profile: profile && views.myProfile(profile) });
 });
 

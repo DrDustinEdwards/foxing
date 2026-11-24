@@ -51,6 +51,12 @@ async function requireModerator(
 // Clubs are free: no tier gate on creation. Everything below is membership/role
 // authorization, which is domain logic (Plus gates the AI companion, never clubs).
 
+async function requireClub(db: Db, clubId: string): Promise<clubsRepo.Club> {
+  const club = await clubsRepo.getClubById(db, clubId);
+  if (!club) throw domainErrors.notFound("Club not found.");
+  return club;
+}
+
 export async function createClub(
   db: Db,
   creatorId: string,
@@ -97,8 +103,7 @@ export async function updateClub(
 }
 
 export async function deleteClub(db: Db, actor: EventActor, clubId: string): Promise<void> {
-  const club = await clubsRepo.getClubById(db, clubId);
-  if (!club) throw domainErrors.notFound("Club not found.");
+  const club = await requireClub(db, clubId);
   // Only the creator (owner) may delete the club.
   if (club.creatorId !== actor.userId) {
     throw domainErrors.forbidden("Only the club creator can delete it.");
@@ -124,8 +129,7 @@ export async function joinClub(
   clubId: string,
   opts: { viaInvite?: boolean } = {},
 ): Promise<clubsRepo.ClubMember> {
-  const club = await clubsRepo.getClubById(db, clubId);
-  if (!club) throw domainErrors.notFound("Club not found.");
+  const club = await requireClub(db, clubId);
 
   const existing = await clubsRepo.getMembership(db, clubId, actor.userId);
   if (existing?.status === "active") return existing;
@@ -177,8 +181,7 @@ export async function joinByCode(
 }
 
 export async function leaveClub(db: Db, actor: EventActor, clubId: string): Promise<void> {
-  const club = await clubsRepo.getClubById(db, clubId);
-  if (!club) throw domainErrors.notFound("Club not found.");
+  const club = await requireClub(db, clubId);
   if (club.creatorId === actor.userId) {
     throw domainErrors.conflict("The creator cannot leave; delete or transfer the club instead.");
   }
@@ -196,8 +199,7 @@ export async function approveMember(
   targetUserId: string,
 ): Promise<clubsRepo.ClubMember> {
   await requireModerator(db, clubId, actor.userId);
-  const club = await clubsRepo.getClubById(db, clubId);
-  if (!club) throw domainErrors.notFound("Club not found.");
+  const club = await requireClub(db, clubId);
   const target = await clubsRepo.getMembership(db, clubId, targetUserId);
   if (!target || !membership.canApprove(target.status)) {
     throw domainErrors.conflict("No pending request for that user.");
@@ -330,8 +332,7 @@ export async function createThread(
   }
   // An announcement notifies and pushes every member, so only moderators may post one.
   if (input.type === "announcement") await requireModerator(db, clubId, actor.userId);
-  const club = await clubsRepo.getClubById(db, clubId);
-  if (!club) throw domainErrors.notFound("Club not found.");
+  const club = await requireClub(db, clubId);
 
   const thread = await clubsRepo.createThread(db, clubId, actor.userId, input);
   if (input.body) {
@@ -428,8 +429,7 @@ export async function createPoll(
   },
 ): Promise<clubsRepo.ClubPoll> {
   await requireActive(db, clubId, actor.userId);
-  const club = await clubsRepo.getClubById(db, clubId);
-  if (!club) throw domainErrors.notFound("Club not found.");
+  const club = await requireClub(db, clubId);
   const poll = await clubsRepo.createPoll(db, clubId, actor.userId, input);
   const recipientIds = await clubsRepo.listActiveMemberIds(db, clubId, actor.userId);
   await emit(db, "club.poll.created", actor, {
@@ -449,7 +449,8 @@ export async function votePoll(
 ): Promise<{ poll: clubsRepo.ClubPoll; clubId: string; live: LiveMessage }> {
   const poll = await clubsRepo.getPollById(db, pollId);
   if (!poll) throw domainErrors.notFound("Poll not found.");
-  if (poll.isClosed) throw domainErrors.conflict("This poll is closed.");
+  if (poll.isClosed || (poll.closesAt?.getTime() ?? Infinity) <= Date.now())
+    throw domainErrors.conflict("This poll is closed.");
   await requireActive(db, poll.clubId, actor.userId);
 
   const optionIds = new Set((poll.options ?? []).map((o) => o.id));
@@ -484,7 +485,7 @@ export async function closePoll(
 }> {
   const poll = await clubsRepo.getPollById(db, pollId);
   if (!poll) throw domainErrors.notFound("Poll not found.");
-  // The poll creator or a moderator may close it.
+  if (poll.isClosed) throw domainErrors.conflict("This poll is already closed.");
   if (poll.createdBy !== actor.userId) {
     await requireModerator(db, poll.clubId, actor.userId);
   } else {
@@ -524,8 +525,7 @@ export async function createMeeting(
   input: Parameters<typeof clubsRepo.createMeeting>[3],
 ): Promise<clubsRepo.ClubMeeting> {
   await requireActive(db, clubId, actor.userId);
-  const club = await clubsRepo.getClubById(db, clubId);
-  if (!club) throw domainErrors.notFound("Club not found.");
+  const club = await requireClub(db, clubId);
   const meeting = await clubsRepo.createMeeting(db, clubId, actor.userId, input);
   const recipientIds = await clubsRepo.listActiveMemberIds(db, clubId, actor.userId);
   await emit(db, "club.meeting.created", actor, {

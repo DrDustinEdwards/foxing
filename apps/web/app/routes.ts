@@ -108,7 +108,6 @@ export default [
     route("admin/notifications", "routes/admin-notifications.tsx"),
     route("admin/content", "routes/admin-content.tsx"),
     route("admin/analytics", "routes/admin-analytics.tsx"),
-    // Phase 4a TEMPORARY test surface. Remove once the reader hosts the companion.
   ]),
 
   // Liveness and backup age for uptime monitors (JSON, no-store, unauthenticated).

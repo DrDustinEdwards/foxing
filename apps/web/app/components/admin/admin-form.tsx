@@ -28,8 +28,7 @@ export function messageFrom(result: Result, fallback: string): string {
   return b?.detail ?? `${fallback} (${result.status}).`;
 }
 
-/** Drives one admin mutation: pending flag, visible error, and an onDone callback.
- *  Reloads the route on success by default so the list reflects the write. */
+/** Drives one admin mutation: pending flag, visible error, and an onDone callback. */
 export function useAdminAction(opts?: { onDone?: () => void }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -148,6 +147,7 @@ export function AdminButton({
   children,
   pending,
   variant = "default",
+  disabled,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   pending?: boolean;
@@ -156,10 +156,10 @@ export function AdminButton({
   return (
     <button
       type="button"
-      disabled={pending || props.disabled}
       className="cap-btn"
       data-variant={variant === "default" ? undefined : variant}
       {...props}
+      disabled={pending || disabled}
     >
       {children}
     </button>

@@ -352,6 +352,10 @@ export function MagicLinkForm({
       )
       .catch(() => null);
     setPending(false);
+    if (res === null) {
+      setRefusal("Could not send the link. Check your connection and try again.");
+      return;
+    }
     // The refusals to show are the ones about the site, never whether the address has an account:
     // the bot check, an address no mail reaches, and the link request turned off (no Turnstile
     // keys) or its counter down. Everything else gets

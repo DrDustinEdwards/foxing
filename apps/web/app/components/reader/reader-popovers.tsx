@@ -91,7 +91,6 @@ export function AttributionPopover({
   canvas,
   replies,
   revealed,
-  progressGateEnabled,
   shareableClubs,
   onReveal,
   onToggleLike,
@@ -103,7 +102,6 @@ export function AttributionPopover({
   canvas: { bg: string; text: string };
   replies: ReaderComment[];
   revealed: boolean;
-  progressGateEnabled: boolean;
   shareableClubs: { id: string; name: string }[];
   onReveal: () => void;
   onToggleLike: () => void;
@@ -122,7 +120,7 @@ export function AttributionPopover({
     `${replies.length}|${revealed}|${replyText}`,
   );
 
-  const gated = other.gate.spoiler || (progressGateEnabled && other.gate.ahead);
+  const gated = other.gate.spoiler || other.gate.ahead;
   const gateLabel = other.gate.spoiler ? "Contains spoilers" : "Ahead of where you are";
   const canReply = shareableClubs.length > 0;
 

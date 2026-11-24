@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { hmacSha256Hex } from "@dustinedwards/site-runtime/encoding";
+import { createStripeBilling } from "../src/billing/client";
 import {
   interpretStripeEvent,
   pickCurrentSubscription,
@@ -90,5 +92,29 @@ describe("pickCurrentSubscription", () => {
     const ended = [{ status: "canceled" }, { status: "incomplete_expired" }];
     expect(pickCurrentSubscription(ended)).toEqual({ status: "canceled" });
     expect(pickCurrentSubscription([])).toBeNull();
+  });
+});
+
+describe("verifyWebhook", () => {
+  const secret = "whsec_test";
+  const body = JSON.stringify({
+    id: "evt_1",
+    type: "invoice.payment_failed",
+    data: { object: { customer: "cus_1" } },
+  });
+  const client = createStripeBilling({ secretKey: "sk_test", webhookSecret: secret });
+  const header = async (t: number, payload = body) =>
+    `t=${t},v1=${await hmacSha256Hex(secret, `${t}.${payload}`)}`;
+  const now = () => Math.floor(Date.now() / 1000);
+
+  it("accepts a fresh signed event and rejects a tampered or stale one", async () => {
+    expect(await client.verifyWebhook(body, await header(now()))).toEqual({
+      id: "evt_1",
+      type: "invoice.payment_failed",
+      object: { customer: "cus_1" },
+    });
+    await expect(client.verifyWebhook(body + " ", await header(now()))).rejects.toThrow();
+    await expect(client.verifyWebhook(body, await header(now() - 600))).rejects.toThrow();
+    await expect(client.verifyWebhook(body, "")).rejects.toThrow();
   });
 });

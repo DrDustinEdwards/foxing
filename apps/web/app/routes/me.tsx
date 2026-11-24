@@ -84,11 +84,11 @@ export default function Me({ loaderData }: Route.ComponentProps) {
         <section className="cap-card cap-stack fx-me-card" data-gap="6">
           <dl className="cap-text fx-me-grid" data-align="center">
             {statTiles.map((tile) => (
-              <div key={tile.label} className="cap-stack" data-gap="1">
+              <div key={tile.label} className="cap-stack fx-flip" data-gap="1">
+                <dt className="fx-me-caps">{tile.label}</dt>
                 <dd className="cap-title" data-size="3">
                   {tile.value}
                 </dd>
-                <dt className="fx-me-caps">{tile.label}</dt>
               </div>
             ))}
           </dl>

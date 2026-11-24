@@ -216,11 +216,11 @@ function AccountPanel({
 
       <dl className="fx-acct-stats">
         {stats.map((stat) => (
-          <div key={stat.label} className="cap-stack" data-gap="1">
+          <div key={stat.label} className="cap-stack fx-flip" data-gap="1">
+            <dt>{stat.label}</dt>
             <dd className="cap-title" data-size="4">
               {stat.value}
             </dd>
-            <dt>{stat.label}</dt>
           </div>
         ))}
       </dl>

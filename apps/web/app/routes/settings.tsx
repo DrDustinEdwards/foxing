@@ -71,7 +71,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     bio: profile.bio ?? "",
     favoriteGenres: (profile.favoriteGenres ?? []).join(", "),
     tier: isPlus ? ("plus" as const) : ("free" as const),
-    // Plus is offered only once it can be bought (CLAUDE.md rule 6).
+    // Plus is offered only once it can be bought (CLAUDE.md rule 7).
     canUpgrade: !isPlus && billing.stripeSettings(env) !== null,
     subscriptionStatus: profile.subscriptionStatus,
     periodEndLabel: profile.subscriptionPeriodEnd

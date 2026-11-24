@@ -1,11 +1,6 @@
-// Admin surface. Callers are a signed-in admin (cookie session) or the admin MCP
-// Worker (operator bearer naming the acting admin, middleware/operator.ts); both pass
-// the same requireAdmin check. Reads wrap adminRepo and page with limit and offset.
-// Every mutation is gated on the admin list (ADMIN_EMAIL and CO_OWNER_EMAILS) and wrapped in an admin_audit_log entry
-// (actor + source ip, plus via: "operator" for bearer calls). Every write returns a
-// plain result; the admin UI surfaces a visible error on non-2xx. Role and permission
-// changes (suspend, tier) are preview then perform; see below. Who is an admin is the
-// ADMIN_EMAIL and CO_OWNER_EMAILS setting alone, so no route grants or revokes it.
+// Admin surface, for a signed-in admin or the admin MCP Worker (operator bearer, middleware/operator.ts): both pass
+// requireAdmin, every mutation writes an admin_audit_log entry, and suspend and tier changes are preview then
+// perform. Who is an admin is the ADMIN_EMAIL and CO_OWNER_EMAILS setting alone.
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
 import {
   adminRepo,
@@ -32,8 +27,7 @@ import type { Env, SessionUser } from "../types";
 
 export const adminRoutes = new Hono<Env>();
 
-// Session + admin list gate. profileMw already blocks a suspended account's writes;
-// this also keeps a suspended admin out of the admin reads.
+// Session + admin list gate; also keeps a suspended admin out of the reads (profileMw blocks their writes).
 function requireAdmin(c: Context<Env>): SessionUser {
   const session = requireSession(c);
   const profile = c.get("profile");
@@ -42,8 +36,7 @@ function requireAdmin(c: Context<Env>): SessionUser {
   return session;
 }
 
-// Record every admin write. Called after the mutation commits so the log reflects
-// applied changes only.
+// Record every admin write, after the mutation commits, so the log shows applied changes only.
 async function audit(c: Context<Env>, action: string, params: Record<string, unknown>) {
   await adminRepo.writeAuditLog(c.get("db"), {
     action,
@@ -341,6 +334,9 @@ adminRoutes.delete("/admin/users/:id", rateLimit("write"), async (c) => {
       [{ path: "id", message: "Delete your own account from settings." }],
       "Delete your own account from settings.",
     );
+  const target = await adminRepo.getUserDetail(c.get("db"), id, c.env);
+  if (!target) throw errors.notFound("No user with that id.");
+  if (target.isAdmin) throw errors.forbidden("An admin account cannot be deleted from here.");
   await deleteAccount(c.get("db"), id);
   await audit(c, "user.delete", { id });
   return c.json({ ok: true });
@@ -356,11 +352,15 @@ const bookMetaInput = z.object({
   subjects: z.array(z.enum(catalogRepo.GENRE_SLUGS)).nullable().optional(),
 });
 
+function found(changed: boolean) {
+  if (!changed) throw errors.notFound("Nothing with that id.");
+}
+
 adminRoutes.patch("/admin/books/:id", rateLimit("write"), async (c) => {
   requireAdmin(c);
   const id = c.req.param("id");
   const patch = await parseJson(c, bookMetaInput);
-  await adminRepo.updateBookAdmin(c.get("db"), id, patch);
+  found(await adminRepo.updateBookAdmin(c.get("db"), id, patch));
   await audit(c, "book.update", { id, fields: Object.keys(patch) });
   return c.json({ ok: true });
 });
@@ -372,7 +372,7 @@ adminRoutes.post("/admin/books/:id/staff-pick", rateLimit("write"), async (c) =>
     c,
     z.object({ on: z.boolean(), note: z.string().max(500).nullable().optional() }),
   );
-  await adminRepo.setBookStaffPick(c.get("db"), id, on, note ?? null);
+  found(await adminRepo.setBookStaffPick(c.get("db"), id, on, note ?? null));
   await audit(c, on ? "book.feature" : "book.unfeature", { id });
   return c.json({ ok: true });
 });
@@ -400,7 +400,7 @@ adminRoutes.patch("/admin/botm/:id", rateLimit("write"), async (c) => {
   requireAdmin(c);
   const id = c.req.param("id");
   const input = await parseJson(c, botmInput.partial());
-  await adminRepo.updateBotm(c.get("db"), id, input);
+  found(await adminRepo.updateBotm(c.get("db"), id, input));
   await audit(c, "botm.update", { id });
   return c.json({ ok: true });
 });
@@ -409,7 +409,7 @@ adminRoutes.post("/admin/botm/:id/publish", rateLimit("write"), async (c) => {
   requireAdmin(c);
   const id = c.req.param("id");
   const { on } = await parseJson(c, onOff);
-  await adminRepo.setBotmPublished(c.get("db"), id, on);
+  found(await adminRepo.setBotmPublished(c.get("db"), id, on));
   await audit(c, on ? "botm.publish" : "botm.unpublish", { id });
   return c.json({ ok: true });
 });
@@ -417,7 +417,7 @@ adminRoutes.post("/admin/botm/:id/publish", rateLimit("write"), async (c) => {
 adminRoutes.delete("/admin/botm/:id", rateLimit("write"), async (c) => {
   requireAdmin(c);
   const id = c.req.param("id");
-  await adminRepo.deleteBotm(c.get("db"), id);
+  found(await adminRepo.deleteBotm(c.get("db"), id));
   await audit(c, "botm.delete", { id });
   return c.json({ ok: true });
 });
@@ -426,7 +426,7 @@ adminRoutes.post("/admin/picks/:id/publish", rateLimit("write"), async (c) => {
   requireAdmin(c);
   const id = c.req.param("id");
   const { on } = await parseJson(c, onOff);
-  await adminRepo.setPickPublished(c.get("db"), id, on);
+  found(await adminRepo.setPickPublished(c.get("db"), id, on));
   await audit(c, on ? "pick.publish" : "pick.unpublish", { id });
   return c.json({ ok: true });
 });
@@ -442,7 +442,7 @@ adminRoutes.patch("/admin/picks/:id", rateLimit("write"), async (c) => {
       category: z.string().max(200).nullable().optional(),
     }),
   );
-  await adminRepo.updatePick(c.get("db"), id, patch);
+  found(await adminRepo.updatePick(c.get("db"), id, patch));
   await audit(c, "pick.update", { id });
   return c.json({ ok: true });
 });
@@ -451,7 +451,7 @@ adminRoutes.post("/admin/clubs/:id/verify", rateLimit("write"), async (c) => {
   const admin = requireAdmin(c);
   const id = c.req.param("id");
   const { on } = await parseJson(c, onOff);
-  await adminRepo.setClubVerified(c.get("db"), id, on, admin.id);
+  found(await adminRepo.setClubVerified(c.get("db"), id, on, admin.id));
   await audit(c, on ? "club.verify" : "club.unverify", { id });
   return c.json({ ok: true });
 });
@@ -459,7 +459,7 @@ adminRoutes.post("/admin/clubs/:id/verify", rateLimit("write"), async (c) => {
 adminRoutes.delete("/admin/clubs/:id", rateLimit("write"), async (c) => {
   requireAdmin(c);
   const id = c.req.param("id");
-  await adminRepo.deleteClubAdmin(c.get("db"), id);
+  found(await adminRepo.deleteClubAdmin(c.get("db"), id));
   await audit(c, "club.delete", { id });
   return c.json({ ok: true });
 });

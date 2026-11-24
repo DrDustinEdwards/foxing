@@ -45,11 +45,11 @@ export function StatsView({ data, notice }: { data: StatsData; notice?: ReactNod
 
         <dl className="fx-stats-grid">
           {tiles.map((tile) => (
-            <div key={tile.label} className="cap-card">
+            <div key={tile.label} className="cap-card fx-flip">
+              <dt className="fx-stats-caps">{tile.label}</dt>
               <dd className="cap-title" data-size="2">
                 {formatNumber(tile.value)}
               </dd>
-              <dt className="fx-stats-caps">{tile.label}</dt>
             </div>
           ))}
         </dl>

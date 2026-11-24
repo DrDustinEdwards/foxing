@@ -50,8 +50,10 @@ export async function getOrCreateThread(
   const [row] = await db
     .insert(companionThreads)
     .values({ userId, bookId, mode: mode ?? null })
+    .onConflictDoNothing()
     .returning();
-  return row;
+  // A concurrent first message created it (unique user, book): use that thread.
+  return row ?? (await findThread(db, userId, bookId))!;
 }
 
 /** Recent messages in a thread, oldest first, for context assembly. */

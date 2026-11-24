@@ -1,6 +1,5 @@
 /**
- * The tools. Ruling mcp-2026-10-10 and capsid/research/design-mcp-servers.md
- * section 5 (Foxing Admin).
+ * The tools. Ruling mcp-2026-10-10 and capsid/research/design-mcp-servers.md section 5 (Foxing Admin).
  *
  * WHOLE JOBS, NOT ENDPOINT MIRRORS (rule 4). Each tool finishes a job, and every
  * step of it is one authenticated request to /api/v1/admin, which owns every
@@ -12,15 +11,13 @@
  * preview-then-perform step for a suspension (packages/api/src/admin-confirm.ts), so the tool passes that step through
  * and its token is the API's, not this server's.
  *
- * ONLY TOOLS THE API OFFERS. This server adds no route of its own, so a design
- * tool whose API route does not exist yet is not here:
+ * ONLY TOOLS THE API OFFERS. This server adds no route of its own, so a design tool without one is not here:
  * - foxing_read_errors (no error or log read in the API),
  * - foxing_award_badge (no badge route),
  * - foxing_run_task (the one task route, /ops/companion-cache-batch, is outside
  *   /admin and takes no operator bearer),
  * - foxing_stage_tier_change: a tier change stays in the app for Dustin (tier and award decisions are his).
- * create_journal_post is dropped for good: Carrel owns writing (rule 11). Book
- * of the Month delete stays in the admin screen.
+ * Carrel owns writing (rule 11), and Book of the Month delete stays in the admin screen.
  *
  * EVERY CALL GOES THROUGH site-runtime's invokeTool (mcp-handler.ts), which
  * proves the caller owns what the tool names (rule 12.1), checks the scope each
@@ -525,7 +522,10 @@ export const TOOLS: ToolDefinition[] = [
         description: z.string().max(20000).nullable().optional(),
         publication_year: z.number().int().nullable().optional(),
         publisher: z.string().max(500).nullable().optional(),
-        subjects: z.array(z.string()).nullable().optional(),
+        subjects: z
+          .array(z.string().regex(/^[a-z-]{1,40}$/))
+          .nullable()
+          .optional(),
         staff_pick: z
           .strictObject({
             on: z.boolean().describe("true features the book as a staff pick, false removes it."),

@@ -71,12 +71,19 @@ function hhmmToMinutes(hhmm: string): number {
 /** Local minutes-since-midnight in the given IANA timezone, from a UTC epoch ms. Uses
  *  Intl (available in Workers); no tz database bundled. */
 export function localMinutes(nowUtcMs: number, timezone: string): number {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: timezone,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(new Date(nowUtcMs));
+  const format = (timeZone: string) =>
+    new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  let parts;
+  try {
+    parts = format(timezone).formatToParts(new Date(nowUtcMs));
+  } catch {
+    parts = format("UTC").formatToParts(new Date(nowUtcMs)); // a stored zone Intl does not know
+  }
   const h = Number(parts.find((p) => p.type === "hour")?.value ?? "0") % 24;
   const m = Number(parts.find((p) => p.type === "minute")?.value ?? "0");
   return h * 60 + m;

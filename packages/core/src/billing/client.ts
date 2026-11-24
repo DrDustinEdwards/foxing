@@ -1,9 +1,8 @@
-// The one file that touches the Stripe SDK. API routes depend on the BillingClient
-// interface (dependency-injected, same pattern as CompanionCaller): the Worker builds
-// the real Stripe-backed client from its secrets; tests inject a stub with no network
-// call and no key. Configured for Workers (fetch HTTP client + SubtleCrypto webhook
-// verification, since Workers has no synchronous crypto).
-import Stripe from "stripe";
+// The one file that talks to Stripe, with fetch and SubtleCrypto: the SDK's resource classes were 238 KB of the
+// Worker for four calls. API routes depend on the BillingClient interface (dependency-injected, same pattern as
+// CompanionCaller): the Worker builds the real client from its secrets; tests inject a stub with no network call.
+import { hmacSha256Hex } from "@dustinedwards/site-runtime/encoding";
+import { safeEqual } from "@dustinedwards/site-runtime/compare";
 import { TRIAL_DAYS } from "./config";
 import { pickCurrentSubscription } from "./webhook";
 
@@ -13,6 +12,8 @@ export type BillingCheckoutArgs = {
   /** The Foxing user id; surfaces on checkout.session.completed to link user<->customer. */
   clientReferenceId: string;
   existingCustomerId: string | null;
+  /** The free trial applies only to a reader who has never subscribed. */
+  trial: boolean;
   successUrl: string;
   cancelUrl: string;
 };
@@ -37,7 +38,7 @@ export interface BillingClient {
   getCurrentSubscription(customerId: string): Promise<BillingSubscriptionLite | null>;
 }
 
-/** The Stripe API version every request is made with. Pinned, so an SDK upgrade never changes
+/** The Stripe API version every request is made with. Pinned, so Stripe never changes
  *  it silently (https://docs.stripe.com/sdks/set-version). Foxhound pins the same version.
  *  The webhook endpoint in the Stripe Dashboard must use this version too, since an
  *  endpoint's version decides the shape of the events it receives
@@ -70,41 +71,61 @@ export function notConfiguredBilling(): BillingClient {
   };
 }
 
-/** Reads current_period_end without depending on a specific Stripe apiVersion, where the
- *  field has moved between the subscription and its items across versions. */
-function readPeriodEnd(sub: Stripe.Subscription): number | null {
-  const top = (sub as unknown as { current_period_end?: number }).current_period_end;
-  if (typeof top === "number") return top;
-  const item = sub.items?.data?.[0] as unknown as { current_period_end?: number } | undefined;
-  return typeof item?.current_period_end === "number" ? item.current_period_end : null;
-}
+type StripeSubscription = {
+  status: string;
+  customer: string | { id: string };
+  current_period_end?: number;
+  items?: { data?: { current_period_end?: number }[] };
+};
 
-function lite(sub: Stripe.Subscription): BillingSubscriptionLite {
+function lite(sub: StripeSubscription): BillingSubscriptionLite {
+  const end = sub.current_period_end ?? sub.items?.data?.[0]?.current_period_end;
   return {
     status: sub.status,
-    currentPeriodEnd: readPeriodEnd(sub),
+    currentPeriodEnd: typeof end === "number" ? end : null,
     customerId: typeof sub.customer === "string" ? sub.customer : sub.customer.id,
   };
 }
 
+const WEBHOOK_TOLERANCE_SECONDS = 300;
+
+function formFields(value: unknown, key: string, out: URLSearchParams) {
+  if (value === undefined) return;
+  if (value !== null && typeof value === "object") {
+    for (const [k, v] of Object.entries(value)) formFields(v, `${key}[${k}]`, out);
+  } else out.append(key, String(value));
+}
+
 export function createStripeBilling(config: StripeBillingConfig): BillingClient {
-  const stripe = new Stripe(config.secretKey, {
-    apiVersion: STRIPE_API_VERSION,
-    httpClient: Stripe.createFetchHttpClient(),
-    // Two automatic retries with backoff (the SDK adds idempotency keys where safe), and a
-    // timeout well under a Worker request's budget (SDK defaults: 1 retry, 80 s).
-    maxNetworkRetries: 2,
-    timeout: 20_000,
-    appInfo: { name: "Foxing" },
-  });
-  const cryptoProvider = Stripe.createSubtleCryptoProvider();
+  async function call<T>(
+    method: "GET" | "POST",
+    path: string,
+    params: Record<string, unknown>,
+  ): Promise<T> {
+    const fields = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) formFields(v, k, fields);
+    const init = {
+      method,
+      headers: {
+        authorization: `Bearer ${config.secretKey}`,
+        "stripe-version": STRIPE_API_VERSION,
+      },
+      signal: AbortSignal.timeout(20_000),
+    };
+    const res =
+      method === "GET"
+        ? await fetch(`https://api.stripe.com/v1/${path}?${fields}`, init)
+        : await fetch(`https://api.stripe.com/v1/${path}`, { ...init, body: fields });
+    if (!res.ok) throw new Error(`Stripe ${method} ${path} answered ${res.status}.`);
+    return (await res.json()) as T;
+  }
 
   return {
     async createCheckoutSession(a) {
-      const session = await stripe.checkout.sessions.create({
+      const session = await call<{ url?: string }>("POST", "checkout/sessions", {
         mode: "subscription",
         line_items: [{ price: a.priceId, quantity: 1 }],
-        subscription_data: { trial_period_days: TRIAL_DAYS },
+        ...(a.trial ? { subscription_data: { trial_period_days: TRIAL_DAYS } } : {}),
         client_reference_id: a.clientReferenceId,
         ...(a.existingCustomerId
           ? { customer: a.existingCustomerId }
@@ -117,36 +138,44 @@ export function createStripeBilling(config: StripeBillingConfig): BillingClient 
     },
 
     async createPortalSession(a) {
-      const session = await stripe.billingPortal.sessions.create({
+      const session = await call<{ url: string }>("POST", "billing_portal/sessions", {
         customer: a.customerId,
         return_url: a.returnUrl,
       });
       return { url: session.url };
     },
 
+    // Stripe-Signature: t=<seconds>,v1=<hex HMAC-SHA256 of "<t>.<body>">, one v1 per secret in rotation.
     async verifyWebhook(payload, signature) {
-      const event = await stripe.webhooks.constructEventAsync(
-        payload,
-        signature,
-        config.webhookSecret,
-        undefined,
-        cryptoProvider,
-      );
-      return {
-        id: event.id,
-        type: event.type,
-        object: event.data.object as unknown as Record<string, unknown>,
+      const parts = signature.split(",").map((p) => p.split("=") as [string, string]);
+      const t = parts.find(([k]) => k === "t")?.[1] ?? "";
+      const expected = await hmacSha256Hex(config.webhookSecret, `${t}.${payload}`);
+      let ok = false;
+      for (const [k, v] of parts) if (k === "v1" && (await safeEqual(v, expected))) ok = true;
+      if (!ok || Math.abs(Date.now() / 1000 - Number(t)) > WEBHOOK_TOLERANCE_SECONDS)
+        throw new Error("Stripe webhook signature is not valid.");
+      const event = JSON.parse(payload) as {
+        id: string;
+        type: string;
+        data: { object: Record<string, unknown> };
       };
+      return { id: event.id, type: event.type, object: event.data.object };
     },
 
     async getSubscription(subscriptionId) {
-      return lite(await stripe.subscriptions.retrieve(subscriptionId));
+      return lite(
+        await call<StripeSubscription>(
+          "GET",
+          `subscriptions/${encodeURIComponent(subscriptionId)}`,
+          {},
+        ),
+      );
     },
 
     async getCurrentSubscription(customerId) {
       // Newest first. Resolving by customer, not by the event's subscription, keeps a late
       // event for an old subscription from downgrading someone who has since resubscribed.
-      const { data } = await stripe.subscriptions.list({
+      const { data } = await call<{ data: StripeSubscription[] }>("GET", "subscriptions", {
         customer: customerId,
         status: "all",
         limit: 10,

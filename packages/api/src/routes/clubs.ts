@@ -223,7 +223,7 @@ clubRoutes.post("/threads/:id/posts", rateLimit("write"), async (c) => {
 
 clubRoutes.delete("/posts/:id", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
-  const { reason } = await parseJson(c, removePostInput).catch(() => ({ reason: undefined }));
+  const { reason } = await parseOptionalJson(c, removePostInput);
   const { post, clubId, live } = await clubsDomain.removePost(
     c.get("db"),
     actor,

@@ -17,7 +17,8 @@ export function useBookAnnotations<S extends W.ReaderAnnotations | undefined = u
   return useSeededQuery(
     {
       queryKey: keys.annotations(bookId),
-      queryFn: () => api.get<W.ReaderAnnotations>(`/books/${bookId}/annotations`),
+      queryFn: () =>
+        api.get<W.ReaderAnnotations>(`/books/${encodeURIComponent(bookId)}/annotations`),
     },
     seed,
   );
@@ -29,7 +30,7 @@ export function useReaderPage(idOrSlug: string) {
   const api = useApi();
   return useQuery({
     queryKey: keys.readerPage(idOrSlug),
-    queryFn: () => api.get<W.ReaderPage>(`/books/${idOrSlug}/reader`),
+    queryFn: () => api.get<W.ReaderPage>(`/books/${encodeURIComponent(idOrSlug)}/reader`),
     staleTime: Number.POSITIVE_INFINITY,
   });
 }

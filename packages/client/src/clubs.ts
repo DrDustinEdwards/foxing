@@ -52,7 +52,7 @@ export function useThreadPage<S extends W.ThreadPage | undefined = undefined>(
   return useSeededQuery(
     {
       queryKey: keys.thread(threadId),
-      queryFn: () => api.get<W.ThreadPage>(`/threads/${threadId}`),
+      queryFn: () => api.get<W.ThreadPage>(`/threads/${encodeURIComponent(threadId)}`),
     },
     seed,
   );

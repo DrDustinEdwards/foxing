@@ -16,6 +16,8 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   if (!tag) throw redirect("/journal/archive");
   const page = parsePage(new URL(request.url).searchParams.get("page"));
   const result = await catalogRepo.listPostsByTag(db, tag, { page });
+  // The tag is free text from the URL: an empty one is a 404, not a thin indexable page.
+  if (result.total === 0) throw new Response("Not found", { status: 404 });
   return { tag, result };
 }
 

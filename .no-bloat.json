@@ -28,7 +28,7 @@
       "apps/web/app/components/reader/reader-panels.tsx": 504,
       "apps/web/app/components/reader/reader-view.tsx": 708,
       "apps/web/app/components/settings/account-sections.tsx": 807,
-      "apps/web/app/lib/carrel/journal-adapter.server.ts": 836,
+      "apps/web/app/lib/carrel/journal-adapter.server.ts": 831,
       "apps/web/app/styles/reader.css": 589,
       "apps/web/app/styles/social.css": 652,
       "apps/web/workers/app.ts": 694,
@@ -40,7 +40,7 @@
     },
     "tests": {
       "files": 70,
-      "cases": 370
+      "cases": 371
     },
     "comments": {
       "lines": 5877,

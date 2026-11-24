@@ -111,7 +111,10 @@ export function useMyLists<S extends W.MyList[] | undefined = undefined>(seed?: 
 export function useListPage<S extends W.ListPage | undefined = undefined>(id: string, seed?: S) {
   const api = useApi();
   return useSeededQuery(
-    { queryKey: keys.list(id), queryFn: () => api.get<W.ListPage>(`/lists/${id}`) },
+    {
+      queryKey: keys.list(id),
+      queryFn: () => api.get<W.ListPage>(`/lists/${encodeURIComponent(id)}`),
+    },
     seed,
   );
 }
@@ -232,7 +235,7 @@ export function useCreateList() {
 export function useUpdateList() {
   const api = useApi();
   return useWrite<ListInput & { id: string }>({
-    write: ({ id, ...input }) => api.patch(`/lists/${id}`, input),
+    write: ({ id, ...input }) => api.patch(`/lists/${encodeURIComponent(id)}`, input),
     optimistic: ({ id, ...input }) => [
       patch<W.ListPage>(keys.list(id), (l) => ({ ...l, list: { ...l.list, ...input } })),
     ],
@@ -243,7 +246,7 @@ export function useUpdateList() {
 export function useDeleteList() {
   const api = useApi();
   return useWrite<{ id: string }>({
-    write: ({ id }) => api.delete(`/lists/${id}`),
+    write: ({ id }) => api.delete(`/lists/${encodeURIComponent(id)}`),
     optimistic: ({ id }) => [
       patch<W.MyList[]>(keys.myLists, (ls) => ls.filter((l) => l.id !== id)),
     ],
