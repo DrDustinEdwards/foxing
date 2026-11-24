@@ -9,9 +9,9 @@
       "files": 2
     },
     "jscpd": {
-      "clones": 109,
-      "lines": 1138,
-      "percentage": 1.36,
+      "clones": 108,
+      "lines": 1131,
+      "percentage": 1.35,
       "unread": 0
     },
     "shared copies": {
