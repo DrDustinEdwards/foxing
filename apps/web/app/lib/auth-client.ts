@@ -1,6 +1,9 @@
 // Browser auth client: the family sign-in's plugins (site-runtime ./sign-in-client, the magic
 // link and passkeys). baseURL defaults to the current origin.
-import { signInAgainIfStale as signInAgain, signInClientPlugins } from "@dustinedwards/site-runtime/sign-in-client";
+import {
+  signInAgainIfStale as signInAgain,
+  signInClientPlugins,
+} from "@dustinedwards/site-runtime/sign-in-client";
 import { createAuthClient } from "better-auth/react";
 import { signInHref } from "./sign-in-path";
 
