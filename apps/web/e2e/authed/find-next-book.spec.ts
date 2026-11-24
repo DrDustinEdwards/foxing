@@ -9,7 +9,7 @@ test.describe("find next book (signed in)", () => {
   test("renders recommended books, each with a reason", async ({ page }) => {
     await page.goto("/find-next-book", { waitUntil: "networkidle" });
     await expect(page.getByRole("heading", { name: /find your next book/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /^refresh$/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^refresh$/i })).toBeVisible();
 
     // The catalog has readable candidates, so the grid renders books with reason lines.
     const reasons = page.getByTestId("rec-reason");
