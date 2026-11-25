@@ -13,10 +13,10 @@ import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/diary";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export function meta() {
-  return noindexMeta("Your diary | Foxing");
+  return noindexPageMeta("Your diary | Foxing");
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {

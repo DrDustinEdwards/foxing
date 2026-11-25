@@ -10,12 +10,12 @@ import {
 } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
 import type { Route } from "./+types/signup";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export const headers = () => PRIVATE_PAGE_HEADERS;
 
 export function meta() {
-  return noindexMeta("Create your Foxing account");
+  return noindexPageMeta("Create your Foxing account");
 }
 
 export function loader({ context }: Route.LoaderArgs) {

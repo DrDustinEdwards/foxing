@@ -14,7 +14,7 @@ import {
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-content";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -24,7 +24,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return noindexMeta("Admin · Content | Foxing");
+  return noindexPageMeta("Admin · Content | Foxing");
 }
 
 const PLACEMENTS = ["banner", "home", "journal"] as const;

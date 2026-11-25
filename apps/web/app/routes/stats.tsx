@@ -3,10 +3,10 @@ import { StatsView } from "~/components/reading/stats-view";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/stats";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export function meta() {
-  return noindexMeta("Reading stats | Foxing");
+  return noindexPageMeta("Reading stats | Foxing");
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {

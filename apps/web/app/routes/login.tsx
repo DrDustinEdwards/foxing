@@ -13,12 +13,12 @@ import {
 } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
 import type { Route } from "./+types/login";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export const headers = () => PRIVATE_PAGE_HEADERS;
 
 export function meta() {
-  return noindexMeta("Sign in to Foxing");
+  return noindexPageMeta("Sign in to Foxing");
 }
 
 export function loader({ context, request }: Route.LoaderArgs) {

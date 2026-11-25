@@ -11,10 +11,10 @@ import { cloudflareContext } from "~/context";
 import { getAuth, sessionUserFromRequest } from "~/lib/auth.server";
 import { linkPageHeaders, redirectOrLimited } from "~/lib/link-confirm.server";
 import type { Route } from "./+types/sign-in-confirm";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export function meta() {
-  return noindexMeta("Sign in to Foxing");
+  return noindexPageMeta("Sign in to Foxing");
 }
 
 export const headers = linkPageHeaders;

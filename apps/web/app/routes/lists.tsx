@@ -7,12 +7,12 @@ import { Container, EmptyState, EntityCard, FilterTab, PageHeader } from "~/comp
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/lists";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 type ListFilter = "all" | "public" | "private";
 
 export function meta() {
-  return noindexMeta("Your lists | Foxing");
+  return noindexPageMeta("Your lists | Foxing");
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {

@@ -24,7 +24,7 @@ import { cloudflareContext } from "~/context";
 import { loadLibraryData } from "~/lib/library.server";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/library";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 const STATUS_TABS: { value: ShelfStatus; label: string }[] = [
   { value: "reading", label: "Reading" },
@@ -49,7 +49,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return noindexMeta("Your library | Foxing");
+  return noindexPageMeta("Your library | Foxing");
 }
 
 export default function Library({ loaderData }: Route.ComponentProps) {

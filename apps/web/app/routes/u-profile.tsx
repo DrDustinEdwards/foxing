@@ -13,7 +13,7 @@ import { Avatar, Container, EmptyState, TagPill } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { sessionUserFromRequest } from "~/lib/auth.server";
 import { jsonLd } from "@drdustinedwards/site-helpers/schema";
-import { absoluteUrl, buildMeta, noindexMeta } from "~/lib/seo";
+import { absoluteUrl, buildMeta, noindexPageMeta } from "~/lib/seo";
 import type { Route } from "./+types/u-profile";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
@@ -27,7 +27,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
   const data = loaderData?.page;
-  if (!data) return noindexMeta("Reader | Foxing");
+  if (!data) return noindexPageMeta("Reader | Foxing");
   const { username, displayName, avatarUrl } = data.profile;
   const name = displayName ?? username;
   const bio = data.isPrivate ? null : data.profile.bio;

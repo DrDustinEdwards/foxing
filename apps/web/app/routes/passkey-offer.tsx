@@ -10,11 +10,11 @@ import { authClient, signInAgainIfStale } from "~/lib/auth-client";
 import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
 import { getAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/passkey-offer";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 import { signInFrom } from "~/lib/sign-in-path";
 
 export function meta() {
-  return noindexMeta("Create a passkey | Foxing");
+  return noindexPageMeta("Create a passkey | Foxing");
 }
 
 async function signedIn({ context, request }: Route.LoaderArgs | Route.ActionArgs) {

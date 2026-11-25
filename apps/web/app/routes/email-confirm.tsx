@@ -13,10 +13,10 @@ import { cloudflareContext } from "~/context";
 import { getAuth, sessionUserFromRequest } from "~/lib/auth.server";
 import { linkPageHeaders, redirectOrLimited } from "~/lib/link-confirm.server";
 import type { Route } from "./+types/email-confirm";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export function meta() {
-  return noindexMeta("Confirm your email change | Foxing");
+  return noindexPageMeta("Confirm your email change | Foxing");
 }
 
 export const headers = linkPageHeaders;
