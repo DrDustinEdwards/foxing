@@ -68,8 +68,8 @@ const SECTIONS: LegalSection[] = [
     body: (
       <p>
         When you use the AI reading companion, the passage you select and the book's metadata are
-        sent to our AI provider, Anthropic, to generate a response. The provider does not train its models on
-        your data per its API terms, and nothing else is sent.
+        sent to our AI provider, Anthropic, to generate a response. The provider does not train its
+        models on your data per its API terms, and nothing else is sent.
       </p>
     ),
   },
