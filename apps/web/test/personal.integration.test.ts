@@ -10,8 +10,11 @@ import { callApi, seedUser, testApi } from "./test-api";
 
 const api = testApi();
 
-const call = (path: string, user: string, req?: Omit<NonNullable<Parameters<typeof callApi>[2]>, "user">) =>
-  callApi(api, path, { ...req, user });
+const call = (
+  path: string,
+  user: string,
+  req?: Omit<NonNullable<Parameters<typeof callApi>[2]>, "user">,
+) => callApi(api, path, { ...req, user });
 
 describe("reading goal edit", () => {
   beforeEach(async () => {
