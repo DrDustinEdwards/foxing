@@ -1,9 +1,4 @@
-// Find next book (auth-gated, noindex): a tiered recommendation grid. Reads run
-// in-process via core (loadRecommendations); the Want-to-read write per book goes to
-// /api/v1 through BookStatusControl (visible pending + role=alert error). Free readers
-// get data-driven picks, with a subtle upgrade affordance once Plus can be bought (billing
-// configured); Plus readers get AI-personalised reasons. Refresh busts the AI cache
-// (rate-limited in core).
+// Find next book (auth-gated, noindex): free readers get data-driven picks, Plus readers AI reasons; Refresh busts the AI cache (rate-limited in core).
 import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-path";
 import { useState } from "react";
 import { Link } from "capsomer/react/link";
@@ -28,7 +23,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user } = await requireProfile(env, request);
   const { recommendations, isPlus } = await loadRecommendations(env, user.id);
-  // No upgrade is offered while Plus cannot be bought (CLAUDE.md rule 7).
   const canUpgrade = !isPlus && billing.stripeSettings(env) !== null;
   return { recommendations, canUpgrade };
 }
@@ -132,5 +126,4 @@ function RecCard({ rec }: { rec: Recommendation }) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

@@ -1,5 +1,4 @@
-// The Workers runtime exposes caches.default (the zone cache), which the ambient DOM
-// CacheStorage type does not model. One typed accessor keeps the cast in a single place.
+// caches.default (the zone cache) is not in the ambient CacheStorage type; one typed accessor keeps the cast in a place.
 export function edgeCache(): Cache {
   return (caches as unknown as { default: Cache }).default;
 }

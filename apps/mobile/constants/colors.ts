@@ -1,7 +1,6 @@
 import { useColorScheme } from "react-native";
 
 interface ColorTokens {
-  // Brand
   brandUi: string;
   brandText: string;
   brandHover: string;
@@ -9,12 +8,10 @@ interface ColorTokens {
   brandSubtle: string;
   brandSubtleText: string;
 
-  // Toggle / active binary controls (sky blue, complement of auburn)
   toggleOn: string;
   toggleOnHover: string;
   toggleOnSubtle: string;
 
-  // Backgrounds
   bgBase: string;
   bgSurface: string;
   bgElevated: string;
@@ -26,7 +23,6 @@ interface ColorTokens {
   bgReadingSepia: string;
   bgReadingOled: string;
 
-  // Text
   textPrimary: string;
   textSecondary: string;
   textTertiary: string;
@@ -36,7 +32,6 @@ interface ColorTokens {
   textOnDark: string;
   textOnSepia: string;
 
-  // Status
   success: string;
   successBg: string;
   successBorder: string;
@@ -54,7 +49,6 @@ interface ColorTokens {
   infoBorder: string;
   infoBorderInteractive: string;
 
-  // Borders
   borderSubtle: string;
   borderDefault: string;
   borderInteractive: string;
@@ -62,7 +56,6 @@ interface ColorTokens {
   borderBrand: string;
   borderFocus: string;
 
-  // Annotation highlight backgrounds
   hlAmber: string;
   hlAuburn: string;
   hlYellow: string;
@@ -71,7 +64,6 @@ interface ColorTokens {
   hlCrimson: string;
   hlPurple: string;
 
-  // Annotation highlight text
   hlAmberT: string;
   hlAuburnT: string;
   hlYellowT: string;
@@ -80,7 +72,6 @@ interface ColorTokens {
   hlCrimsonT: string;
   hlPurpleT: string;
 
-  // UI states
   skeletonBase: string;
   skeletonShimmer: string;
   tooltipBg: string;
@@ -95,12 +86,10 @@ interface ColorTokens {
   presenceOnline: string;
   presenceAway: string;
   overlay: string;
-  // Scrims over imagery: fixed warm-black glass, identical in both schemes
-  // (mirrors the web --scrim-* tokens).
+  // Scrims over imagery: fixed warm-black glass, identical in both schemes (mirrors web --scrim-*).
   scrimLight: string;
   scrimDark: string;
 
-  // Shadows
   shadowSm: string;
   shadowMd: string;
   shadowLg: string;

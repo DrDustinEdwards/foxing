@@ -1,6 +1,3 @@
-// Signed-in dashboard at /home. Reads run in-process via core (loadLibraryData);
-// the shell (nav, secondary bar) comes from the root loader. Anonymous visitors are
-// sent to /login and signed-in-without-profile users to /onboarding by requireProfile.
 import { useNow } from "capsomer/react/hooks";
 import { Link } from "capsomer/react/link";
 import { Meter } from "capsomer/react/meter";
@@ -21,8 +18,7 @@ function timeOfDay(hour: number): string {
   return "evening";
 }
 
-// The hour in the user's saved timezone, or null when unset/invalid so the client
-// can fall back to the visitor's local hour. Avoids the UTC greeting bug.
+// The hour in the saved timezone, or null so the client falls back to the visitor's local hour (avoids a UTC greeting).
 function hourInZone(tz: string | null): number | null {
   if (!tz) return null;
   try {
@@ -60,8 +56,7 @@ export function meta() {
 
 export default function Home({ loaderData }: Route.ComponentProps) {
   const { firstName, reading, streak, hasTimezone } = loaderData;
-  // Server greeting uses the saved timezone. Without one it is a UTC guess, so correct to the
-  // visitor's actual local hour once the page is live (Capsomer's clock is 0 until then).
+  // Without a saved timezone the server greeting is a UTC guess, so correct it to the visitor's local hour once live.
   const now = useNow(60_000);
   const greeting =
     hasTimezone || now === 0 ? loaderData.greeting : timeOfDay(new Date(now).getHours());
@@ -169,5 +164,4 @@ function StreakCard({ streak: s }: { streak: Streak }) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

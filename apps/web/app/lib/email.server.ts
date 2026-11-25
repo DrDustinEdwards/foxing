@@ -1,7 +1,4 @@
-// Transactional email via the Cloudflare Email Service send_email binding (EMAIL).
-// No API key: the binding sends from the onboarded foxing.app domain. Every mail is
-// rendered by Capsomer's email templates (capsomer/email), which escape every value
-// and refuse a link that is not https.
+// Transactional email via the Cloudflare Email Service send_email binding (EMAIL), rendered by Capsomer's email templates (which escape every value and refuse a non-https link).
 
 import { EmailNotSent, sendEmail } from "@dustinedwards/site-runtime/email";
 import { type NoticeDetail, SIGN_IN_EXPIRES_IN_WORDS } from "@dustinedwards/site-runtime/sign-in";
@@ -17,8 +14,7 @@ import {
 
 const brand: Brand = { name: "Foxing", family: "fox" };
 
-/** Sends one mail (site-runtime ./email: a link or code in `secrets` and the recipient are cut out of a logged
- *  error, never the body). What is thrown holds none of the provider's words: Better Auth logs it as it is. */
+/** Sends one mail; a link or code in `secrets` and the recipient are cut out of a logged error, never the body. */
 async function send(env: Env, to: string, mail: Rendered, secrets: string[] = []): Promise<void> {
   const outcome = await sendEmail(
     env.EMAIL,
@@ -28,9 +24,6 @@ async function send(env: Env, to: string, mail: Rendered, secrets: string[] = []
   if (!outcome.sent) throw new EmailNotSent(outcome.code);
 }
 
-/** The sign-in mail (site-runtime ./sign-in) on Capsomer's magic-link template: the link signs
- *  in the browser that opens it, the code is typed into the tab that asked, when the link opens
- *  somewhere else (a phone's mail app). */
 export function sendMagicLinkEmail(
   env: Env,
   to: string,
@@ -60,16 +53,12 @@ const signInCode: Template<{ code: string }> = {
   ],
 };
 
-/** The app's sign-in code (site-runtime ./sign-in appCode): the phone can't take a link that
- *  opens in the browser, so it asks for the code alone. */
 export function sendSignInCodeEmail(env: Env, to: string, code: string): Promise<void> {
   return send(env, to, renderEmail(signInCode, { brand, to, code }), [code]);
 }
 
-// The email change sends two mails, both Capsomer's emailChange template: the current address
-// approves, then the new address confirms. Each link opens /email/confirm, whose button does the
-// step (auth.server.ts, emailConfirmURL). Better Auth's links are stateless JWTs good for an hour
-// (better-auth 1.7.12 dist/api/routes/email-verification.mjs), which the mail says.
+// The email change sends two mails: the current address approves, then the new one confirms, each via /email/confirm.
+// Better Auth's links are stateless JWTs good for an hour, which the mail says.
 const EMAIL_CHANGE_EXPIRES_IN = "1 hour";
 
 export function sendChangeEmailConfirmation(
@@ -100,8 +89,6 @@ export function sendVerificationEmail(env: Env, to: string, url: string): Promis
   return send(env, to, mail, [url]);
 }
 
-/** A change to how the reader signs in (site-runtime ./sign-in `sendSecurityNotice`) on
- *  Capsomer's security-notice template, its button back to /settings. It holds no sign-in link. */
 export function sendSecurityNoticeEmail(env: Env, to: string, detail: NoticeDetail): Promise<void> {
   const url = new URL("/settings", env.BETTER_AUTH_URL).href;
   return send(env, to, renderEmail(securityNotice, { brand, to, ...detail, url }));

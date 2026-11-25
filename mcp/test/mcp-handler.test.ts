@@ -9,7 +9,7 @@ import {
 } from "@dustinedwards/site-runtime/mcp-server";
 
 import { handleMcp } from "../src/mcp-handler.ts";
-import type { ToolEnv } from "../src/tools.ts";
+import type { ToolEnv } from "../src/tool-kit.ts";
 import {
   READER,
   WRITER,

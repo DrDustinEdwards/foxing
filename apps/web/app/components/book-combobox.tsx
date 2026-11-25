@@ -1,6 +1,3 @@
-// A book from the catalog, chosen by typing: Capsomer's Combobox with its server search, over the
-// public /api/v1/search/suggest. The admin forms (BOTM, celebrity picks), the diary's book picker and
-// a list's "Add a book" use it; each says what picking a book does. The box empties after a pick.
 import { qs, useApi } from "@foxing/client";
 import type { SearchSuggest } from "@foxing/types";
 import { Combobox, type ComboboxOption } from "capsomer/react/combobox";
@@ -24,7 +21,6 @@ export function BookCombobox({
   onPick: (book: SuggestedBook) => void;
 }) {
   const api = useApi();
-  // The books the last search returned, by id, so a pick hands back the whole book.
   const found = useRef(new Map<string, SuggestedBook>());
 
   async function search(q: string, signal: AbortSignal): Promise<ComboboxOption[]> {

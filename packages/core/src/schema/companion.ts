@@ -1,4 +1,3 @@
-// AI companion history (2 tables, Phase 4). Per-book conversation threads, and the daily usage counter.
 import {
   index,
   integer,
@@ -20,10 +19,7 @@ export const companionThreads = sqliteTable(
     mode: text("mode"),
     createdAt: createdAt(),
   },
-  (t) => [
-    // One thread per (user, book).
-    uniqueIndex("companion_threads_user_book_uq").on(t.userId, t.bookId),
-  ],
+  (t) => [uniqueIndex("companion_threads_user_book_uq").on(t.userId, t.bookId)],
 );
 
 export const companionMessages = sqliteTable(
@@ -39,9 +35,8 @@ export const companionMessages = sqliteTable(
   (t) => [index("companion_messages_thread_idx").on(t.threadId)],
 );
 
-// One row per reader per UTC day: the companion quota (security-open-items.md item 4). Written only by
-// companionRepo.reserveUsage/settleUsage, each one statement, so parallel requests cannot all pass the cap
-// on the same reading (migration 0022).
+// One row per reader per UTC day: the companion quota, written only by companionRepo.reserveUsage/settleUsage, each one statement,
+// so parallel requests cannot all pass the cap on the same reading.
 export const companionUsage = sqliteTable(
   "companion_usage",
   {

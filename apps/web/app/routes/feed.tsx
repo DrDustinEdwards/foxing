@@ -1,7 +1,3 @@
-// The activity feed at /feed. Aggregates events from people you follow (public) and
-// people whose close-friends list includes you (friends-only), plus your own new-follower
-// notices. Visibility resolves entirely server-side in core; the loader receives only
-// what the viewer is entitled to see.
 import { activityText, useFeed } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import { Link } from "capsomer/react/link";
@@ -93,5 +89,4 @@ export default function Feed({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

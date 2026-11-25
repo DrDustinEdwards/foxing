@@ -1,9 +1,5 @@
-// SEO helpers: canonical URLs, Open Graph / Twitter tags, and JSON-LD builders,
-// all emitted through React Router's meta() so a route declares its SEO in one place.
-//
-// Canonical, OG and JSON-LD URLs always name https://foxing.app, never the request's
-// origin: the workers.dev preview must not claim to be the page.
-// The JSON-LD builders and the IndexNow and robots helpers are Prelum's.
+// SEO helpers emitted through React Router's meta(). Canonical, OG and JSON-LD URLs always name https://foxing.app, never
+// the request's origin: the workers.dev preview must not claim to be the page. The JSON-LD builders are Prelum's.
 import { defineHead, absoluteUrl as prelumAbsoluteUrl } from "@drdustinedwards/site-helpers/head";
 import {
   article,
@@ -20,24 +16,20 @@ export const SITE_NAME = "Foxing";
 const DEFAULT_DESCRIPTION =
   "Foxing is a reading home for the classics: browse the catalog, follow literary awards and celebrity picks, and read the conversations around great books.";
 
-/** A path on foxing.app made absolute. */
 export function absoluteUrl(path: string): string {
   return prelumAbsoluteUrl(SITE_ORIGIN, path);
 }
 
-/** A journal tag's page. Tags are free text, so the segment is encoded: a space or "&" in a
- *  tag would otherwise break the link and the sitemap. */
+/** A journal tag's page; tags are free text, so the segment is encoded. */
 export function journalTagPath(tag: string): string {
   return `/journal/tag/${encodeURIComponent(tag)}`;
 }
 
-/** A journal series' page, every part in order. Series names are free text, encoded like tags. */
 export function journalSeriesPath(series: string): string {
   return `/journal/series/${encodeURIComponent(series)}`;
 }
 
-/** Prelum's head builder with the site-wide share card (routes/og-site.tsx), for a page without a card
- *  of its own. A long title drops the suffix and is cut at a word for search; the share card keeps it whole. */
+/** Prelum's head builder with the site share card; a long title drops the suffix and is cut at a word for search. */
 const head = defineHead({
   origin: SITE_ORIGIN,
   siteName: SITE_NAME,
@@ -50,9 +42,7 @@ const head = defineHead({
   },
   suffix: ` | ${SITE_NAME}`,
   description: DEFAULT_DESCRIPTION,
-  // The home page's title is already whole.
   wholeHomeTitle: true,
-  // The sections a page's BreadcrumbList passes through; Prelum builds the only one a page has.
   sections: { "/books": "Books", "/awards": "Awards", "/picks": "Picks", "/journal": "Journal" },
 });
 
@@ -60,22 +50,16 @@ type MetaInput = {
   title: string;
   description?: string;
   pathname: string;
-  /** Absolute or site-relative card image, with its size where known; without one the page shares the site card. */
   image?: string | { url: string; width: number; height: number; type?: string };
   imageAlt?: string;
   type?: "website" | "article" | "book" | "profile";
-  /** Set true to keep a page out of the index (community book pages, a Journal post Carrel marked noindex). */
   noindex?: boolean;
-  /** An absolute canonical URL, where it is not this page's own (a Journal post's search field). */
   canonical?: string;
-  /** "CollectionPage" for a list; WebPage otherwise. */
   pageType?: string;
-  /** The trail from home, where it is not the one the URL's sections give. */
   breadcrumbs?: Array<{ name: string; path: string }>;
 };
 
-/** The route's own lowercase address for a requested one: the router matches `/About` to the About page, but its canonical is
- *  `/about`. Only the first segment (and `journal/archive|tag|series`) is lowercased; a username, tag or id after it keeps its case. */
+/** The route's lowercase address for a requested one (`/About` canonicalises to `/about`); only the first segment (and journal/archive|tag|series) is lowercased. */
 function canonicalPathname(pathname: string): string {
   const parts = pathname.split("/");
   const lower =
@@ -85,21 +69,18 @@ function canonicalPathname(pathname: string): string {
   );
 }
 
-/** The full standard head from Prelum's defineHead: title, description, canonical, Open Graph, Twitter. Routes pass
- *  location.pathname; Prelum drops a trailing slash, so /x/ names /x as canonical. */
+/** The full standard head from Prelum's defineHead; Prelum drops a trailing slash, so /x/ names /x as canonical. */
 export function buildMeta({ pathname, ...page }: MetaInput): MetaDescriptor[] {
   return head({ ...page, path: canonicalPathname(pathname) });
 }
 
-/** The head of a page that stays out of the index (a signed-in screen, a sign-in step): its title and nothing else. */
 export function noindexMeta(title: string): MetaDescriptor[] {
   return [{ title }, { name: "robots", content: "noindex" }];
 }
 
 const ORGANIZATION_ID = `${SITE_ORIGIN}/#organization`;
 
-/** Foxing itself, on the home page, where Google reads an Organization's name and logo
- *  (https://developers.google.com/search/docs/appearance/structured-data/organization). The logo is the 512 px app icon. */
+/** Foxing as an Organization on the home page, where Google reads its name and logo (the 512 px app icon). */
 export function organizationLd(): Record<string, unknown> {
   return organization({
     id: ORGANIZATION_ID,
@@ -110,8 +91,7 @@ export function organizationLd(): Record<string, unknown> {
   });
 }
 
-/** The site, on the home page, where Google reads the site name
- *  (https://developers.google.com/search/docs/appearance/site-names). No SearchAction: /search is kept from crawlers. */
+/** The site on the home page, where Google reads the site name. No SearchAction: /search is kept from crawlers. */
 export function websiteLd(): Record<string, unknown> {
   return website({
     origin: SITE_ORIGIN,
@@ -121,7 +101,6 @@ export function websiteLd(): Record<string, unknown> {
   });
 }
 
-/** The Journal as a Blog, published by Foxing, on /journal. */
 export function journalLd(description: string): Record<string, unknown> {
   return thing("Blog", {
     "@id": `${absoluteUrl("/journal")}#blog`,
@@ -166,18 +145,15 @@ export function articleLd(post: {
   title: string;
   excerpt: string | null;
   coverImageUrl: string | null;
-  /** The picture's Article crops (journalArticleImages), written in its place where it has them. */
   articleImages?: Array<{ url: string; width: number; height: number; creditText?: string }>;
   publishedAt: Date | null;
   updatedAt: Date | null;
-  /** The staff member the post credits; null credits Foxing. */
   author?: string | null;
 }): Record<string, unknown> {
   return article({
     url: absoluteUrl(`/journal/${post.slug}`),
     headline: post.title,
     description: post.excerpt,
-    // A post with no picture of its own is shown with the site's share card, so every Article has an image.
     image: post.articleImages?.length
       ? post.articleImages
       : (post.coverImageUrl ?? absoluteUrl("/og/site")),
@@ -190,8 +166,7 @@ export function articleLd(post: {
   });
 }
 
-/** Paths no crawler needs, in /robots.txt and /ai.txt alike. The /books era, length and sort combinations multiply into
- *  thousands of near-duplicate lists; a genre and its pages stay crawlable, and every book is in the sitemap. */
+/** Paths no crawler needs, in /robots.txt and /ai.txt alike: list sort and filter combinations multiply into near-duplicates. */
 export const ROBOTS_DISALLOW = [
   "/me",
   "/onboarding",

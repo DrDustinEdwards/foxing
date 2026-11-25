@@ -1,7 +1,4 @@
-// Pure Locator helpers for the reader: highlight tints (design-system --hl-*) and R1/R2
-// selection-Locator enrichment. No DOM, no ts-toolkit
-// imports, so this is unit-testable (the R1 multi-occurrence guarantee is proven
-// by an e2e reload test; the merge shape is proven here).
+// Pure Locator helpers for the reader (no DOM, no ts-toolkit imports, so unit-testable): highlight tints and selection-Locator enrichment.
 import type { HighlightColor } from "@foxing/core";
 
 export interface Locator {
@@ -13,9 +10,7 @@ export interface Locator {
   [k: string]: unknown;
 }
 
-/** Highlight background tints per theme (design-system.md "Annotation Highlight
- *  Colors" --hl-* bg values). Concrete hex because decorations render inside the
- *  content iframe where the app's CSS vars are not defined. */
+/** Highlight tints per theme: concrete hex because decorations render inside the content iframe, where the app's CSS vars are not defined. */
 const HL_TINTS: Record<"lightish" | "dark", Record<HighlightColor, string>> = {
   lightish: {
     amber: "#FEF0C0",
@@ -41,33 +36,23 @@ export function tintFor(color: HighlightColor, theme: "light" | "sepia" | "dark"
   return HL_TINTS[theme === "dark" ? "dark" : "lightish"][color];
 }
 
-// The fill for a highlight/note. isActive makes it a click/tap target in-frame:
-// the ts-toolkit Decorator hit-tests the text range on pointerup and reports the
-// activation (with a rect) back to the navigator, which is what opens the popover.
+// The fill for a highlight/note; isActive makes it a click target in-frame.
 export function decorationStyleFor(color: HighlightColor, theme: "light" | "sepia" | "dark") {
   return { type: "highlight", tint: tintFor(color, theme), isActive: true };
 }
 
-// Another reader's annotation: an underline in the AUTHOR's color, kept a click target
-// (isActive) so a tap opens their attribution popover, but visually distinct from your
-// own solid fill so the two layers never read the same. Underline (not fill) is the
-// "someone else marked this" signal.
+// Another reader's annotation: an underline in the author's color, still a click target, visibly distinct from your fill.
 export function otherDecorationStyleFor(color: HighlightColor, theme: "light" | "sepia" | "dark") {
   return { type: "underline", tint: tintFor(color, theme), isActive: true };
 }
 
-// The popular-highlights layer: a faint underline shared by many readers, non-active
-// (never a click target) so it stays ambient and never competes with your own or others'
-// tappable decorations.
+// The popular-highlights layer: a faint, non-active underline so it stays ambient.
 export function popularDecorationStyleFor(theme: "light" | "sepia" | "dark") {
   const tint = theme === "dark" ? "#3A3A3A" : "#D8D2C4";
   return { type: "underline", tint, isActive: false };
 }
 
-// The in-text "has a note" indicator: an outline box around the passage, drawn as a
-// second, non-active decoration (so it never competes with the fill for the click).
-// Outline + layout:bounds always renders via the DOM overlay (the CSS Highlight API
-// only does background fills), so it shows on browsers that use native highlights.
+// The "has a note" outline box, a second non-active decoration; outline + layout:bounds always renders via the DOM overlay (the CSS Highlight API only fills backgrounds).
 export function noteOutlineStyleFor(color: HighlightColor, theme: "light" | "sepia" | "dark") {
   return { type: "outline", tint: tintFor(color, theme), layout: "bounds", isActive: false };
 }
@@ -79,12 +64,9 @@ export interface SelectionContext {
 }
 
 /**
- * R1 + R2: enrich a raw selection Locator so annotations re-anchor to the right
- * occurrence. R1 keeps text.before/after (the TextQuoteAnchor prefix/suffix the
- * ts-toolkit decorator uses to disambiguate duplicate phrases) and cssSelector
- * (narrows the search root). R2 merges the current reading position's
- * progression/position/totalProgression so jump-to-annotation does not depend on
- * text re-anchoring alone. Extras the navigator already provided are preserved.
+ * Enriches a raw selection Locator so annotations re-anchor to the right occurrence: keeps text.before/after and
+ * cssSelector, and merges the current position's progression so jump-to-annotation does not rely on text re-anchoring
+ * alone. Extras the navigator already provided are preserved.
  */
 export function enrichSelectionLocator(
   base: Locator,

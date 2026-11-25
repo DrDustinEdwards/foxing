@@ -1,13 +1,8 @@
-/* The page frame around Capsomer's site header: Foxing's logo, its Books, Celebrity Picks and
-   account panels, the "Your Foxing" tabs, the main column, the footer and the error page. */
-
-/* The account avatar keeps Foxing's soft accent disc. */
 .cap-site-header {
   --header-avatar: var(--accent-soft);
   --header-avatar-fg: var(--accent-text);
 }
 
-/* The logo: the fox and the Fraunces wordmark (Rule 9 allows the emoji in chrome). */
 .fx-logo-mark {
   font-size: var(--title-4);
   line-height: var(--leading-none);
@@ -19,7 +14,6 @@
   line-height: var(--leading-none);
 }
 
-/* The section panels. */
 .fx-panel {
   padding: var(--space-3);
 }
@@ -66,8 +60,6 @@
   color: var(--accent-text);
 }
 
-/* The account panel: who you are with the tier, three stats, the reading links, Collections,
-   and the footer bar of Profile, Settings and Sign out. */
 .cap-site-header-panel:has(> .fx-acct) {
   padding: 0;
   overflow: hidden;
@@ -131,7 +123,6 @@
   flex: none;
   color: var(--dim);
 }
-/* Capsomer's icons at the menu's 16px. */
 .fx-acct {
   --icon-size: var(--title-6);
 }
@@ -189,7 +180,6 @@
   opacity: var(--opacity-half);
 }
 
-/* The signed-in reader's tabs under the header, from a tablet up; a phone has Capsomer's bottom bar. */
 .fx-your-bar {
   display: none;
   border-block-end: var(--line-w) solid var(--line);
@@ -210,7 +200,6 @@
   padding-block: var(--space-7-5);
 }
 
-/* The footer. */
 .fx-footer {
   margin-block-start: var(--space-10);
   border-block-start: var(--line-w) solid var(--line);
@@ -274,7 +263,6 @@
   }
 }
 
-/* The search palette is Capsomer's command menu; its rows read in the UI face, not the body's. */
 .cap-cmd {
   font-family: var(--ui);
 }

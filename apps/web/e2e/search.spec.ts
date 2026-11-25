@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectNoSeriousViolations } from "./helpers";
 
 // Search depth: grouped results, the filter bar, pagination, and the Cmd+K command
 // palette. Everything is driven through the visible controls a human clicks.
@@ -55,13 +55,7 @@ test.describe("search depth", () => {
   }) => {
     await page.goto(`/search?q=${encodeURIComponent(query)}`, { waitUntil: "networkidle" });
     await expect(page.getByRole("heading", { name: /^books/i })).toBeVisible();
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      .analyze();
-    const serious = results.violations.filter(
-      (v) => v.impact === "serious" || v.impact === "critical",
-    );
-    expect(serious, JSON.stringify(serious.map((v) => v.id))).toEqual([]);
+    await expectNoSeriousViolations(page);
   });
 
   test("the open command palette has no serious accessibility violations (WCAG AA)", async ({
@@ -70,12 +64,6 @@ test.describe("search depth", () => {
     await page.goto("/books", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: /search the catalog/i }).click();
     await expect(page.getByRole("dialog", { name: /command menu/i })).toBeVisible();
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      .analyze();
-    const serious = results.violations.filter(
-      (v) => v.impact === "serious" || v.impact === "critical",
-    );
-    expect(serious, JSON.stringify(serious.map((v) => v.id))).toEqual([]);
+    await expectNoSeriousViolations(page);
   });
 });

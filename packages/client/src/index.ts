@@ -1,5 +1,3 @@
-// @foxing/client: the data layer web and mobile share. One /api/v1 client, one set
-// of TanStack Query hooks and cache keys, typed by @foxing/types.
 export * from "./http";
 export * from "./keys";
 export * from "./provider";

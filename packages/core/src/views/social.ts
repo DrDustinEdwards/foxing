@@ -1,6 +1,4 @@
-// Social views: the feed, a profile page, the reader's own diary, people, a reading
-// list, and a recap, in their /api/v1 wire shape (@foxing/types). Visibility resolves
-// here, server-side (socialDomain.visibleVisibilitiesFor); no caller re-implements it.
+// Social views in their /api/v1 wire shape (@foxing/types). Visibility resolves here, server-side (socialDomain.visibleVisibilitiesFor); no caller re-implements it.
 import type * as W from "@foxing/types";
 import type { Db } from "../db";
 import * as recapDomain from "../domain/recap";
@@ -15,7 +13,6 @@ import * as socialRepo from "../repositories/social";
 import { finishedSpread } from "./library";
 import { bookRefs, ms } from "./wire";
 
-/** The viewer's activity feed, with actor identity and book cards. */
 export async function feed(db: Db, viewerId: string, cursor: string | null): Promise<W.FeedPage> {
   const page = await socialDomain.getFeed(db, viewerId, { cursor });
   const actorIds: string[] = [];
@@ -71,7 +68,6 @@ async function diaryEntries(db: Db, entries: diaryRepo.DiaryEntry[]): Promise<W.
   }));
 }
 
-/** A profile by username, or null when there is none. */
 export async function profilePage(
   db: Db,
   username: string,
@@ -183,7 +179,6 @@ export async function profilePage(
   };
 }
 
-/** The reader's own reading log, newest-logged first, every visibility (it is theirs). */
 export async function diary(db: Db, userId: string): Promise<W.DiaryEntry[]> {
   const entries = await diaryRepo.listEntriesForUser(db, userId, ["private", "friends", "public"], {
     limit: 100,
@@ -191,8 +186,7 @@ export async function diary(db: Db, userId: string): Promise<W.DiaryEntry[]> {
   return diaryEntries(db, entries);
 }
 
-/** One diary entry, or null when the viewer may not see it: the author sees everything,
- *  a close friend friends and public, anyone else public only (FX-7). */
+/** One diary entry, or null when the viewer may not see it (author: all; close friend: friends and public; else public). */
 export async function diaryEntry(
   db: Db,
   entryId: string,
@@ -205,7 +199,6 @@ export async function diaryEntry(
   return (await diaryEntries(db, [entry]))[0] ?? null;
 }
 
-/** Who the viewer follows, who follows them, and their close friends. */
 export async function people(db: Db, viewerId: string): Promise<W.PeoplePage> {
   const [followingIds, followerIds, closeFriendIds] = await Promise.all([
     socialRepo.listFollowingIds(db, viewerId),
@@ -228,7 +221,6 @@ export async function people(db: Db, viewerId: string): Promise<W.PeoplePage> {
   };
 }
 
-/** The reader's own lists, newest first, public and private. */
 export async function myLists(db: Db, userId: string): Promise<W.MyList[]> {
   const [rows, summaries] = await Promise.all([
     socialRepo.listListsForUser(db, userId),
@@ -245,7 +237,6 @@ export async function myLists(db: Db, userId: string): Promise<W.MyList[]> {
   }));
 }
 
-/** A reading list, or null when it is private and not the viewer's. */
 export async function listPage(
   db: Db,
   listId: string,
@@ -287,7 +278,6 @@ export async function listPage(
   };
 }
 
-/** A year's recap for the viewer, or for a public profile by username. */
 export async function recap(
   db: Db,
   target: { userId: string } | { username: string },

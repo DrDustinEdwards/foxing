@@ -1,6 +1,3 @@
-// Admin chrome: Capsomer's admin shell (header, app strip, section menu, top bar) with Foxing's
-// sections; every admin page renders inside <AdminShell>. Cut legacy sections (author-claims,
-// giveaways, bookstores, 404s, mcp) are intentionally absent.
 import {
   AdminShell as CapsomerAdminShell,
   FIRST_PAGE,
@@ -22,7 +19,6 @@ import { routerRenderLink } from "capsomer/react/link";
 import { useLocation, useRouteLoaderData } from "react-router";
 import { avatarInitials } from "~/components/ui";
 import { THEME_PREF_KEY } from "~/lib/theme";
-// The shell's styles load only in the admin (React 19 hoists the link).
 import adminShellCss from "capsomer/admin-shell.css?url";
 import type { loader as RootLoader } from "~/root";
 
@@ -80,7 +76,6 @@ export function AdminShell({ title, children }: { title?: string; children: Reac
   );
 }
 
-/** Section card used across the admin pages. Matches the settings Card look. */
 export function AdminCard({
   title,
   action,

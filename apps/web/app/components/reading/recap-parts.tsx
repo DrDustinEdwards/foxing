@@ -2,7 +2,6 @@ import { formatCount } from "@drdustinedwards/site-helpers/text";
 import type { RecapPage } from "@foxing/types";
 import { Link } from "capsomer/react/link";
 
-// The year's four numbers, shared by the Year in Reading page and the public recap (routes/recap.tsx).
 export function YearNumbers({ recap }: { recap: RecapPage["recap"] }) {
   const stats = [
     { label: "books finished", value: recap.booksFinished },
@@ -27,7 +26,6 @@ export function YearNumbers({ recap }: { recap: RecapPage["recap"] }) {
   );
 }
 
-// The year's top books, shared with the public recap.
 export function TopBooks({ books }: { books: RecapPage["recap"]["topBooks"] }) {
   if (books.length === 0) return null;
   return (

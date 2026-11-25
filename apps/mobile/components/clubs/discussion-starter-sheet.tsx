@@ -2,6 +2,7 @@ import { useCompanion, useCreateThread } from "@foxing/client";
 import { useCallback, useEffect, useState } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator, Switch } from "react-native";
 import { X as XIcon, Sparkle, ArrowsClockwise } from "phosphor-react-native";
+import { FieldLabel, SheetError } from "@/components/ui/form-field";
 import { SheetScaffold } from "@/components/ui/sheet-scaffold";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
@@ -16,8 +17,6 @@ interface DiscussionStarterSheetProps {
   onPosted?: (threadId: string) => void;
 }
 
-// Drafts a discussion opener with the companion's discussion_starter (Plus), which
-// the member edits before posting it as a new thread. It never posts on its own.
 export function DiscussionStarterSheet({
   visible,
   clubId,
@@ -190,37 +189,7 @@ export function DiscussionStarterSheet({
         </>
       )}
 
-      {error ? (
-        <View
-          style={{
-            marginTop: 16,
-            padding: 12,
-            borderRadius: 12,
-            backgroundColor: colors.errorBg,
-          }}
-        >
-          <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.error }}>{error}</Text>
-        </View>
-      ) : null}
+      {error ? <SheetError message={error} /> : null}
     </SheetScaffold>
-  );
-}
-
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  const colors = useColors();
-  return (
-    <Text
-      style={{
-        fontFamily: Fonts.uiMedium,
-        fontSize: 12,
-        color: colors.textTertiary,
-        marginTop: 12,
-        marginBottom: 6,
-        textTransform: "uppercase",
-        letterSpacing: 0.6,
-      }}
-    >
-      {children}
-    </Text>
   );
 }

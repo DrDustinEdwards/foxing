@@ -1,9 +1,4 @@
-// Admin: User detail. Full profile for one reader plus operator controls: suspend,
-// change tier, send a notification, and delete the account. Reads run in-process via
-// adminRepo; every write goes to /api/v1/admin/users/:id/* with an audit-log entry and a
-// visible pending + role=alert error. Suspend and tier open a confirmation showing the
-// server's preview before anything changes. Who is an admin is ADMIN_EMAIL and CO_OWNER_EMAILS alone.
-import { adminRepo, createDb } from "@foxing/core";
+import { adminRepo } from "@foxing/core";
 import { useState } from "react";
 import { useNavigate, useRevalidator } from "react-router";
 import { Link } from "capsomer/react/link";
@@ -16,15 +11,12 @@ import {
   useAdminAction,
 } from "~/components/admin/admin-form";
 import { SuspendButton, useRoleChange } from "~/components/admin/confirm-change";
-import { cloudflareContext } from "~/context";
-import { requireAdmin } from "~/lib/admin.server";
+import { adminLoaderBase } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-user-detail";
 import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
-  const { env } = context.get(cloudflareContext);
-  await requireAdmin(env, request);
-  const db = createDb(env.DB);
+  const { env, db } = await adminLoaderBase(context, request);
   const user = await adminRepo.getUserDetail(db, params.id, env);
   if (!user) throw new Response("Not found", { status: 404 });
   const stats = await adminRepo.getUserActivityStats(db, params.id);
@@ -255,5 +247,4 @@ function OperatorControls({
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

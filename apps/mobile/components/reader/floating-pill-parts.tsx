@@ -16,8 +16,6 @@ import { Pressable, Text, View } from "react-native";
 import { Fonts } from "@/constants/fonts";
 import { SectionLabel } from "@/components/ui/section-label";
 
-// All-options bottom sheet shown on long-press of the pill. Mirrors the inline
-// menu with full labels. Each action calls the handler the pill already wires.
 export function AllOptionsSheet({
   visible,
   mode,
@@ -183,10 +181,7 @@ export function AllOptionsSheet({
   );
 }
 
-// One action chip inside the pill. The primary chip gets a brand-subtle bg and
-// a label so the eye lands on it; secondary chips are icon-only (label exposed
-// via accessibilityLabel) so the unified menu fits inline. autoFocus is
-// iOS-only; safe to pass as a no-op elsewhere via the type cast.
+// autoFocus is iOS-only; passing it elsewhere is a no-op via the type cast.
 export function PillAction({
   Icon,
   label,
@@ -246,7 +241,6 @@ export function PillAction({
   );
 }
 
-// Small lock badge overlaid on the top-right of a gated action's icon.
 export function LockBadge({
   colors,
   size = 13,

@@ -1,8 +1,3 @@
-// The signed-in reader's reading goals index (auth-gated, noindex). The loader reads
-// core's goals view in-process (the same view GET /goals answers with); after that the
-// list lives in the @foxing/client cache and every edit patches it in place. Books-type
-// goals show progress against finishes in their period. Active goals (their period
-// covers today) are separated from past ones.
 import {
   goalPacing,
   goalPeriodLabel,
@@ -36,8 +31,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user } = await requireProfile(env, request);
 
-  // Reading activity: books finished in each of the last 53 Sunday-first weeks. Finish dates are
-  // the only real per-day reading signal in D1 (reading_sessions are unpopulated on web).
+  // Finish dates are the only real per-day reading signal in D1 (reading_sessions are unpopulated on web).
   const db = createDb(env.DB);
   const goals = await views.goals(db, user.id);
   const now = new Date();
@@ -65,7 +59,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return { goals, weeks, streak };
 }
 
-/** A goal is active when its period covers the current date; otherwise it is past. */
 function isActive(goal: Goal, now: Date): boolean {
   const year = now.getUTCFullYear();
   if (goal.year !== year) return false;
@@ -123,8 +116,6 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// A small status pill: success (reached / on track) or neutral (behind). Inline SVG check,
-// no icon library. Uses the semantic success tokens so it reads in light and dark.
 function GoalBadge({ tone, children }: { tone: "success" | "neutral"; children: ReactNode }) {
   return (
     <span className={tone === "success" ? "badge badge-ok" : "badge badge-quiet"}>{children}</span>
@@ -277,5 +268,4 @@ function CreateGoal() {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

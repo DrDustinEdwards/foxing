@@ -1,5 +1,4 @@
-// Journal pictures from the media library, sized from their rows. Every address carries the bytes'
-// hash (`v`), so a replace under the same key is a new URL and every size can be kept a year.
+// Journal pictures from the media library. Every address carries the bytes' hash (`v`), so a replace under the same key is a new URL and every size can be kept a year.
 import type { ImageAttributes } from "@dustinedwards/site-runtime/image";
 import { type Db, journalMediaRepo } from "@foxing/core";
 import { images } from "./images";
@@ -7,13 +6,11 @@ import { SITE_ORIGIN } from "./origins";
 
 const PATH = journalMediaRepo.JOURNAL_MEDIA_PATH;
 
-/** The library key an address names (absolute on foxing.app, or a path), or null. */
 function keyOf(url: string): string | null {
   const path = url.startsWith(SITE_ORIGIN) ? url.slice(SITE_ORIGIN.length) : url;
   return path.startsWith(`${PATH}journal/`) ? path.slice(PATH.length) : null;
 }
 
-/** A library row as site-runtime's StoredImage: its bytes' hash as the version (`v`), so a replace is a new URL. */
 function stored(row: journalMediaRepo.JournalMediaRow) {
   return {
     src: `${PATH}${row.key}`,
@@ -26,10 +23,6 @@ function stored(row: journalMediaRepo.JournalMediaRow) {
   };
 }
 
-/**
- * Each cover address's attributes, with its focal point and the stored placeholder and color it shows while it
- * loads; one outside the library is written as it is, unsized.
- */
 export async function journalCovers(
   db: Db,
   urls: Array<string | null>,
@@ -53,10 +46,7 @@ export async function journalCovers(
   return out;
 }
 
-/**
- * An Article's `image` set for a post's picture: Google's 16:9, 4:3 and 1:1 crops at 1200 wide, cut around the file's
- * focal point, as absolute URLs with the file's credit. Empty for a picture outside the library (no size to cut).
- */
+/** An Article's `image` set: 16:9, 4:3 and 1:1 crops at 1200 wide around the focal point; empty for a picture outside the library. */
 export async function journalArticleImages(db: Db, url: string | null) {
   const key = url ? keyOf(url) : null;
   const row = key ? await journalMediaRepo.getJournalMedia(db, key) : null;
@@ -69,17 +59,11 @@ export async function journalArticleImages(db: Db, url: string | null) {
   }));
 }
 
-/** The library keys a post's Markdown names, by their /media/journal/ paths. */
 function keysIn(content: string): string[] {
   const found = content.match(/\/media\/journal\/[A-Za-z0-9._/-]+/g) ?? [];
   return [...new Set(found.flatMap((u) => (keyOf(u) ? [keyOf(u) as string] : [])))];
 }
 
-/**
- * Prelum's image options for a post's body: each library picture's size and stored placeholder, and its AVIF and WebP
- * sizes at the column's width with a versioned link to the original, plus a GIF's reduced-motion stills. A picture
- * outside the library is written unsized, as before.
- */
 export async function journalBodyImages(db: Db, content: string) {
   const keys = keysIn(content);
   const rows = new Map(

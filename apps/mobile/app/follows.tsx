@@ -1,10 +1,11 @@
 import { usePeople } from "@foxing/client";
 import { useState } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { UnderlineTabs } from "@/components/ui/underline-tabs";
 import { ErrorState } from "@/components/ui/error-state";
 import { BackHeader } from "@/components/ui/back-header";
 import { FollowButton } from "@/components/profile/follow-button";
@@ -12,7 +13,11 @@ import { PersonRow } from "@/components/profile/person-row";
 
 type Tab = "followers" | "following";
 
-// The reader's own connections, from GET /people (the web People page's data).
+const FOLLOW_TABS: { key: Tab; label: string }[] = [
+  { key: "following", label: "Following" },
+  { key: "followers", label: "Followers" },
+];
+
 export default function FollowsScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -27,35 +32,12 @@ export default function FollowsScreen() {
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
       <BackHeader title="Connections" />
 
-      <View className="flex-row px-4 mb-4">
-        {(["following", "followers"] as Tab[]).map((t) => {
-          const active = tab === t;
-          return (
-            <Pressable
-              key={t}
-              onPress={() => setTab(t)}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
-              className="flex-1 py-2 items-center"
-              style={{
-                borderBottomWidth: 2,
-                borderBottomColor: active ? colors.borderInteractive : colors.borderSubtle,
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: Fonts.uiMedium,
-                  fontSize: 13,
-                  color: active ? colors.brandText : colors.textTertiary,
-                  textTransform: "capitalize",
-                }}
-              >
-                {t}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <UnderlineTabs
+        className="flex-row px-4 mb-4"
+        tabs={FOLLOW_TABS}
+        active={tab}
+        onChange={setTab}
+      />
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
         {people.isPending ? (

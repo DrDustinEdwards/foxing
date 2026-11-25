@@ -1,7 +1,3 @@
-// Club detail (auth-gated read in-process). The loader's page seeds the shared cache;
-// every write goes to /api/v1, patches the cached page and refetches only it. Members
-// get the live experience: a presence indicator, and another member's thread or vote
-// shows up over the club WebSocket without a reload.
 import { useClubLive, useClubPage } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import { PageShell } from "~/components/page-shell";
@@ -84,7 +80,6 @@ export default function ClubDetail({ loaderData, params }: Route.ComponentProps)
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
 
 export { ErrorBoundary } from "~/components/route-error";

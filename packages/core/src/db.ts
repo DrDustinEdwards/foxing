@@ -1,4 +1,3 @@
-// D1 + Drizzle handle. Built per-request from the DB binding (D1 is request-scoped).
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import * as schema from "./schema";
 import { attachKv, type KvLike } from "./kv-cache";

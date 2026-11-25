@@ -5,7 +5,6 @@ import { Fonts } from "@/constants/fonts";
 import { BackHeader } from "@/components/ui/back-header";
 import { Screen } from "@/components/ui/screen";
 
-// A failed read: say so and let the reader retry. Never an empty state.
 export function ErrorState({
   onRetry,
   message = "Couldn't load. Check your connection.",
@@ -43,12 +42,10 @@ export function ErrorState({
   );
 }
 
-// A 404 is a real "not found"; any other failed read is an error to retry.
 export function isNotFound(error: unknown) {
   return error instanceof ApiError && error.status === 404;
 }
 
-// A page whose read came back empty: retry on a failed read, `notFound` on a 404.
 export function ErrorScreen({
   query,
   notFound,

@@ -1,7 +1,5 @@
-// Shared reading-goal helpers, used by the web library card, the web /goals page and the
-// app's goals screen so they never drift. The ISO-week math mirrors core
-// periodRange (weeks start Monday; week 1 holds the year's first Thursday) so the client
-// and the progress query agree on which finishes count.
+// Shared reading-goal helpers. The ISO-week math mirrors core periodRange (weeks start Monday; week 1 holds the year's first Thursday) so client
+// and progress query agree on which finishes count.
 import { MONTH_NAMES } from "./months";
 
 export function isoWeek(d: Date): number {
@@ -29,9 +27,7 @@ function clamp01(f: number): number {
   return Math.min(1, Math.max(0, f));
 }
 
-/** Fraction (0..1) of the goal's current period that has elapsed, for pacing feedback.
- *  Only meaningful for an active goal (its period contains `now`). Weeks start Monday to
- *  match isoWeek / core periodRange, all in UTC to agree with the progress query. */
+/** Fraction (0..1) of an active goal's period elapsed; weeks start Monday, all in UTC to agree with the progress query. */
 export function periodElapsedFraction(periodType: string, now: Date): number {
   const ms = now.getTime();
   const y = now.getUTCFullYear();
@@ -47,8 +43,6 @@ export function periodElapsedFraction(periodType: string, now: Date): number {
   return clamp01((ms - Date.UTC(y, 0, 1)) / (Date.UTC(y + 1, 0, 1) - Date.UTC(y, 0, 1)));
 }
 
-/** Pacing verdict for an active, incomplete goal: on track if finished has kept pace with
- *  the share of the period elapsed, else how many behind to catch up. */
 export function goalPacing(
   finished: number,
   target: number,

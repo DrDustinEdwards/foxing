@@ -36,8 +36,6 @@ const USERNAME_RE = /^[a-z0-9_]{3,30}$/;
 
 type UsernameStatus = "idle" | "same" | "invalid" | "checking" | "available" | "taken";
 
-// Name, username, bio and favorite genres, saved through PATCH /me (and
-// /me/username when the username changed). The profile cache updates at once.
 export function EditProfileSheet({ visible, profile, onClose }: Props) {
   const colors = useColors();
   const updateMe = useUpdateMe();

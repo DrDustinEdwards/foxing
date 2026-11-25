@@ -1,23 +1,11 @@
-// Library repository: shelf state (user_books), custom shelves, reading goals,
-// and streak reads. All queries are user-scoped. Status writes go through
-// domain/library.changeBookStatus (which also emits); this module is data access.
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+// Shelf state, custom shelves, reading goals and streaks, all user-scoped. Status writes go through domain/library.changeBookStatus, which also emits.
+import { and, desc, eq, sql } from "drizzle-orm";
 import type { Db } from "../db";
 import type { UserBookStatus } from "../enums";
-import {
-  books,
-  customShelfBooks,
-  customShelves,
-  readingGoals,
-  readingSessions,
-  readingStreaks,
-  userBooks,
-  vocabulary,
-} from "../schema";
+import { books, customShelfBooks, customShelves, userBooks, vocabulary } from "../schema";
 import type { SaveProgressInput } from "../validators/annotation";
-import type { CreateGoalInput, CreateShelfInput, UpdateGoalInput } from "../validators/library";
+import type { CreateShelfInput } from "../validators/library";
 
-/** The book columns every library listing selects beside the user_books ones. */
 const bookRef = {
   title: books.title,
   author: books.author,
@@ -27,8 +15,6 @@ const bookRef = {
 
 export type UserBook = typeof userBooks.$inferSelect;
 export type CustomShelf = typeof customShelves.$inferSelect;
-export type ReadingGoal = typeof readingGoals.$inferSelect;
-export type ReadingStreak = typeof readingStreaks.$inferSelect;
 
 export interface LibraryEntry {
   bookId: string;
@@ -54,10 +40,7 @@ export async function getUserBook(
   return rows[0] ?? null;
 }
 
-/** Save reading position. First write starts the book (status 'reading',
- *  started_at now); later writes update progress and never downgrade status
- *  (a want-to-read row becomes reading once the reader opens it). Keyed on the
- *  unique (user_id, book_id). */
+/** First write starts the book ('reading'); later writes update progress and never downgrade status. */
 export async function upsertProgress(
   db: Db,
   userId: string,
@@ -94,7 +77,6 @@ export async function upsertProgress(
   return row;
 }
 
-/** Timestamp to set for a status transition (others are left untouched). */
 function statusTimestamp(status: UserBookStatus, now: Date): Partial<UserBook> {
   switch (status) {
     case "finished":
@@ -108,9 +90,6 @@ function statusTimestamp(status: UserBookStatus, now: Date): Partial<UserBook> {
   }
 }
 
-/** Upsert the shelf status, keyed on (user, book). Sets started_at on the first
- *  reading/finished transition and the status-specific timestamp. Data only; the
- *  domain layer emits events. */
 export async function upsertStatus(
   db: Db,
   userId: string,
@@ -183,7 +162,6 @@ export interface ProfileBook {
   coverUrl: string | null;
 }
 
-/** Count of finished books. Powers the profile "Books read" stat tile. */
 export async function countFinishedBooks(db: Db, userId: string): Promise<number> {
   const [row] = await db
     .select({ n: sql<number>`count(*)` })
@@ -192,7 +170,6 @@ export async function countFinishedBooks(db: Db, userId: string): Promise<number
   return Number(row?.n ?? 0);
 }
 
-/** How many readers have the book in their library, on any shelf. */
 export async function countReaders(db: Db, bookId: string): Promise<number> {
   const [row] = await db
     .select({ n: sql<number>`COUNT(*)` })
@@ -201,7 +178,6 @@ export async function countReaders(db: Db, bookId: string): Promise<number> {
   return Number(row?.n ?? 0);
 }
 
-/** Recently finished books, newest first, for the public profile library preview. */
 export async function listFinishedBooks(db: Db, userId: string, limit = 8): Promise<ProfileBook[]> {
   return db
     .select({
@@ -221,7 +197,6 @@ export interface PublicShelf {
   bookCount: number;
 }
 
-/** Public custom shelves with book counts, for the profile shelves grid. */
 export async function listPublicShelves(db: Db, userId: string): Promise<PublicShelf[]> {
   const rows = await db
     .select({
@@ -236,8 +211,6 @@ export async function listPublicShelves(db: Db, userId: string): Promise<PublicS
   return rows.map((r) => ({ id: r.id, name: r.name, bookCount: Number(r.bookCount) }));
 }
 
-/** Currently-reading books for a user, newest activity first. Powers the profile
- *  "currently reading" strip; the caller decides whether progress visibility allows it. */
 export async function listCurrentlyReading(
   db: Db,
   userId: string,
@@ -258,8 +231,6 @@ export async function listCurrentlyReading(
     .limit(limit);
 }
 
-/** Every book id in the user's library (any status). The exclusion set for
- *  recommendations: never recommend a book they already track. */
 export async function listOwnedBookIds(db: Db, userId: string): Promise<string[]> {
   const rows = await db
     .select({ bookId: userBooks.bookId })
@@ -275,7 +246,6 @@ export interface ReadSignalBook {
   subjects: string[] | null;
 }
 
-/** Finished books with the fields the recommender scores on (author + subjects). */
 export async function listFinishedForSignals(db: Db, userId: string): Promise<ReadSignalBook[]> {
   return db
     .select({
@@ -294,8 +264,6 @@ export interface FinishedStatBook {
   subjects: string[] | null;
 }
 
-/** Finished books in a half-open time window, carrying the two fields the stats charts
- *  need: the finish date (monthly-books view) and subjects (genre breakdown). */
 export async function listFinishedInRangeForStats(
   db: Db,
   userId: string,
@@ -317,7 +285,6 @@ export async function listFinishedInRangeForStats(
 
 export type VocabularyEntry = typeof vocabulary.$inferSelect;
 
-/** Count of words not yet mastered. Powers the account menu "N words to master" line. */
 export async function countVocabularyToMaster(db: Db, userId: string): Promise<number> {
   const [row] = await db
     .select({ n: sql<number>`count(*)` })
@@ -326,7 +293,6 @@ export async function countVocabularyToMaster(db: Db, userId: string): Promise<n
   return Number(row?.n ?? 0);
 }
 
-/** Count of all the words a user has saved. */
 export async function countVocabulary(db: Db, userId: string): Promise<number> {
   const [row] = await db
     .select({ n: sql<number>`count(*)` })
@@ -335,7 +301,6 @@ export async function countVocabulary(db: Db, userId: string): Promise<number> {
   return Number(row?.n ?? 0);
 }
 
-/** A user's saved words, newest first. Backs the /vocabulary page. */
 export async function listVocabulary(db: Db, userId: string): Promise<VocabularyEntry[]> {
   return db
     .select()
@@ -345,7 +310,6 @@ export async function listVocabulary(db: Db, userId: string): Promise<Vocabulary
     .limit(500);
 }
 
-/** Toggle a saved word mastered / not (scoped to the owner). Null when it is not theirs. */
 export async function setVocabularyMastered(
   db: Db,
   userId: string,
@@ -385,7 +349,6 @@ export async function createShelf(
   return row;
 }
 
-/** Delete a shelf the caller owns. Returns false if it is not theirs. */
 export async function deleteShelf(db: Db, userId: string, shelfId: string): Promise<boolean> {
   const rows = await db
     .delete(customShelves)
@@ -450,7 +413,6 @@ export async function listShelfBooks(
     .orderBy(desc(customShelfBooks.addedAt));
 }
 
-/** Shelf ids (owned by the user) that contain the given book. For the book-page picker. */
 export async function shelfIdsForBook(db: Db, userId: string, bookId: string): Promise<string[]> {
   const rows = await db
     .select({ shelfId: customShelfBooks.shelfId })
@@ -458,204 +420,4 @@ export async function shelfIdsForBook(db: Db, userId: string, bookId: string): P
     .innerJoin(customShelves, eq(customShelfBooks.shelfId, customShelves.id))
     .where(and(eq(customShelves.userId, userId), eq(customShelfBooks.bookId, bookId)));
   return rows.map((r) => r.shelfId);
-}
-
-export async function createGoal(
-  db: Db,
-  userId: string,
-  input: CreateGoalInput,
-): Promise<ReadingGoal> {
-  const [row] = await db
-    .insert(readingGoals)
-    .values({
-      userId,
-      type: input.type,
-      target: input.target,
-      periodType: input.periodType,
-      year: input.year,
-      month: input.month ?? null,
-      week: input.week ?? null,
-    })
-    .returning();
-  return row;
-}
-
-/** Retarget a goal the caller owns. Returns the updated row, or null if not theirs. */
-export async function updateGoal(
-  db: Db,
-  userId: string,
-  goalId: string,
-  patch: UpdateGoalInput,
-): Promise<ReadingGoal | null> {
-  const [row] = await db
-    .update(readingGoals)
-    .set({ target: patch.target, ...(patch.type ? { type: patch.type } : {}) })
-    .where(and(eq(readingGoals.id, goalId), eq(readingGoals.userId, userId)))
-    .returning();
-  return row ?? null;
-}
-
-export async function deleteGoal(db: Db, userId: string, goalId: string): Promise<boolean> {
-  const rows = await db
-    .delete(readingGoals)
-    .where(and(eq(readingGoals.id, goalId), eq(readingGoals.userId, userId)))
-    .returning({ id: readingGoals.id });
-  return rows.length > 0;
-}
-
-export async function listGoals(db: Db, userId: string): Promise<ReadingGoal[]> {
-  return db
-    .select()
-    .from(readingGoals)
-    .where(eq(readingGoals.userId, userId))
-    .orderBy(desc(readingGoals.year));
-}
-
-/** The instant a calendar day starts in the reader's timezone, from that day's UTC midnight (`dayStartUtc`); the
- *  UTC midnight itself when they have no zone or Intl does not know it. Inverse of localDay. */
-export function localMidnight(dayStartUtc: number, timezone: string | null): number {
-  if (!timezone) return dayStartUtc;
-  const offset = (at: number): number => {
-    try {
-      const parts = Object.fromEntries(
-        new Intl.DateTimeFormat("en-US", {
-          timeZone: timezone,
-          hourCycle: "h23",
-          year: "numeric",
-          month: "numeric",
-          day: "numeric",
-          hour: "numeric",
-          minute: "numeric",
-        })
-          .formatToParts(new Date(at))
-          .map((p) => [p.type, Number(p.value)]),
-      ) as Record<string, number>;
-      const wall = Date.UTC(parts.year!, parts.month! - 1, parts.day!, parts.hour!, parts.minute!);
-      return wall - Math.floor(at / 60_000) * 60_000;
-    } catch {
-      return 0;
-    }
-  };
-  // Two steps settle a day whose offset changes (a daylight saving switch) between UTC midnight and local midnight.
-  const first = dayStartUtc - offset(dayStartUtc);
-  return dayStartUtc - offset(first);
-}
-
-/** Half-open [start, end) date range for a goal period, its days in the reader's timezone (UTC without one), so
- *  goal progress counts the same days as the streak and the stats page. */
-export function periodRange(
-  periodType: string,
-  year: number,
-  month?: number | null,
-  week?: number | null,
-  timezone: string | null = null,
-): { start: Date; end: Date } {
-  const { start, end } = utcPeriodRange(periodType, year, month, week);
-  return {
-    start: new Date(localMidnight(start.getTime(), timezone)),
-    end: new Date(localMidnight(end.getTime(), timezone)),
-  };
-}
-
-function utcPeriodRange(
-  periodType: string,
-  year: number,
-  month?: number | null,
-  week?: number | null,
-): { start: Date; end: Date } {
-  if (periodType === "month" && month) {
-    const start = new Date(Date.UTC(year, month - 1, 1));
-    const end = new Date(Date.UTC(year, month, 1));
-    return { start, end };
-  }
-  if (periodType === "week" && week) {
-    // ISO week: week 1 contains the year's first Thursday; weeks start Monday.
-    const jan4 = new Date(Date.UTC(year, 0, 4));
-    const jan4Dow = (jan4.getUTCDay() + 6) % 7; // 0 = Monday
-    const week1Monday = new Date(jan4);
-    week1Monday.setUTCDate(jan4.getUTCDate() - jan4Dow);
-    const start = new Date(week1Monday);
-    start.setUTCDate(week1Monday.getUTCDate() + (week - 1) * 7);
-    const end = new Date(start);
-    end.setUTCDate(start.getUTCDate() + 7);
-    return { start, end };
-  }
-  return { start: new Date(Date.UTC(year, 0, 1)), end: new Date(Date.UTC(year + 1, 0, 1)) };
-}
-
-/** Books the user finished within a goal's period (books-type goal progress). */
-export async function countFinishedInPeriod(
-  db: Db,
-  userId: string,
-  goal: { periodType: string; year: number; month?: number | null; week?: number | null },
-  timezone: string | null = null,
-): Promise<number> {
-  const { start, end } = periodRange(goal.periodType, goal.year, goal.month, goal.week, timezone);
-  const rows = await db
-    .select({ n: sql<number>`count(*)` })
-    .from(userBooks)
-    .where(
-      and(
-        eq(userBooks.userId, userId),
-        eq(userBooks.status, "finished"),
-        sql`${userBooks.finishedAt} >= ${start.getTime()} AND ${userBooks.finishedAt} < ${end.getTime()}`,
-      ),
-    );
-  return Number(rows[0]?.n ?? 0);
-}
-
-export async function getStreak(db: Db, userId: string): Promise<ReadingStreak | null> {
-  const rows = await db
-    .select()
-    .from(readingStreaks)
-    .where(eq(readingStreaks.userId, userId))
-    .limit(1);
-  return rows[0] ?? null;
-}
-
-/** Write the day streak and add a session's pages, upserting the streak row. */
-export async function saveStreak(
-  db: Db,
-  userId: string,
-  next: {
-    currentStreak: number;
-    longestStreak: number;
-    lastReadDate: Date | null;
-    pagesRead: number;
-  },
-): Promise<void> {
-  const now = new Date();
-  await db
-    .insert(readingStreaks)
-    .values({
-      userId,
-      currentStreak: next.currentStreak,
-      longestStreak: next.longestStreak,
-      lastReadDate: next.lastReadDate,
-      totalPagesRead: next.pagesRead,
-      updatedAt: now,
-    })
-    .onConflictDoUpdate({
-      target: readingStreaks.userId,
-      set: {
-        currentStreak: next.currentStreak,
-        longestStreak: next.longestStreak,
-        lastReadDate: next.lastReadDate,
-        totalPagesRead: sql`${readingStreaks.totalPagesRead} + ${next.pagesRead}`,
-        updatedAt: now,
-      },
-    });
-}
-
-/** The reader's sessions that started at or after a moment, oldest first. */
-export async function listSessionsSince(db: Db, userId: string, sinceMs: number) {
-  return db
-    .select({
-      startedAt: readingSessions.startedAt,
-      endedAt: readingSessions.endedAt,
-      pagesRead: readingSessions.pagesRead,
-    })
-    .from(readingSessions)
-    .where(and(eq(readingSessions.userId, userId), sql`${readingSessions.startedAt} >= ${sinceMs}`))
-    .orderBy(asc(readingSessions.startedAt));
 }

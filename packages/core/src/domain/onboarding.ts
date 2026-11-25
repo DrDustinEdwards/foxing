@@ -1,5 +1,3 @@
-// Onboarding domain logic. Creates the profile row for a freshly signed-up user
-// and emits the profile.onboarded event (the one real emission wired in Phase 1).
 import type { Db } from "../db";
 import { emit } from "../events";
 import { createProfile, type Profile } from "../repositories/profiles";

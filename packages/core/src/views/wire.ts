@@ -6,7 +6,6 @@ import { books } from "../schema";
 
 export { toMs as ms } from "@dustinedwards/site-runtime/time";
 
-/** Book references for any books (catalog or community), keyed by id. */
 export async function bookRefs(db: Db, ids: (string | null)[]): Promise<Map<string, W.BookRef>> {
   const map = new Map<string, W.BookRef>();
   const wanted = [...new Set(ids.filter((id): id is string => !!id))];

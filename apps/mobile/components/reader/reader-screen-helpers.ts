@@ -2,8 +2,6 @@ import { type CanvasTheme, FONT_SIZE_PX, type ReaderPrefs } from "@/lib/reader-s
 import { Colors } from "@/constants/colors";
 import type { ReaderSettings } from "@/components/reader/reader-types";
 
-// Reading canvas modes are decoupled from the app's UI theme, they're
-// applied to the WebView body (and via setStyles to each chapter iframe).
 export const CANVAS_PALETTE: Record<CanvasTheme, { background: string; text: string }> = {
   default: { background: Colors.light.bgReading, text: Colors.light.textPrimary },
   sepia: { background: Colors.light.bgReadingSepia, text: Colors.light.textOnSepia },
@@ -11,8 +9,6 @@ export const CANVAS_PALETTE: Record<CanvasTheme, { background: string; text: str
   oled: { background: Colors.dark.bgReadingOled, text: Colors.dark.textOnDark },
 };
 
-// "MM:SS" countdown formatter for the sleep-timer badge. Zero-pads seconds
-// so the width doesn't jitter as the digit count changes.
 export function formatRemaining(ms: number): string {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const minutes = Math.floor(totalSeconds / 60);
@@ -20,9 +16,7 @@ export function formatRemaining(ms: number): string {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
-// Convert a 6-digit hex like "#FEFCF8" to an rgba() string at the given
-// alpha. Used so the chrome bar can be translucent without the React Native
-// `opacity` prop (which would fade the icons inside too).
+// Translucent chrome without RN `opacity`, which would fade the icons too.
 export function hexToRgba(hex: string, alpha: number): string {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex);
   if (!m) return hex;
@@ -33,8 +27,6 @@ export function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-// Project a ReaderPrefs (step-space, persistent) into the flat ReaderSettings
-// the renderer consumes.
 export function prefsToSettings(prefs: ReaderPrefs): ReaderSettings {
   return { fontSize: FONT_SIZE_PX[prefs.fontSize], theme: CANVAS_PALETTE[prefs.canvasTheme] };
 }

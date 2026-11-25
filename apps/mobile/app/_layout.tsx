@@ -38,18 +38,10 @@ Sentry.init({
   environment: __DEV__ ? "development" : "production",
 });
 
-// Keep the splash screen up until both auth and fonts are ready. This prevents
-// the visible flash of the platform fallback typeface that happens when the
-// app paints with a system font and then re-renders once the bundled font
-// asset registers.
 SplashScreen.preventAutoHideAsync().catch(() => {
-  // ignore, preventAutoHideAsync rejects if the splash already auto-hid
-  // (e.g. during fast refresh). It's not actionable.
+  // rejects if the splash already auto-hid (fast refresh); not actionable
 });
 
-// Signed out goes to sign-in; signed in without a profile goes to onboarding, which
-// creates it. Both come from the server: the session from Better Auth, the profile from
-// GET /me.
 function RootLayout() {
   const { data: session, isPending: authLoading } = authClient.useSession();
   const signedIn = !!session?.user;
@@ -79,15 +71,12 @@ function RootLayout() {
   useEffect(() => {
     console.log("[boot] fonts state", { fontsLoaded, fontsError: fontsError?.message });
     if (fontsError) {
-      // A font failure shouldn't block the app forever, log and continue with
-      // platform fallbacks. Visual regression is preferable to a frozen splash.
+      // A font failure must not freeze the splash; continue with platform fallbacks.
       console.warn("[fonts] failed to load", fontsError);
     }
   }, [fontsLoaded, fontsError]);
 
-  // Hard ceiling on how long the splash can stay up. If something hangs (font
-  // load stuck, auth network call never resolving, etc.) we'd rather show the
-  // app with platform fallbacks than freeze on the splash forever.
+  // Hard ceiling so a hung font or auth call cannot freeze the splash.
   useEffect(() => {
     const t = setTimeout(() => {
       console.warn("[boot] splash timeout reached, forcing ready");
@@ -96,11 +85,9 @@ function RootLayout() {
     return () => clearTimeout(t);
   }, []);
 
-  // Queued offline writes go up at launch and whenever the app comes back to the front.
   useEffect(() => {
     if (!signedIn) return;
     void syncNow();
-    // Daily reminder and the 8pm streak nudge, from the reader's notification prefs.
     rescheduleAll().catch(() => {});
     const sub = AppState.addEventListener("change", (state) => {
       if (state === "active") void syncNow();
@@ -132,10 +119,7 @@ function RootLayout() {
     meFailed ||
     ((fontsLoaded || !!fontsError) && !authLoading && (!signedIn || onboarded !== null));
 
-  // Hide the native splash as soon as we're ready. useEffect runs after every
-  // render where `ready` is true, so this is more reliable than onLayout
-  // (which only fires after the root view actually paints, and never fires
-  // at all if something throws before then).
+  // Effect rather than onLayout, which never fires if something throws before first paint.
   useEffect(() => {
     if (!ready) return;
     console.log("[boot] ready, hiding splash", {
@@ -149,8 +133,6 @@ function RootLayout() {
     });
   }, [ready, fontsLoaded, fontsError, authLoading, splashTimeoutReached]);
 
-  // Render nothing until ready. The native splash stays up because we called
-  // preventAutoHideAsync at module load.
   if (!ready) return null;
 
   return (

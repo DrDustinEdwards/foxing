@@ -19,9 +19,6 @@ import { Fonts } from "@/constants/fonts";
 import { BackHeader } from "@/components/ui/back-header";
 import { SectionLabel } from "@/components/ui/section-label";
 
-// Saved Passages: every highlight where a note has been written, grouped by book, with
-// public toggle + share + delete.
-
 export default function SavedPassagesScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -33,8 +30,6 @@ export default function SavedPassagesScreen() {
   const [editing, setEditing] = useState<string | null>(null);
   const [noteDraft, setNoteDraft] = useState("");
 
-  // Group by book (two books can share a title); entries without a book bucket into
-  // "Loose pages".
   const grouped = useMemo(() => {
     const m = new Map<string, W.MyAnnotation[]>();
     for (const r of rows) {

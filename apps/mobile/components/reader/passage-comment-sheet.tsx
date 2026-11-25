@@ -16,13 +16,10 @@ interface PassageCommentSheetProps {
   bookId: string;
   cfi: string | null;
   passageText: string;
-  /** The viewer's clubs reading this book; a comment goes to one of them. */
   clubs: { id: string; name: string }[];
   onClose: () => void;
 }
 
-// The club discussion on one passage: the comments anchored there (from the book's
-// annotation layers), their replies, and a composer. A new comment shows at once.
 export function PassageCommentSheet({
   visible,
   bookId,
@@ -38,7 +35,6 @@ export function PassageCommentSheet({
   const [body, setBody] = useState("");
   const [hasSpoilers, setHasSpoilers] = useState(false);
   const [replyTo, setReplyTo] = useState<W.ResolvedComment | null>(null);
-  // Spoiler reveal is per comment, keyed by id.
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [activeClubId, setActiveClubId] = useState<string | null>(null);
 

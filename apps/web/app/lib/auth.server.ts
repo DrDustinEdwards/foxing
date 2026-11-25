@@ -1,9 +1,6 @@
-// Better Auth with the family's one sign-in (site-runtime ./sign-in): a passkey first, an
-// emailed link and code before one exists (Turnstile in front of it), Google and
-// Apple, no passwords, no OAuth tokens stored. Accounts are joined only by a signed-in person.
-// The app's own way in: `appCode` opens the six-digit code request the phone uses (a link opens
-// in the phone's browser, not the app), held to three a minute; and the Expo plugin hands a
-// Google or Apple sign-in back to the app through foxing://.
+// Better Auth with the family's one sign-in (site-runtime ./sign-in). `appCode` opens the six-digit code request the
+// phone uses (a link would open in the phone's browser), held to three a minute; the Expo plugin hands a Google or
+// Apple sign-in back through foxing://.
 import { expo } from "@better-auth/expo";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { type ClubSuccessors, createDb, eraseAccountData, schema } from "@foxing/core";
@@ -14,8 +11,7 @@ import {
   sessionLookup,
   signInOptions,
 } from "@dustinedwards/site-runtime/sign-in";
-// The minimal build: the database is the Drizzle adapter, so Kysely and the schema-migration code the full build
-// bundles never run here (Better Auth: "For minimal mode (without Kysely), import from better-auth/minimal").
+// Minimal build: the Drizzle adapter means Kysely and the schema-migration code never run here.
 import { betterAuth } from "better-auth/minimal";
 import { waitUntil } from "cloudflare:workers";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -28,16 +24,13 @@ import {
 } from "./email.server";
 import { PREVIEW_ORIGIN, SITE_ORIGIN } from "./origins";
 
-/** The club hand-over of the deletion running now, for beforeDelete (deleteUserAccount). */
 const leaving = new AsyncLocalStorage<ClubSuccessors>();
 
-/** The app's scheme (apps/mobile app.json), where a sign-in started in the app returns. */
 const APP_ORIGIN = "foxing://";
 
 async function buildAuth(env: Env) {
   const db = createDb(env.DB);
-  // A magic link proves control of the address, so the created user is email-verified; a new
-  // user (no profile row yet) lands on /onboarding, an existing one on /me.
+  // A magic link proves control of the address, so the created user is email-verified.
   const signIn = await signInOptions(env, {
     siteName: "Foxing",
     social: true,
@@ -48,15 +41,9 @@ async function buildAuth(env: Env) {
     sendSignInCode: async ({ email, code }) => {
       await sendSignInCodeEmail(env, email, code);
     },
-    // Five sign-in mails an hour, and wrong codes three an hour and ten a day, per address.
     emailLimiter: env.RATE_LIMITER,
-    // Each auth event is also a row in auth_events (migration 0012): Settings' security history,
-    // /health's spike check, and new-device and recovery notices read it.
     eventsDb: env.DB,
-    // Each session keeps its coarse place and a device id, and a read moves its last-active time
-    // (migration 0014): the signed-in devices list and the new-device notice read them.
     sessionDetails: true,
-    // A passkey, Google or Apple, the email, the sessions or the account changed: tell the reader.
     sendSecurityNotice: async (_kind, { user, detail }) => {
       await sendSecurityNoticeEmail(env, user.email, detail);
     },
@@ -66,7 +53,6 @@ async function buildAuth(env: Env) {
     ...signIn,
     baseURL: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
-    // The live domain, the workers.dev preview and the app are all trusted; baseURL covers one.
     trustedOrigins: [...signIn.trustedOrigins, SITE_ORIGIN, PREVIEW_ORIGIN, APP_ORIGIN],
     database: drizzleAdapter(db, {
       provider: "sqlite",
@@ -75,31 +61,23 @@ async function buildAuth(env: Env) {
       transaction: false,
     }),
     plugins: [...signIn.plugins, expo()],
-    // Only the /api/v1 route deletes an account (its club hand-over comes in its body), and
-    // the verification mail is only the email change's second step, never sent on request.
+    // Only the /api/v1 route deletes an account, and the verification mail is only the email change's second step.
     disabledPaths: [
       ...signIn.disabledPaths,
       "/delete-user",
       "/delete-user/callback",
       "/send-verification-email",
     ],
-    // The instance outlives a request, so the request's waitUntil comes from cloudflare:workers:
-    // the answer does not wait for a security notice's mail.
+    // The instance outlives a request, so waitUntil comes from cloudflare:workers; the answer does not wait for a notice's mail.
     advanced: { ...signIn.advanced, backgroundTasks: { handler: waitUntil } },
-    // Only the change-email flow sends this now, to the new address, once the current one has
-    // approved the change. The link is good for an hour (Better Auth's default). Better Auth's own
-    // link acts on a GET, so a mail scanner could confirm it; the mail carries /email/confirm
-    // instead, where only the button's POST does (site-runtime emailConfirmURL).
+    // Better Auth's link acts on a GET, so a mail scanner could confirm it; the mail carries /email/confirm instead, where only the button's POST does.
     emailVerification: {
       sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
         await sendVerificationEmail(env, user.email, emailConfirmURL(url));
       },
     },
     user: {
-      // Changing the email takes two links (better-auth 1.7.12 update-user.mjs, changeEmail):
-      // the current address approves first, then the new address confirms itself, and only
-      // then does the email change. A person with only a stolen session cannot move the account
-      // to an address of their own. site-runtime ./sign-in tells both addresses after.
+      // Changing the email takes two links (current address approves, then the new one confirms), so a stolen session alone cannot move the account.
       changeEmail: {
         enabled: true,
         sendChangeEmailConfirmation: async ({
@@ -114,10 +92,7 @@ async function buildAuth(env: Env) {
           await sendChangeEmailConfirmation(env, user.email, newEmail, emailConfirmURL(url));
         },
       },
-      // Deleting the account is Better Auth's /delete-user, called only from DELETE
-      // /api/v1/account (deleteUserAccount), with a sign-in from the last 10 minutes.
-      // beforeDelete erases Foxing's own data and hands over the clubs first; Better Auth then
-      // removes the sessions, the Google and Apple links and the user (passkeys go with it).
+      // Deleting is Better Auth's /delete-user, called only from DELETE /api/v1/account after a sign-in within 10 minutes; beforeDelete erases Foxing's data and hands over clubs first.
       deleteUser: {
         enabled: true,
         beforeDelete: async (user: { id: string }) => {
@@ -130,8 +105,7 @@ async function buildAuth(env: Env) {
 
 type Auth = Awaited<ReturnType<typeof buildAuth>>;
 
-// Built once per isolate (the Worker env is stable within one) and the promise kept: Apple's
-// client secret is signed with WebCrypto on each build.
+// Built once per isolate and the promise kept: Apple's client secret is signed with WebCrypto on each build.
 const cache = new WeakMap<Env, Promise<Auth>>();
 
 export function getAuth(env: Env): Promise<Auth> {
@@ -144,10 +118,7 @@ export function getAuth(env: Env): Promise<Auth> {
   return auth;
 }
 
-/**
- * The signed-in user behind a request, from the Better Auth session cookie; null when there is
- * none. The Worker's createApi resolveSession, the page loaders and the Carrel key isolation tests.
- */
+/** The signed-in user behind a request, from the session cookie; null when none. */
 export async function sessionUserFromRequest(
   req: Request,
   env: Env,
@@ -157,11 +128,7 @@ export async function sessionUserFromRequest(
   return { id: session.user.id, email: session.user.email };
 }
 
-/**
- * DELETE /api/v1/account's deletion: Better Auth's deleteUser for the signed-in reader, with
- * `successors` handed to beforeDelete. "not_fresh" when the last sign-in is over 10 minutes old
- * (site-runtime ./sign-in FRESH_SECONDS), and nothing is deleted.
- */
+/** DELETE /api/v1/account's deletion, with `successors` handed to beforeDelete; "not_fresh" (nothing deleted) when the last sign-in is over 10 minutes old. */
 export async function deleteUserAccount(
   req: Request,
   env: Env,
@@ -178,8 +145,7 @@ export async function deleteUserAccount(
   }
 }
 
-/** Whether the request's session was made in the last 10 minutes (site-runtime
- *  requireFreshSession), for the account export. */
+/** Whether the session was made in the last 10 minutes, for the account export. */
 export async function isFreshSession(req: Request, env: Env): Promise<boolean> {
   try {
     return (await requireFreshSession(await getAuth(env), req)) !== null;

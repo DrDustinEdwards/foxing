@@ -1,9 +1,4 @@
-// The Books and Celebrity Picks panels of Capsomer's site header, and the same links as groups
-// for the phone's sheet. Browse items are real routes; era chips map to /books?era= filters that
-// ship today. By Mood is cut until mood_tags is populated (all catalog books are '[]' today).
-// Featured clubs come from the root loader (listExternalClubs), so the
-// panel renders server-side; the Book of the Month card shows only when a published pick exists.
-// Every item is a link, so the header's panel closes on its own when one is followed.
+// The Books and Celebrity Picks panels of Capsomer's site header, and the same links as groups for the phone's sheet.
 import { ERA_BUCKETS } from "@foxing/core/catalog-buckets";
 import type { HeaderGroup } from "capsomer/react/site-header";
 import { Link } from "capsomer/react/link";

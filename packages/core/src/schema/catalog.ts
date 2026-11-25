@@ -1,6 +1,4 @@
-// Catalog (8 tables). Migrates rows from Postgres in Phase 2.
-// Community books are first-class here (tracking/diary/clubs/affiliate surface);
-// readability is derived (source_type='catalog' AND epub_url present), not a column.
+// Community books are first-class; readability is derived (source_type='catalog' AND epub_url present), not a column.
 import { integer, primaryKey, real, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
 import { bool, cascadeFk, createdAt, idPk, json, ts, updatedAt } from "./_helpers";
 import { user } from "./auth";
@@ -141,17 +139,14 @@ export const journalPosts = sqliteTable(
     ogTitle: text("og_title"),
     ogDescription: text("og_description"),
     canonicalUrl: text("canonical_url"),
-    // site-api's image, imageAlt and noindex search fields (Carrel's share image and search controls).
     ogImageUrl: text("og_image_url"),
     ogImageAlt: text("og_image_alt"),
     noindex: bool("noindex").notNull().default(false),
     readingTimeMinutes: integer("reading_time_minutes"),
-    // A series the post is part of, by name, and its place in it (site-api's series and seriesPart
-    // post fields); the page reads "Part n of m". Both null outside a series.
+    // Series name and place in it (site-api's series, seriesPart); both null outside a series.
     series: text("series"),
     seriesPart: integer("series_part"),
-    // Carrel's content trash (site-api v0.17.0): set when the post goes to the trash, which takes
-    // it off the Journal; null otherwise. site-api's runSchedules deletes it 30 days on.
+    // Carrel's content trash: set when the post is trashed (off the Journal); site-api's runSchedules deletes it 30 days on.
     trashedAt: ts("trashed_at"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -159,16 +154,14 @@ export const journalPosts = sqliteTable(
   (t) => [index("journal_posts_published_idx").on(t.isPublished, t.publishedAt)],
 );
 
-// The old addresses of renamed Journal posts (site-api v0.17.0 rename): /journal/<from_slug>
-// answers a 301 to /journal/<to_slug>. A later rename points every row at the newest slug, so
-// there are no chains; the post route reads it only when no live post holds the slug.
+// Old addresses of renamed Journal posts: /journal/<from_slug> answers a 301 to /journal/<to_slug>. A later rename repoints
+// every row at the newest slug, so there are no chains.
 export const journalSlugRedirects = sqliteTable("journal_slug_redirects", {
   fromSlug: text("from_slug").primaryKey(),
   toSlug: text("to_slug").notNull(),
   createdAt: createdAt(),
 });
 
-/** What a journal version keeps beside its title, excerpt and body. */
 export type JournalVersionFields = {
   slug: string;
   coverImageUrl: string | null;
@@ -205,7 +198,6 @@ export const journalPostVersions = sqliteTable(
   (t) => [index("journal_post_versions_post_id_idx").on(t.postId)],
 );
 
-// Populated by Queue in Phase 4, catalog books only. PK (book_id, action).
 export const bookAiCache = sqliteTable(
   "book_ai_cache",
   {

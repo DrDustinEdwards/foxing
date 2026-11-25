@@ -1,8 +1,5 @@
 import { Link } from "capsomer/react/link";
 
-// The parts the three guide pages share (routes/guide.tsx, app-guide.tsx, features.tsx): the jump
-// links under the header, a section, a paragraph, a dotted list and the closing sign-up line.
-
 export function GuideNav({ anchors }: { anchors: { href: string; label: string }[] }) {
   return (
     <nav aria-label="Sections" className="fx-guide-row">

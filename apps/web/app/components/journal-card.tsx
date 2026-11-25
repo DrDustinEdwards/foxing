@@ -1,6 +1,5 @@
 import { Link } from "capsomer/react/link";
 
-/** A Journal post's card in a tag's or a series' grid: its label, title, excerpt and length. */
 export function JournalCard({
   to,
   label,

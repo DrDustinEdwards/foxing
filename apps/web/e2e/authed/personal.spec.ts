@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { failApiWrite } from "../helpers";
 
 // Personal surfaces (diary, goals, year) driven through ONLY the visible controls with a
 // REAL session (auth.setup.ts signed in through the form). A goal is created and edited
@@ -34,15 +35,7 @@ test.describe("reading goals (signed in)", () => {
   });
 
   test("a failed goal write is surfaced, not silently swallowed", async ({ page }) => {
-    await page.route(/\/api\/v1\/goals/, (route) =>
-      route.request().method() === "POST"
-        ? route.fulfill({
-            status: 500,
-            contentType: "application/json",
-            body: JSON.stringify({ status: 500, code: "server_error", detail: "boom" }),
-          })
-        : route.continue(),
-    );
+    await failApiWrite(page, /\/api\/v1\/goals/, "POST");
     await page.goto("/goals", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: /set goal/i }).click();
     await expect(page.getByRole("alert")).toContainText(/could not save/i);

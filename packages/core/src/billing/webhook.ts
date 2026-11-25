@@ -1,28 +1,19 @@
-// Pure interpretation of a verified Stripe event into an intent the webhook route
-// executes against D1. No Stripe SDK, no DB: unit-testable with plain objects. The
-// route is the SINGLE writer of profiles.subscription_tier; this function only decides
-// what that write should be.
+// Pure interpretation of a verified Stripe event into an intent the route executes; the route is the SINGLE writer of profiles.subscription_tier. No SDK, no DB.
 import type { BillingEventLite } from "./client";
 
-/** Plus while the subscription is active or in its trial; free once it lapses. */
 export function tierForStatus(status: string): "free" | "plus" {
   return status === "active" || status === "trialing" ? "plus" : "free";
 }
 
 const ENDED = new Set(["canceled", "incomplete_expired"]);
 
-/** The customer's current subscription out of their list, newest first: the newest one still
- *  live, else the newest. A late event for an old subscription must not decide the tier of
- *  someone who has since resubscribed. */
+/** The newest still-live subscription, else the newest: a late event for an old subscription must not decide the tier of someone who has since resubscribed. */
 export function pickCurrentSubscription<T extends { status: string }>(newestFirst: T[]): T | null {
   return newestFirst.find((s) => !ENDED.has(s.status)) ?? newestFirst[0] ?? null;
 }
 
 export type BillingIntent =
-  // checkout.session.completed: links the Foxing user to the Stripe customer and points
-  // at the new subscription so the route can fetch its live status/period.
   | { op: "link"; userId: string; customerId: string; subscriptionId: string | null }
-  // customer.subscription.*: project the subscription's status onto tier/status/period.
   | {
       op: "sync";
       customerId: string;

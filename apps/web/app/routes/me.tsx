@@ -1,6 +1,3 @@
-// The signed-in user's own profile at /me, rendered in the app shell. Reads run
-// in-process via core; requireProfile sends anonymous visitors to /login and
-// signed-in-without-profile users to /onboarding (never renders a null profile).
 import { createDb, views } from "@foxing/core";
 import { ButtonLink, Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
@@ -116,5 +113,4 @@ export default function Me({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

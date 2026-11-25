@@ -1,13 +1,5 @@
-// Each weight Expo Google Fonts ships is registered under its own
-// React Native font family name. RN does not synthesize bold from a single
-// fontFamily, the family string must include the weight suffix or the
-// renderer silently falls back to the platform default.
+// Each weight is its own RN family name: RN does not synthesize bold, so the family string must carry the weight suffix or it falls back to the platform default.
 //
-// Roles map to the design-system tiers:
-//   display → Fraunces (headings, hero, pull quotes)
-//   body    → Source Serif 4 (reading canvas, editorial copy)
-//   ui      → DM Sans (buttons, nav, labels, inputs, badges)
-//   mono    → DM Mono (timestamps, hex values, code)
 export const Fonts = {
   display: "Fraunces_600SemiBold",
   displayLight: "Fraunces_300Light",

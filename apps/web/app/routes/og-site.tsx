@@ -1,14 +1,10 @@
-// The site-wide share card: what a page without a book or post card of its own shows when
-// shared. The same layout, fonts and colors as og-book, without the cover.
 import { ogCard } from "~/lib/og.server";
 import { OG_CACHE_ORIGIN } from "~/lib/origins";
 
-// Bump when the card's HTML changes, so the edge cache serves the new one.
 const VERSION = 1;
 
 export function loader() {
-  // Single line, no whitespace between tags: satori counts whitespace text nodes as
-  // children and requires display:flex on any multi-child element.
+  // Single line with no whitespace between tags: satori counts whitespace text nodes as children and requires display:flex on any multi-child element.
   return ogCard(
     new Request(`${OG_CACHE_ORIGIN}/site?v=${VERSION}`),
     ({ titleFamily }) =>

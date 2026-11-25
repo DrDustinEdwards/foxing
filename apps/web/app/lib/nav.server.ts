@@ -1,10 +1,7 @@
-// Nav identity + stats for the signed-in shell, resolved server-side in the root
-// loader. Safe to SSR because the Worker bypasses the edge cache whenever a
-// better-auth cookie is present (workers/app.ts), so a signed-in response is never
-// written into the anonymous cache. Reads run in-process via core (the standing
-// rule: loaders never self-fetch the Worker's own /api/v1).
+// Nav identity for the signed-in shell, resolved in the root loader. Safe to SSR because the Worker bypasses the edge
+// cache whenever a better-auth cookie is present. Reads run in-process via core (loaders never self-fetch /api/v1).
 import { isAdminEmail } from "@dustinedwards/site-runtime/access";
-import { catalogRepo, createDb, libraryRepo, profilesRepo, views } from "@foxing/core";
+import { catalogRepo, createDb, goalsRepo, libraryRepo, profilesRepo, views } from "@foxing/core";
 import { sessionUserFromRequest } from "./auth.server";
 
 export interface NavUser {
@@ -21,9 +18,7 @@ export interface NavUser {
   vocabularyToMaster: number;
 }
 
-/** The signed-in nav identity, or null for anonymous / not-yet-onboarded users.
- *  A signed-in user with no profile row still sees the signed-out nav here; the
- *  profile-gated page loaders are what route them to /onboarding. */
+/** The signed-in nav identity, or null for anonymous or not-yet-onboarded users (page loaders route those to /onboarding). */
 export async function getNavUser(env: Env, request: Request): Promise<NavUser | null> {
   const user = await sessionUserFromRequest(request, env);
   if (!user) return null;
@@ -35,7 +30,7 @@ export async function getNavUser(env: Env, request: Request): Promise<NavUser | 
   const year = new Date().getUTCFullYear();
   const [streak, booksThisYear, vocabularyToMaster] = await Promise.all([
     views.streak(db, user.id),
-    libraryRepo.countFinishedInPeriod(db, user.id, { periodType: "year", year }),
+    goalsRepo.countFinishedInPeriod(db, user.id, { periodType: "year", year }),
     libraryRepo.countVocabularyToMaster(db, user.id),
   ]);
 
@@ -54,13 +49,11 @@ export async function getNavUser(env: Env, request: Request): Promise<NavUser | 
   };
 }
 
-/** A featured celebrity-picks club for the Celebrity Picks mega-menu. */
 export interface NavFeaturedClub {
   slug: string;
   name: string;
 }
 
-/** The published Book of the Month for the mega-menu card, or null when none is live. */
 export interface NavBotm {
   title: string;
   author: string;
@@ -71,10 +64,7 @@ export interface NavMenu {
   botm: NavBotm | null;
 }
 
-/** Public mega-menu data (featured picks clubs + published BOTM), shown to everyone.
- *  Resolved in-process via core so the menus render server-side with no client fetch;
- *  the anonymous response is edge-cacheable. getCurrentBotm already filters to published
- *  rows, so the BOTM card self-omits when nothing is live. */
+/** Public mega-menu data, resolved in-process so it renders server-side and the anonymous response is edge-cacheable. */
 export async function getNavMenu(env: Env): Promise<NavMenu> {
   const db = createDb(env.DB, env.APP_KV);
   const [clubs, botm] = await Promise.all([

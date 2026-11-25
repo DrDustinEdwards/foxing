@@ -1,10 +1,7 @@
 import { likeContains } from "@dustinedwards/site-runtime/d1";
-// Club data access. Pure DB reads/writes over the 10 club tables; no
-// permission logic and no event emission (that lives in domain/clubs.ts). Reads are
-// called in-process from web/mobile loaders; writes are called by the API layer after
-// the domain layer has authorized them. All fan-out to the live layer happens AFTER
-// these commit -- this file never touches a Durable Object. Threads and posts live in
-// clubs-threads.ts, polls, meetings and schedule in clubs-events.ts (re-exported below).
+// Club data access: no permission logic and no event emission (domain/clubs.ts); writes run after the domain layer authorized them,
+// and this file never touches a Durable Object. Threads and posts are in clubs-threads.ts, polls, meetings and schedule in
+// clubs-events.ts (re-exported below).
 import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { customAlphabet, nanoid } from "nanoid";
 import { chunked, type Db } from "../db";
@@ -33,18 +30,14 @@ export type ClubMeeting = typeof clubMeetings.$inferSelect;
 export type ClubMeetingRsvp = typeof clubMeetingRsvps.$inferSelect;
 export type ClubScheduleRow = typeof clubSchedule.$inferSelect;
 
-// Join codes are short, unambiguous, and URL/deep-link safe (no lookalike chars).
 const joinCodeAlphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const makeJoinCode = customAlphabet(joinCodeAlphabet, 10);
 
-/** A fresh, collision-resistant invite code. */
 export function generateJoinCode(): string {
   return makeJoinCode();
 }
 
-/** Public clubs matching a name query, for the command palette's federated search.
- *  Only PUBLIC clubs with a slug are returned, so this is safe on the anonymous suggest
- *  endpoint (private clubs never surface here). */
+/** PUBLIC clubs with a slug only, so it is safe on the anonymous suggest endpoint. */
 export async function searchClubs(
   db: Db,
   query: string,
@@ -102,7 +95,6 @@ export async function createClub(
   if (input.currentBookId) {
     await db.insert(clubBooks).values({ clubId: id, bookId: input.currentBookId, startedAt: now });
   }
-  // The creator is the first, owning member.
   await db.insert(clubMembers).values({
     clubId: id,
     userId: creatorId,
@@ -128,7 +120,6 @@ export async function getClubByJoinCode(db: Db, code: string): Promise<Club | nu
   return row ?? null;
 }
 
-/** Public clubs for the browse list, most recent first. */
 export async function listPublicClubs(db: Db, limit = 50): Promise<Club[]> {
   return db
     .select()
@@ -138,7 +129,6 @@ export async function listPublicClubs(db: Db, limit = 50): Promise<Club[]> {
     .limit(limit);
 }
 
-/** Public clubs whose current read is the given book. */
 export async function listPublicClubsReading(db: Db, bookId: string, limit = 3): Promise<Club[]> {
   return db
     .select()
@@ -148,7 +138,6 @@ export async function listPublicClubsReading(db: Db, bookId: string, limit = 3):
     .limit(limit);
 }
 
-/** Clubs the user is an active member of. */
 export async function listClubsForUser(db: Db, userId: string): Promise<Club[]> {
   return db
     .select({ club: clubs })
@@ -172,7 +161,6 @@ export async function updateClub(
   return row ?? null;
 }
 
-/** Regenerate the join code, invalidating the previous one. Returns the new code. */
 export async function rotateJoinCode(db: Db, id: string): Promise<string> {
   const code = generateJoinCode();
   await db.update(clubs).set({ joinCode: code, updatedAt: new Date() }).where(eq(clubs.id, id));
@@ -184,9 +172,7 @@ export async function deleteClub(db: Db, id: string): Promise<void> {
   await db.delete(clubs).where(eq(clubs.id, id));
 }
 
-/** Point the club at a book (or at none) and keep the history. clubs.current_book_id is the
- *  one record of the current read; club_books is the history, its open row (no finished_at)
- *  being the book now being read. */
+/** Points the club at a book or none: clubs.current_book_id is the current read; club_books is the history, its open row (no finished_at) the book now being read. */
 export async function setCurrentBook(db: Db, clubId: string, bookId: string | null): Promise<void> {
   const now = new Date();
   await db
@@ -218,7 +204,6 @@ export async function countActiveMembers(db: Db, clubId: string): Promise<number
   return row?.n ?? 0;
 }
 
-/** Active member counts for many clubs at once, keyed by club id. */
 export async function countActiveMembersFor(
   db: Db,
   clubIds: string[],
@@ -244,7 +229,6 @@ export async function listMembers(db: Db, clubId: string): Promise<ClubMember[]>
     .orderBy(desc(clubMembers.joinedAt));
 }
 
-/** Insert or move a membership row to a new status/role. */
 export async function upsertMembership(
   db: Db,
   clubId: string,
@@ -324,8 +308,6 @@ export async function setMemberMute(
   return row ?? null;
 }
 
-/** Active-member user ids for a club, minus one optional excluded id (the actor).
- *  Used by the event emitter to notify a club without notifying the actor. */
 export async function listActiveMemberIds(
   db: Db,
   clubId: string,

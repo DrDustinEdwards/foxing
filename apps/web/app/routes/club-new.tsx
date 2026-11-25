@@ -1,6 +1,3 @@
-// Create a club. Clubs are free: creating, joining, and taking part are all part of the
-// free social product (Plus gates the AI companion, never clubs). The form writes to
-// /api/v1/clubs from the browser and navigates to the new club on success.
 import { useCreateClub } from "@foxing/client";
 import { redirect, useNavigate } from "react-router";
 import { PageShell } from "~/components/page-shell";
@@ -118,5 +115,4 @@ export default function ClubNew() {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

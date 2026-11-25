@@ -5,7 +5,6 @@ import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { CommentCard } from "./passage-comment-card";
 
-/** Top-level comments with their replies underneath. */
 export function PassageCommentList({
   loading,
   comments,

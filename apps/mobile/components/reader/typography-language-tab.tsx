@@ -17,8 +17,6 @@ const LANGUAGES = [
   "Mandarin",
 ] as const;
 
-// The translation language the reader's Translate action uses, and an Anki export of
-// the words looked up in this book.
 export function LanguageTab({
   prefs,
   set,

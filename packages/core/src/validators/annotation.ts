@@ -1,13 +1,8 @@
-// Validators for the reader write paths: annotations (highlight/note/bookmark)
-// and reading progress. The Locator schema is intentionally permissive: it keeps
-// the full serialized Readium Locator, including text.before/after (R1) and any
-// locations extras like cssSelector/fragments the navigator provides, so
-// re-anchoring survives duplicate phrases. Extras are stored verbatim; the other
-// client (mobile) ignores fields it does not use (verified harmless).
+// The Locator schema is deliberately permissive: it keeps the full Readium Locator (text.before/after and extras like cssSelector/fragments)
+// verbatim so re-anchoring survives duplicate phrases; mobile ignores fields it does not use.
 import { z } from "zod";
 import { annotationType, highlightColor } from "../enums";
 
-/** RWPM Locator.text: { before?, highlight?, after? }. */
 export const locatorText = z
   .object({
     before: z.string().optional(),
@@ -16,8 +11,6 @@ export const locatorText = z
   })
   .passthrough();
 
-/** RWPM Locator.locations: progression/position/totalProgression + fragments +
- *  any extension keys (e.g. cssSelector) flattened per the RWPM spec. */
 export const locatorLocations = z
   .object({
     fragments: z.array(z.string()).optional(),
@@ -48,11 +41,8 @@ export const createAnnotationInput = z
     body: z.string().max(20000).optional(),
     color: highlightColor.optional(),
     chapter: z.string().max(500).optional(),
-    // Optional (no default) so an unspecified audience is resolved from the
-    // reader's default-annotation preference in domain/annotations.createAnnotation.
-    // 'club' is an EXPOSURE (share-to-club): the annotation stays personal (club_id
-    // NULL), and which clubs see it is derived at read time from the author's active
-    // current-read clubs. Personal annotations never carry a club_id.
+    // Optional: an unspecified audience is resolved from the reader's default in domain/annotations.createAnnotation. 'club' is an EXPOSURE
+    // (the annotation stays personal, club_id NULL; clubs are derived at read time from the author's current-read clubs).
     visibility: z.enum(["private", "friends", "club", "public"]).optional(),
     containsSpoilers: z.boolean().optional(),
   })
@@ -62,11 +52,7 @@ export const createAnnotationInput = z
   });
 export type CreateAnnotationInput = z.infer<typeof createAnnotationInput>;
 
-/** Passage discussion write (type='comment'). Always club-scoped (club_id) and
- *  book-scoped (book_id, so the reader resolver finds it), anchored either to a passage
- *  (locator) or to a highlight/comment it replies to (parentId). visibility is not
- *  accepted: a comment's audience is its club, resolved from club_id, never a personal
- *  visibility. Active club membership is enforced in the domain, not here. */
+/** Passage discussion: club- and book-scoped, anchored to a passage (locator) or a reply target (parentId). No visibility: the audience is its club; membership is enforced in the domain. */
 export const createPassageCommentInput = z
   .object({
     id: z.string().min(1).max(64).optional(),
@@ -93,8 +79,6 @@ export const updateAnnotationInput = z.object({
 });
 export type UpdateAnnotationInput = z.infer<typeof updateAnnotationInput>;
 
-/** progressPct is a whole-book percentage (0..100), derived from the Locator's
- *  totalProgression. Stored alongside the Locator on user_books. */
 export const saveProgressInput = z.object({
   bookId: z.string().min(1),
   locator: locator,

@@ -1,6 +1,3 @@
-// Create a diary entry at /diary/new?book=<slugOrId>. The book is resolved in the
-// loader so the form has a title to show and an id to submit. Without a valid book the
-// page explains how to start (from a book page). The form POSTs /api/v1/diary.
 import { catalogRepo, createDb } from "@foxing/core";
 import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
@@ -59,5 +56,4 @@ export default function DiaryNew({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

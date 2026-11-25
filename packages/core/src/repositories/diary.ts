@@ -1,7 +1,5 @@
-// Diary / reviews data access. diary_entries is the single home for ratings
-// and reviews (Letterboxd model: one entry per read-through, re-reads free). Book and
-// profile ratings derive from the LATEST entry per (user, book). Pure DB access; event
-// emission + authorization live in domain/diary.ts.
+// diary_entries is the single home for ratings and reviews (one entry per read-through, re-reads free); book and profile ratings
+// derive from the LATEST entry per (user, book). Events and authorization are in domain/diary.ts.
 import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { type Db, inList } from "../db";
 import { uniqueSlug } from "@drdustinedwards/site-helpers/slug";
@@ -72,8 +70,6 @@ export async function getEntryById(db: Db, entryId: string): Promise<DiaryEntry 
   return row ?? null;
 }
 
-/** A user's diary, newest-logged first, restricted to the visibilities the viewer may
- *  see (owner passes all three; a stranger passes ['public']). */
 export async function listEntriesForUser(
   db: Db,
   userId: string,
@@ -94,7 +90,6 @@ export async function listEntriesForUser(
   return rows;
 }
 
-/** A book's newest public reviews (entries with review text), for the book page. */
 export async function listPublicReviewsForBook(
   db: Db,
   bookId: string,
@@ -122,8 +117,6 @@ export interface RatedSignalBook {
   ratingHalf: number | null;
 }
 
-/** Rated diary entries with the book's author + subjects, for the recommender's
- *  behavior signals ("because you rated X highly"). */
 export async function listRatedForSignals(db: Db, userId: string): Promise<RatedSignalBook[]> {
   return db
     .select({
@@ -138,7 +131,6 @@ export async function listRatedForSignals(db: Db, userId: string): Promise<Rated
     .where(and(eq(diaryEntries.userId, userId), isNotNull(diaryEntries.ratingHalf)));
 }
 
-/** The latest entry for a (user, book) pair. Drives the profile/book-page rating. */
 export async function latestEntryForBook(
   db: Db,
   userId: string,
@@ -153,8 +145,7 @@ export async function latestEntryForBook(
   return row ?? null;
 }
 
-/** The user's latest rating (rating_half, or null) for each of `bookIds`, in one query: the same "latest" as
- *  latestEntryForBook, newest log date then newest edit. A book with no entry is absent from the map. */
+/** Latest rating per book id in one query (same "latest" as latestEntryForBook); a book with no entry is absent. */
 export async function latestRatingsForBooks(
   db: Db,
   userId: string,
@@ -171,13 +162,8 @@ export async function latestRatingsForBooks(
   return latest;
 }
 
-// Recomputed in core after every diary write (spec-cf-schema: "rating aggregates
-// recomputed from diary_entries by core, not triggers"). The aggregate takes each
-// user's LATEST rated entry for the book and averages rating_half. weighted_rating is
-// stored in stars (rating_half / 2); rating_count is the number of distinct raters.
-// Ratings are anonymous, so all visibilities count toward the average (only the review
-// TEXT is visibility-gated, never the numeric rating). Fine at current scale; move to a
-// windowed SQL query if a book ever accrues enough entries to make this hot.
+// Recomputed in core after every diary write (not by triggers): each user's LATEST rated entry averages into weighted_rating (stars,
+// rating_half / 2); rating_count is distinct raters. Ratings are anonymous, so all visibilities count; only review TEXT is visibility-gated.
 export async function recomputeBookRating(db: Db, bookId: string): Promise<void> {
   const rated = await db
     .select({

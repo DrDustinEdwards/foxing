@@ -1,3 +1,5 @@
+import type { HighlightColor } from "@foxing/core";
+import type { DecorationRect } from "~/lib/reader/engine.client";
 import type { Locator } from "~/lib/reader/locator";
 import { DEFAULT_SETTINGS, type ReaderSettings } from "~/lib/reader/settings";
 
@@ -18,9 +20,6 @@ export interface AnnotationAuthor {
   avatarUrl: string | null;
 }
 
-// Another reader's shared annotation, resolved + tagged server-side. `gate` is the
-// courtesy collapse decision (spoiler/ahead); the body is present so tap-to-reveal is
-// instant, but rendered collapsed until revealed.
 export interface ReaderOther {
   id: string;
   type: "highlight" | "note";
@@ -59,8 +58,6 @@ export interface ReaderPopular {
   locator: Locator | null;
 }
 
-// Which social layers the reader shows. Kept in this browser (Capsomer's useRemembered); mine is on
-// by default, the social layers off (opt-in), so the reader opens as a private surface.
 export type LayerState = { mine: boolean; clubs: boolean; everyone: boolean };
 
 const DEFAULT_LAYERS: LayerState = { mine: true, clubs: false, everyone: false };
@@ -71,14 +68,11 @@ export const SETTINGS_KEY = "foxing.reader.settings";
 
 export const PROGRESS_DEBOUNCE = 1500;
 
-// "My clubs" shows club + friend layers; "Everyone" shows public. Popular follows
-// "Everyone" too. One place decides the mapping so the toggles and the redraw agree.
-export function layerShown(layer: ReaderOther["layer"], state: LayerState): boolean {
+function layerShown(layer: ReaderOther["layer"], state: LayerState): boolean {
   if (layer === "public") return state.everyone;
   return state.clubs; // club | friend
 }
 
-/** The layers in a stored value (useRemembered(LAYERS_KEY)), over the defaults. */
 export function parseLayers(raw: string | null): LayerState {
   try {
     return raw ? { ...DEFAULT_LAYERS, ...JSON.parse(raw) } : DEFAULT_LAYERS;
@@ -87,9 +81,6 @@ export function parseLayers(raw: string | null): LayerState {
   }
 }
 
-// Two locators point at the same reading position when they share a resource and
-// their progression matches within a hair. Used to skip redundant progress saves,
-// which otherwise fire (and flash "Saving...") for the position we just restored.
 export function samePosition(a: Locator | null, b: Locator | null): boolean {
   if (!a || !b || a.href !== b.href) return false;
   return Math.abs(progressionOf(a) - progressionOf(b)) < 1e-4;
@@ -101,10 +92,7 @@ function progressionOf(loc: Locator): number {
   return typeof v === "number" ? v : 0;
 }
 
-// The engine keeps a pool of content frames (current, prev, next); only one is
-// shown at a time, the rest are hidden (visibility:hidden, opacity:0). Activation
-// rects are relative to the shown frame, so anchor against that one.
-export function visibleFrame(container: HTMLElement | null): HTMLIFrameElement | null {
+function visibleFrame(container: HTMLElement | null): HTMLIFrameElement | null {
   if (!container) return null;
   const frames = Array.from(container.querySelectorAll("iframe"));
   return (
@@ -114,11 +102,62 @@ export function visibleFrame(container: HTMLElement | null): HTMLIFrameElement |
   );
 }
 
-/** The reading settings in a stored value (useRemembered(SETTINGS_KEY)), over the defaults. */
 export function parseSettings(raw: string | null): ReaderSettings {
   try {
     return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : DEFAULT_SETTINGS;
   } catch {
     return DEFAULT_SETTINGS;
   }
+}
+
+/** The mine/others decorations to draw: "My clubs" = club + friend, "Everyone" = public. */
+export function highlightSpecs(
+  mine: ReaderAnnotation[],
+  othersList: ReaderOther[],
+  layerState: LayerState,
+) {
+  const mineSpecs = layerState.mine
+    ? mine
+        .filter((a) => (a.type === "highlight" || a.type === "note") && a.locator)
+        .map((a) => ({
+          id: a.id,
+          locator: a.locator as Locator,
+          color: (a.color as HighlightColor) ?? "amber",
+          hasNote: !!a.body?.trim(),
+          ownership: "mine" as const,
+        }))
+    : [];
+  const otherSpecs = othersList
+    .filter((o) => o.locator && layerShown(o.layer, layerState))
+    .map((o) => ({
+      id: o.id,
+      locator: o.locator as Locator,
+      color: (o.color as HighlightColor) ?? "amber",
+      hasNote: !!o.body?.trim(),
+      ownership: "other" as const,
+    }));
+  return [...mineSpecs, ...otherSpecs];
+}
+
+/** The rect is in device pixels relative to the content frame's viewport: convert to CSS pixels and offset by the frame's position. */
+export function anchorFromRect(container: HTMLElement | null, rect: DecorationRect | null) {
+  // The engine pools frames, so pick the shown one, not the first in DOM order.
+  const fr = visibleFrame(container)?.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  return rect && fr
+    ? {
+        top: fr.top + rect.top / dpr,
+        left: fr.left + rect.left / dpr,
+        width: rect.width / dpr,
+        height: rect.height / dpr,
+      }
+    : null;
+}
+
+export function popularSpecs(popular: ReaderPopular[], layerState: LayerState) {
+  return layerState.everyone
+    ? popular
+        .filter((p) => p.locator)
+        .map((p, i) => ({ id: `popular-${i}`, locator: p.locator as Locator }))
+    : [];
 }

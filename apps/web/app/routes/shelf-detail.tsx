@@ -22,7 +22,6 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export default function ShelfDetail({ loaderData }: Route.ComponentProps) {
-  // Lives in the cache, so a book taken off this shelf elsewhere drops out here too.
   const { shelf, books } = useShelf(loaderData.shelf.id, loaderData).data;
   return (
     <PageShell>
@@ -58,7 +57,6 @@ export default function ShelfDetail({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
 
 export { ErrorBoundary } from "~/components/route-error";

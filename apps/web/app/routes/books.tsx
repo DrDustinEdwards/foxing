@@ -24,7 +24,6 @@ export function parseFilters(url: URL): Filters {
   const p = url.searchParams;
   const sort = p.get("sort");
   return {
-    // A genre from Foxing's list; an old link with a raw heading lands on the genre it maps to.
     subject: catalogRepo.toGenres([p.get("subject") ?? ""])[0],
     era: p.get("era") || undefined,
     length: p.get("length") || undefined,
@@ -33,7 +32,6 @@ export function parseFilters(url: URL): Filters {
   };
 }
 
-/** Build a query string from the current filters plus an override (null clears a key). */
 function query(filters: Filters, override: Partial<Record<string, string | null>>): string {
   const base: Record<string, string | undefined> = {
     subject: filters.subject,

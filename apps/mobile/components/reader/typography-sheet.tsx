@@ -17,12 +17,7 @@ interface TypographySheetProps {
   visible: boolean;
   prefs: ReaderPrefs;
   userId: string | null;
-  // Book context, used by the Language tab for difficulty + Anki export.
-  // Optional so non-reader callers can omit (the Language tab gates on it).
   bookId?: string;
-  // Tablet layout, when true the sheet docks to the right edge as a 360-wide
-  // side panel instead of sliding up from the bottom. Same content, different
-  // wrapper. Caller decides based on useWindowDimensions().
   sidePanel?: boolean;
   onChangePrefs: (next: ReaderPrefs) => void;
   onClose: () => void;

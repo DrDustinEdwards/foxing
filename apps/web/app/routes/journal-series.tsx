@@ -6,7 +6,6 @@ import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { buildMeta, SITE_NAME } from "~/lib/seo";
 import type { Route } from "./+types/journal-series";
 
-// A series' own page: every live part, in reading order. The series nav on each part links here.
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db } = loaderBase(context, request);
   const series = params.series;

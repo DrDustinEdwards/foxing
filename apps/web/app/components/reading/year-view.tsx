@@ -1,6 +1,3 @@
-// The Year in Reading page's body (app/routes/year.tsx), drawn the same for a reader's own year and
-// for the sample year of /demos/year: the year picker, the year's numbers, the months and genres
-// charts (Enarratio, in Capsomer's frame), the first and latest finish and the top books.
 import type { RecapBook, RecapPage } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";
 import { Link } from "capsomer/react/link";
@@ -20,9 +17,7 @@ export function YearView({
 }: {
   data: YearData;
   notice?: ReactNode;
-  /** Where the year picker links each year. */
   yearHref: (year: number) => string;
-  /** Show the link to the public version on the reader's profile. */
   share?: boolean;
 }) {
   const { recap, year, years, username, monthly, genres } = data;
@@ -99,7 +94,6 @@ export function YearView({
   );
 }
 
-// The first and latest finish of the year, a small celebratory pair of bookends.
 function Bookend({ label, book }: { label: string; book: RecapBook }) {
   return (
     <div className="cap-card">

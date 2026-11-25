@@ -12,8 +12,6 @@ import { parseFilters } from "./books";
 
 const SITEMAP_HASH_KEY = "indexnow:sitemap-hash";
 
-// Sitemap over live catalog data. Catalog books only (source_type='catalog');
-// community books are excluded by the repository queries, never listed here.
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { db, env, ctx } = loaderBase(context, request);
 
@@ -37,12 +35,10 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     catalogRepo.listPublishedSlugs(db),
     catalogRepo.listSitemapTags(db),
     catalogRepo.listSitemapSeries(db),
-    // The covers the home page and /books show, read as their loaders read them (marketing.tsx, books.tsx), for
-    // their image entries.
     catalogRepo.getTodaysPick(db),
     catalogRepo.listBooks(db, { sort: "title", pageSize: 10 }),
     views.browse(db, parseFilters(new URL("/books", request.url))),
-    // The hubs and the pages written in code have no row to date them: the daily page-dates job keeps the day each last changed.
+    // The hubs and code-written pages have no row to date them: the daily page-dates job keeps the day each last changed.
     kvPageRecord(env.APP_KV, PAGE_DATES_KEY).load(),
   ]);
   const hub = (path: string) => ({ lastmod: pageDates?.[path]?.lastmod });
@@ -51,9 +47,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     return urls.length > 0 ? { images: urls } : {};
   };
 
-  // Paths here; Prelum's sitemapResponse takes absolute URLs, made below.
   const urls: SitemapEntry[] = [
-    // The covers on the home page and /books go with those two entries.
     ...TRACKED_PAGES.map((loc) => ({
       loc,
       ...hub(loc),
@@ -82,10 +76,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     })),
   ];
 
-  // IndexNow: ping only when the URL set changed since the last sitemap request
-  // (Prelum keeps its hash in KV, written once the ping went). Never
-  // blocks the response. Journal posts are left out: a Carrel publish submits its post
-  // at once (site-api's indexNowHook, lib/carrel/site-api.server.ts).
+  // IndexNow pings only when the URL set changed (Prelum keeps its hash in KV) and never blocks the response; a Carrel publish submits its own post.
   const postLocs = new Set(posts.map((p) => `/journal/${p.slug}`));
   const pingUrls = urls.filter((u) => !postLocs.has(u.loc));
   ctx.waitUntil(

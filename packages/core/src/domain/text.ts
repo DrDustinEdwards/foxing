@@ -1,6 +1,5 @@
-// Pure text helpers. normalizeText is the popular-highlights aggregation key
-// (lesson from the old CFI-aggregation bug: aggregate on normalized selected text,
-// not on locator/CFI). Same input from any client must produce the same key.
+// normalizeText is the popular-highlights aggregation key: aggregate on normalized selected text, not locator/CFI; the same input from any
+// client must give the same key.
 export function normalizeText(input: string): string {
   return input
     .toLowerCase()

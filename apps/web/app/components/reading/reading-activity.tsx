@@ -1,6 +1,3 @@
-// The goals page's reading activity (app/routes/goals.tsx), drawn the same for a reader's own weeks
-// and for the sample weeks of /demos/goals: books finished per week over the last year (Enarratio's
-// heat strip, in Capsomer's frame) and the streak cards.
 import { formatCount } from "@drdustinedwards/site-helpers/text";
 import type { Streak } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";

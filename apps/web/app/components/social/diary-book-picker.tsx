@@ -1,6 +1,3 @@
-// Book picker for starting a diary entry when /diary/new was opened without a ?book=.
-// Searches the catalog as you type (BookCombobox) and navigates to /diary/new?book=<slug> so
-// the loader can resolve the book and render the form.
 import { useNavigate } from "react-router";
 import { BookCombobox } from "../book-combobox";
 

@@ -1,7 +1,3 @@
-// Admin: Users. Search by username/display name and suspend/unsuspend accounts.
-// Read-only list in-process via adminRepo; the suspend toggle opens a confirmation with
-// the server's preview, then writes to /api/v1/admin/users/:id/suspend with the token,
-// with a visible error on failure.
 import { adminRepo, createDb } from "@foxing/core";
 import { useRevalidator } from "react-router";
 import { ButtonLink } from "capsomer/react/link";
@@ -102,5 +98,4 @@ function UserRow({
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

@@ -34,7 +34,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function headers(): HeadersInit {
-  // Query pages: cache briefly at the edge but keep them out of the index (meta).
   return publicPageHeaders({ freshSeconds: 120, staleSeconds: 600 });
 }
 
@@ -99,5 +98,4 @@ export default function Search({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

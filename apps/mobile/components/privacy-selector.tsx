@@ -3,17 +3,11 @@ import { Globe, UsersThree, Lock } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
-// Three-tier privacy selector used by review composer, highlight save flow,
-// chapter reactions, etc. Stored value is one of: 'public' | 'close_friends'
-// | 'private'. Callers translate to their own storage shape (e.g. highlights
-// uses is_public BOOLEAN, see HighlightsSheet wiring).
-
 export type PrivacyTier = "public" | "close_friends" | "private";
 
 interface PrivacySelectorProps {
   value: PrivacyTier;
   onChange: (next: PrivacyTier) => void;
-  // Optional dense layout, smaller pills for inline placement inside sheets.
   dense?: boolean;
 }
 
@@ -78,7 +72,6 @@ export function PrivacySelector({ value, onChange, dense }: PrivacySelectorProps
   );
 }
 
-// The three-tier picker as an annotation's audience on the server.
 export function privacyToVisibility(tier: PrivacyTier): "public" | "friends" | "private" {
   return tier === "close_friends" ? "friends" : tier;
 }

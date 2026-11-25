@@ -1,6 +1,3 @@
-// Shared by the goals page and the library's goals card: a books goal for the current
-// period, and the period picker. The write goes through @foxing/client, which refetches
-// the goals list; no page reload.
 import { NativeSelect } from "capsomer/react/select-native";
 import { isoWeek, useCreateGoal } from "@foxing/client";
 import { useState } from "react";
@@ -58,7 +55,6 @@ export function GoalPeriodSelect({
   );
 }
 
-/** A goal's target, a whole number of at least one, with its label for screen readers. */
 export function TargetInput({
   label,
   value,

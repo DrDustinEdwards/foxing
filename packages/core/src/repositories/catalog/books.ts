@@ -1,6 +1,4 @@
-// Catalog book reads. Every public query is hard-scoped to source_type='catalog';
-// community books never appear on the browse/search/sitemap surface (spec-cf-schema
-// rev 3). Readability is derived (catalog AND epub_url present), never a column.
+// Catalog reads are hard-scoped to source_type='catalog'; readability is derived (catalog AND epub_url), never a column.
 import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { pageEnvelope } from "capsomer/behavior/pagination";
@@ -56,7 +54,6 @@ function toCard(row: {
   };
 }
 
-/** Whether a book can be opened in the reader (sub-slice 2 owns the reader itself). */
 export function isReadable(book: Pick<Book, "sourceType" | "epubUrl">): boolean {
   return book.sourceType === "catalog" && !!book.epubUrl;
 }
@@ -102,7 +99,6 @@ function browseConditions(params: BrowseParams) {
   return and(...conds);
 }
 
-/** Browse with filters + offset pagination (page numbers are crawlable for SEO). */
 export async function listBooks(db: Db, params: BrowseParams = {}): Promise<BrowseResult> {
   const pageSize = clampPageSize(params.pageSize, 60, 24);
   const where = browseConditions(params);
@@ -135,23 +131,17 @@ export async function listBooks(db: Db, params: BrowseParams = {}): Promise<Brow
   return { books: rows.map(toCard), total, page, pageSize: perPage, pageCount };
 }
 
-/**
- * Full book detail by slug, resolving BOTH catalog and community books. Community
- * books get detail pages (needed for the picks/club/diary/buy surfaces) but the page
- * marks them noindex and they never enter browse/search/sitemap (spec-cf-schema rev 3).
- */
+/** Resolves catalog AND community books; community books get detail pages but never enter browse/search/sitemap. */
 export async function getBookBySlug(db: Db, slug: string): Promise<Book | null> {
   const rows = await db.select().from(books).where(eq(books.slug, slug)).limit(1);
   return rows[0] ?? null;
 }
 
-/** Full book detail by id. Same resolution rules as getBookBySlug. */
 export async function getBookById(db: Db, id: string): Promise<Book | null> {
   const rows = await db.select().from(books).where(eq(books.id, id)).limit(1);
   return rows[0] ?? null;
 }
 
-/** Books by ids, returned in the order the ids were given (for FTS result ordering). */
 export async function getBooksByIds(db: Db, ids: string[]): Promise<BookCard[]> {
   if (ids.length === 0) return [];
   // A reading list can hold more books than one D1 statement may bind, so the ids go as one JSON parameter.
@@ -163,7 +153,6 @@ export async function getBooksByIds(db: Db, ids: string[]): Promise<BookCard[]> 
   return ids.map((id) => byId.get(id)).filter((b): b is BookCard => !!b);
 }
 
-/** All books credited to one author slug (catalog only), newest first. */
 export async function listBooksByAuthorSlug(db: Db, authorSlug: string): Promise<BookCard[]> {
   const rows = await db
     .select(CARD_COLUMNS)
@@ -174,9 +163,8 @@ export async function listBooksByAuthorSlug(db: Db, authorSlug: string): Promise
 }
 
 /**
- * Up to `limit` other catalog books sharing the book's first genre (toGenres), covers first, a different handful each time.
- * ORDER BY RANDOM() read every book of the subject on each page view. This starts at a random id inside the
- * subject's index instead and wraps once, so it reads about `limit` rows however large the subject is.
+ * Other catalog books sharing the first genre, a different handful each time. Starts at a random id inside the subject's
+ * index and wraps once; ORDER BY RANDOM() read every book of the subject on each page view.
  */
 export async function getRelatedBooks(db: Db, book: Book, limit = 6): Promise<BookCard[]> {
   const subject = toGenres(book.subjects)[0];
@@ -209,7 +197,6 @@ export async function getRelatedBooks(db: Db, book: Book, limit = 6): Promise<Bo
 
 type RelatedRow = Parameters<typeof toCard>[0];
 
-/** The next catalog book in the same series, by series order; null when there is none. */
 export async function getNextInSeries(db: Db, book: Book): Promise<BookCard | null> {
   if (!book.seriesName) return null;
   const conds = [
@@ -227,7 +214,6 @@ export async function getNextInSeries(db: Db, book: Book): Promise<BookCard | nu
   return rows[0] ? toCard(rows[0]) : null;
 }
 
-/** Catalog books the staff picked, most recently picked first. */
 export async function listStaffPicks(db: Db, limit = 10): Promise<BookCard[]> {
   const rows = await db
     .select(CARD_COLUMNS)
@@ -238,7 +224,6 @@ export async function listStaffPicks(db: Db, limit = 10): Promise<BookCard[]> {
   return rows.map(toCard);
 }
 
-/** The newest catalog books with a cover. */
 export async function listNewest(db: Db, limit = 10): Promise<BookCard[]> {
   const rows = await db
     .select(CARD_COLUMNS)
@@ -249,7 +234,6 @@ export async function listNewest(db: Db, limit = 10): Promise<BookCard[]> {
   return rows.map(toCard);
 }
 
-/** Catalog books most often shelved in the given window, most first. */
 export async function listTrending(db: Db, sinceMs: number, limit = 10): Promise<BookCard[]> {
   const rows = await db
     .select({ ...CARD_COLUMNS, n: sql<number>`COUNT(*)` })
@@ -262,11 +246,7 @@ export async function listTrending(db: Db, sinceMs: number, limit = 10): Promise
   return rows.map(toCard);
 }
 
-/**
- * Curated starter set for onboarding: award-winning catalog books with a cover,
- * readable ones first so the eventual "Read now" works. Deterministic order (most
- * awarded, then title) so the handoff is stable across sessions.
- */
+/** Onboarding starters: award-winning catalog books with a cover, readable first, in a stable order. */
 export async function listStarterBooks(db: Db, limit = 6): Promise<BookCard[]> {
   const rows = await db.all<RelatedRow>(sql`
     SELECT b.id, b.slug, b.title, b.author, b.author_slug AS authorSlug, b.cover_url AS coverUrl,
@@ -281,13 +261,7 @@ export async function listStarterBooks(db: Db, limit = 6): Promise<BookCard[]> {
   return rows.map(toCard);
 }
 
-/**
- * Catalog books missing at least one of the given cached-generator actions
- * (book_ai_cache), oldest-updated first. Used by the companion cache Cron/Queue to
- * pick a small batch instead of scanning the whole catalog. Action names are passed
- * in rather than imported, so this repository stays decoupled from the companion
- * registry.
- */
+/** Catalog books missing any of the given cached-generator actions, oldest-updated first. Action names are passed in to keep this repo decoupled from the companion registry. */
 export async function findBooksNeedingCache(
   db: Db,
   actionNames: readonly string[],
@@ -314,10 +288,7 @@ export async function findBooksNeedingCache(
   return rows;
 }
 
-// The candidate pool is catalog + readable (epub present) + has a cover, so every
-// recommended book can be opened and shows a cover. Owned books are excluded by the
-// caller in-memory (the exclusion set is per-user and small). subjects/rating/staff-pick
-// come along so the ranker can score without a second fetch.
+// Pool: catalog, readable, with a cover. The caller excludes owned books in memory; subjects/rating/staff-pick ride along so the ranker needs no second fetch.
 
 export interface RecCandidate {
   id: string;
@@ -353,7 +324,6 @@ const readableCatalog = and(
   isNotNull(books.coverUrl),
 );
 
-/** Top readable catalog books by rating, the always-available base pool. */
 export function listRecCandidatesByRating(db: Db, limit = 400): Promise<RecCandidate[]> {
   return db
     .select(REC_COLUMNS)
@@ -367,8 +337,6 @@ export function listRecCandidatesByRating(db: Db, limit = 400): Promise<RecCandi
     .limit(limit);
 }
 
-/** Readable catalog books by any of the given authors (case-insensitive), so behavior
- *  signals like "more from this author" always have candidates in the pool. */
 export function listRecCandidatesByAuthors(
   db: Db,
   authors: string[],
@@ -391,8 +359,6 @@ export function listRecCandidatesByAuthors(
     .limit(limit);
 }
 
-/** Readable catalog books whose subjects overlap any of the given genres
- *  (case-insensitive), so favorite/behavior genres always have candidates. */
 export function listRecCandidatesBySubjects(
   db: Db,
   subjects: string[],
@@ -421,7 +387,6 @@ export function listRecCandidatesBySubjects(
     .limit(limit);
 }
 
-/** Which of the given book ids are award winners (for the "Award winner" reason). */
 export async function listAwardWinnerIds(db: Db, bookIds: string[]): Promise<string[]> {
   if (bookIds.length === 0) return [];
   // The recommendation pool can be several hundred ids; a flat inArray would pass D1's
@@ -437,7 +402,6 @@ export async function listAwardWinnerIds(db: Db, bookIds: string[]): Promise<str
   return [...found];
 }
 
-/** Distinct author slugs across the catalog with the newest change to any of their books, for the sitemap. */
 export async function listSitemapAuthors(
   db: Db,
 ): Promise<Array<{ slug: string; updatedAt: Date }>> {
@@ -450,7 +414,6 @@ export async function listSitemapAuthors(
   return rows.map((r) => ({ slug: r.author_slug, updatedAt: new Date(Number(r.updated_at)) }));
 }
 
-/** Minimal rows for the sitemap: catalog slugs, last-modified and cover. */
 export async function listSitemapBooks(
   db: Db,
 ): Promise<Array<{ slug: string; updatedAt: Date; coverUrl: string | null }>> {

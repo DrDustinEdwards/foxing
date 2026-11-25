@@ -2,8 +2,7 @@ import { chunked, type Db, rowsPerInsert } from "../db";
 import { announcements, notifications, profiles } from "../schema";
 import { and, desc, eq, getTableColumns } from "drizzle-orm";
 
-/** Insert one notification per onboarded user. Returns how many were written. Chunked
- *  so a large audience never exceeds D1's bound-parameter limit (db.ts). */
+/** One notification per onboarded user, chunked so a large audience never exceeds D1's bound-parameter limit (db.ts). */
 
 export async function broadcastNotification(
   db: Db,
@@ -37,9 +36,7 @@ export async function listAnnouncements(db: Db): Promise<Announcement[]> {
   return db.select().from(announcements).orderBy(desc(announcements.createdAt)).limit(100);
 }
 
-/** The single live announcement for a placement, if any (is_active + within window).
- *  The window bounds (null = open-ended) are checked in JS to keep the null semantics
- *  readable; the active-set for one placement is tiny. */
+/** The live announcement for a placement; window bounds (null = open-ended) are checked in JS to keep the null semantics readable. */
 export async function getActiveAnnouncement(
   db: Db,
   placement = "banner",

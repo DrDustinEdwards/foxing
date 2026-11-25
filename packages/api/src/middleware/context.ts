@@ -1,4 +1,3 @@
-// Step 1: request id + logging context, and the per-request D1/Drizzle handle.
 import { createMiddleware } from "hono/factory";
 import { createDb } from "@foxing/core";
 import type { Env } from "../types";

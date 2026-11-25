@@ -1,6 +1,3 @@
-// The signed-in reader's saved highlights (auth-gated, noindex). Reads run in-process via
-// core; requireProfile gates access. Each highlight shows its passage, a color swatch, and
-// its book context. Read-only.
 import { createDb, views } from "@foxing/core";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -28,8 +25,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return { highlights: await views.myAnnotations(db, user.id, ["highlight"]) };
 }
 
-// Highlight colors are user content (annotation swatches), not UI chrome, so the dot uses
-// the saved color. Unknown or missing names fall back to a neutral border token.
+// Highlight colors are user content, so the dot uses the saved color; unknown names fall back to a neutral border token.
 const SWATCH: Record<string, string> = {
   yellow: "#E7C24B",
   green: "#5BA96A",
@@ -60,7 +56,6 @@ export default function Highlights({ loaderData }: Route.ComponentProps) {
   const [book, setBook] = useState("all");
   const [color, setColor] = useState("all");
 
-  // Distinct colors present, in first-seen order, for the color chips.
   const colors: string[] = [];
   const seenColors = new Set<string>();
   for (const h of highlights) {
@@ -162,5 +157,4 @@ function ColorChip({
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

@@ -3,7 +3,8 @@ import { beforeEach, describe, test } from "node:test";
 
 import { OUTSIDE_DATA_NOTICE } from "@dustinedwards/site-runtime/mcp-server";
 
-import { encodeOffsetCursor, TOOLS, type ToolEnv } from "../src/tools.ts";
+import { encodeOffsetCursor, type ToolEnv } from "../src/tool-kit.ts";
+import { TOOLS } from "../src/tools.ts";
 import { FOXING_ADMIN_ID, TOKEN, fakeFoxing, fakeLog, freshEnv, type FakeFoxing } from "./fakes.ts";
 
 let foxing: FakeFoxing;

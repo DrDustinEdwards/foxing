@@ -1,20 +1,32 @@
-// Admin gate for the /admin/* loaders. Builds on requireProfile, then enforces
-// the admin list (site-runtime isAdminEmail: ADMIN_EMAIL and CO_OWNER_EMAILS) and Cloudflare Access (site-runtime ./access). A signed-in non-admin is
-// sent to /home (the admin surface is not secret, just operator-only); an admin whose
-// request Access did not sign for them is refused; anonymous and un-onboarded users are
-// handled upstream by requireProfile (to /login, /onboarding). Reads inside admin loaders run in-process via
-// adminRepo, per the standing rule that loaders never self-fetch the Worker's own API.
-import { redirect } from "react-router";
+// Admin gate for /admin/* loaders: requireProfile, then the admin list and Cloudflare Access. A non-admin goes to /home; anonymous and un-onboarded users are handled upstream.
+import { adminRepo, createDb } from "@foxing/core";
+import { redirect, type RouterContextProvider } from "react-router";
+import { cloudflareContext } from "~/context";
 import { accessAdmin } from "@dustinedwards/site-runtime/access";
 import { type ProfileContext, requireProfile } from "./profile.server";
 
 export async function requireAdmin(env: Env, request: Request): Promise<ProfileContext> {
   const ctx = await requireProfile(env, request);
   if (!ctx.profile.isAdmin) throw redirect("/home");
-  // Access must have signed this request for the signed-in admin's own email, so an Access
-  // session never stands in for another account. Unset ACCESS_* settings: refused.
+  // Access must have signed this request for the admin's own email, so an Access session never stands in for another account.
   if (!(await accessAdmin(request, env, { admins: [ctx.user.email] }))) {
     throw new Response("Sign in through Cloudflare Access.", { status: 403 });
   }
   return ctx;
+}
+
+/** The admin gate plus the plain D1 handle every /admin loader reads with. */
+export async function adminLoaderBase(context: Readonly<RouterContextProvider>, request: Request) {
+  const { env } = context.get(cloudflareContext);
+  await requireAdmin(env, request);
+  return { env, db: createDb(env.DB) };
+}
+
+/** The headline counts and the newest audit rows, shared by the admin overview and analytics. */
+export async function adminOverview(db: ReturnType<typeof createDb>, auditLimit: number) {
+  const [stats, audit] = await Promise.all([
+    adminRepo.getAdminStats(db),
+    adminRepo.listAuditLog(db, auditLimit),
+  ]);
+  return { stats, audit };
 }

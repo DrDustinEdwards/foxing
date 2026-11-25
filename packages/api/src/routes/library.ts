@@ -1,12 +1,9 @@
-// Library / tracking write + read surface. Shelf status changes go through the
-// core changeBookStatus domain function, which emits the activity/notification
-// events (started_book, finished_book, goal_met) on the write path. Handlers stay
-// thin: session, validate, call core, return. Reused by Phase 7 mobile as-is.
 import { Hono } from "hono";
 import {
   changeBookStatus,
   createGoalInput,
   createShelfInput,
+  goalsRepo,
   libraryRepo,
   setStatusInput,
   shelfBookInput,
@@ -109,21 +106,21 @@ libraryRoutes.get("/goals", async (c) => {
 libraryRoutes.post("/goals", rateLimit("write"), async (c) => {
   const session = requireSession(c);
   const input = await parseJson(c, createGoalInput);
-  const goal = await libraryRepo.createGoal(c.get("db"), session.id, input);
+  const goal = await goalsRepo.createGoal(c.get("db"), session.id, input);
   return c.json({ goal }, 201);
 });
 
 libraryRoutes.patch("/goals/:id", rateLimit("write"), async (c) => {
   const session = requireSession(c);
   const input = await parseJson(c, updateGoalInput);
-  const goal = await libraryRepo.updateGoal(c.get("db"), session.id, c.req.param("id"), input);
+  const goal = await goalsRepo.updateGoal(c.get("db"), session.id, c.req.param("id"), input);
   if (!goal) throw errors.notFound("Goal not found.");
   return c.json({ goal });
 });
 
 libraryRoutes.delete("/goals/:id", rateLimit("write"), async (c) => {
   const session = requireSession(c);
-  const ok = await libraryRepo.deleteGoal(c.get("db"), session.id, c.req.param("id"));
+  const ok = await goalsRepo.deleteGoal(c.get("db"), session.id, c.req.param("id"));
   if (!ok) throw errors.notFound("Goal not found.");
   return c.json({ ok });
 });

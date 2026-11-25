@@ -10,8 +10,6 @@ import { ClubPollCard } from "./club-poll-card";
 import { AddMeetingModal, AddPollModal } from "./meeting-poll-modals";
 import { SectionLabel } from "@/components/ui/section-label";
 
-// The club page's upcoming meetings and open polls. RSVPs and votes patch the cached
-// club page, so counts move as soon as you tap.
 export function MeetingsPollsSection({ page, signedIn }: { page: W.ClubPage; signedIn: boolean }) {
   const colors = useColors();
   const clubId = page.club.id;

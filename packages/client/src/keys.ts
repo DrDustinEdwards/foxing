@@ -16,7 +16,6 @@ export const keys = {
   notifications: ["notifications"] as const,
   clubs: ["clubs"] as const,
   clubsIndex: ["clubs", "index"] as const,
-  /** Club pages, keyed by whatever the screen has: id or slug. */
   clubPages: ["clubs", "page"] as const,
   clubPage: (idOrSlug: string) => ["clubs", "page", idOrSlug] as const,
   threads: ["clubs", "thread"] as const,
@@ -44,7 +43,6 @@ export const keys = {
   recommendations: ["recommendations"] as const,
 };
 
-/** The filters the catalog's browse and search pages take. */
 export interface CatalogQuery {
   subject?: string;
   era?: string;

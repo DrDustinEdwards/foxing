@@ -1,10 +1,6 @@
-// Fact-checks the cached AI texts of one book against the web and corrects them in place. Called from the Queue
-// consumer, one book per message. The checker is injected (a Messages call with the web search tool, built in
-// apps/web/app/lib/anthropic.server.ts), so a test supplies a stub with no network call and no key.
-//
-// Nothing wrong stays on the page: a text the model corrects is replaced by the corrected text (the original is kept
-// in book_ai_review), and a corrected text that fails the prose check is blanked, which the page skips like any empty
-// text. A call that did not finish throws and writes nothing, so the queue retries the book.
+// Fact-checks one book's cached AI texts against the web and corrects them in place (Queue consumer, one book per message; the checker
+// is injected). A corrected text replaces the text (the original is kept in book_ai_review); one failing the prose check is blanked, which
+// the page skips. A call that did not finish throws and writes nothing, so the queue retries the book.
 import { checkProse, OUT_OF_PLACE, WRITING_RULES } from "@dustinedwards/site-runtime/prose";
 import { UNTRUSTED_DATA_RULE, untrusted } from "@dustinedwards/site-runtime/anthropic";
 import { costMicros } from "@dustinedwards/site-runtime/ai-engine";
@@ -14,7 +10,6 @@ import type { FactChecker } from "./client";
 import { resolveModel } from "./models";
 import { CACHED_ACTION_NAMES } from "./registry";
 
-/** Anthropic's web search price, $10 per 1,000 searches (docs: agents-and-tools/tool-use/web-search-tool). */
 const SEARCH_MICROS = 10_000;
 
 export const FACT_CHECK_SYSTEM = `You fact-check the texts a reading site shows on one public-domain book's page. Use web search, preferring Wikipedia, Project Gutenberg, Standard Ebooks, ISFDB, Britannica, the Library of Congress and the Internet Archive, and check every claim a reader could verify: plot events and who did what, character and place names, dates, series order and number, the author's life and career, other books named as related, and whether a "similar book" really is what the text says it is.
@@ -60,7 +55,6 @@ function parseJson(raw: string): unknown {
   }
 }
 
-/** The JSON object in the reply's last json fence (or the first `{` to the last `}`), validated; `{ error }` names what does not fit. */
 export function parseFactCheck(
   text: string,
 ): { texts: Record<string, Verdict> } | { error: string } {
@@ -104,7 +98,6 @@ export type FactCheckResult = {
   costMicros: number;
 };
 
-/** Check every non-empty cached text of one book, correcting what is wrong. Returns null when it had none. */
 export async function factCheckBook(
   db: Db,
   check: FactChecker,
@@ -165,7 +158,6 @@ export async function factCheckBook(
       const high = checkProse(v.corrected as string, { allow }).filter(
         (i) => i.severity === "high" || i.severity === "critical",
       );
-      // A correction that is itself unfit to show leaves nothing wrong on the page: the text is blanked.
       next = high.length ? "" : (v.corrected as string);
       verdict = high.length || !next ? "withheld" : "fixed";
     }

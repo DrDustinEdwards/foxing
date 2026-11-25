@@ -6,7 +6,6 @@ import { publicPageHeaders } from "@dustinedwards/site-runtime/edge-cache";
 import { loaderBase } from "~/lib/loader.server";
 import type { Route } from "./+types/journal-rss";
 
-// Resource route (loader only, no component): serves the Journal RSS 2.0 feed (Prelum's rssDocument).
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { db } = loaderBase(context, request);
   const posts = await catalogRepo.listRssPosts(db, 30);

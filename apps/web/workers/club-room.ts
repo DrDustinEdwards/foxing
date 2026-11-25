@@ -1,22 +1,8 @@
-// ClubRoom -- the live layer for ONE book club (Phase 5, per spec-cf-api). One Durable
-// Object instance per club (addressed by idFromName(clubId)), so cross-club isolation
-// is structural: a ClubRoom only ever holds one club's sockets, and a broadcast can
-// never reach another club. The Phase 5 task originally proposed a single shared hub
-// partitioned by club_id; Fable overrode that in favor of the spec's per-club object,
-// which removes the partitioning bug surface and the single-contention point.
-//
-// INVARIANT: the DO is fan-out ONLY. It NEVER writes D1. Every mutation goes through
-// the HTTP API, which commits to D1 first and THEN calls broadcast() here. D1 is the
-// sole source of truth; this object cannot cause data drift because it holds no truth.
-//
-// Uses the Hibernation API: sockets survive the object being evicted between messages,
-// and presence is recomputed from ctx.getWebSockets() (attachments survive hibernation).
-//
-// TRADEOFF + MIGRATION PATH: one object per club is the standard, horizontally scaling
-// shape. If a single club ever outgrows one object's single-threaded fan-out, the fix
-// is local and the write->commit->notify contract is unchanged: shard that club's
-// sockets across N child objects (idFromName(`${clubId}:${shard}`)) and have the API
-// notify each shard. Nothing about D1-as-truth changes.
+// ClubRoom: the live layer for ONE book club, one Durable Object per club (idFromName(clubId)), so a broadcast can never
+// reach another club.
+// INVARIANT: fan-out ONLY. It never writes D1: every mutation goes through the HTTP API, which commits to D1 first and
+// then calls broadcast() here, so this object holds no truth to drift.
+// Uses the Hibernation API: presence is recomputed from ctx.getWebSockets() (attachments survive hibernation).
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { DurableObject } from "cloudflare:workers";
 import type { ClubLiveHub } from "@foxing/api";
@@ -30,26 +16,20 @@ type ServerMessage = LiveMessage | { t: "presence"; users: string[] } | { t: "po
 export class ClubRoom extends DurableObject {
   constructor(ctx: DurableObjectState, env: Cloudflare.Env) {
     super(ctx, env);
-    // The runtime answers the keepalive ping itself, so an idle room stays hibernated
-    // instead of waking every 30 s per socket (Workers best practices: use
-    // setWebSocketAutoResponse for ping/pong). webSocketMessage below still answers a
-    // ping that does not match the exact frame.
+    // The runtime answers the keepalive ping itself so an idle room stays hibernated; webSocketMessage still answers a non-matching ping.
     ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(PING_FRAME, PONG_FRAME));
   }
 
-  /** Upgrade a membership-checked request (the API already verified it) to a socket. */
   override async fetch(request: Request): Promise<Response> {
     if (request.headers.get("Upgrade") !== "websocket") {
       return new Response("Expected a WebSocket upgrade.", { status: 426 });
     }
-    // The API forwards the membership-checked user id on the URL (headers are awkward
-    // to add to a forwarded upgrade request; a query param survives new Request(url, req)).
+    // The API forwards the user id on the URL: a query param survives new Request(url, req) where headers are awkward.
     const userId = new URL(request.url).searchParams.get("uid");
     if (!userId) return new Response("Missing user.", { status: 400 });
 
     const pair = new WebSocketPair();
     const [client, server] = [pair[0], pair[1]];
-    // Accept with a hibernatable socket; stash the user id so presence survives eviction.
     this.ctx.acceptWebSocket(server);
     server.serializeAttachment({ userId } satisfies Attachment);
 
@@ -57,7 +37,6 @@ export class ClubRoom extends DurableObject {
     return new Response(null, { status: 101, webSocket: client });
   }
 
-  /** Clients may only send {t:'ping'} (keepalive). All real writes go via the HTTP API. */
   override async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
     if (typeof message !== "string") return;
     try {
@@ -70,7 +49,6 @@ export class ClubRoom extends DurableObject {
   }
 
   override async webSocketClose(ws: WebSocket): Promise<void> {
-    // The socket is closing; recompute presence from the survivors.
     this.broadcastPresence(ws);
   }
 
@@ -78,8 +56,7 @@ export class ClubRoom extends DurableObject {
     this.broadcastPresence(ws);
   }
 
-  /** RPC: fan a committed write out to every socket in THIS club's room. Called by the
-   *  API's hub AFTER the write committed to D1. */
+  /** RPC: fan a committed write out to every socket in this club's room (called after the D1 commit). */
   async broadcast(message: LiveMessage | LiveMessage[]): Promise<void> {
     const messages = Array.isArray(message) ? message : [message];
     for (const ws of this.ctx.getWebSockets()) {
@@ -87,7 +64,6 @@ export class ClubRoom extends DurableObject {
     }
   }
 
-  /** RPC: close every socket of one user (they left, were banned or were removed). */
   async disconnect(userId: string): Promise<void> {
     for (const ws of this.ctx.getWebSockets()) {
       if ((ws.deserializeAttachment() as Attachment | null)?.userId !== userId) continue;
@@ -104,7 +80,6 @@ export class ClubRoom extends DurableObject {
     }
   }
 
-  /** Distinct connected user ids, optionally excluding a socket that is disconnecting. */
   private broadcastPresence(excluding?: WebSocket): void {
     const sockets = this.ctx.getWebSockets().filter((ws) => ws !== excluding);
     const users = [
@@ -119,9 +94,7 @@ export class ClubRoom extends DurableObject {
   }
 }
 
-/** The API's live hub over the ClubRoom namespace: one object per club. broadcast() runs only
- *  AFTER a write commits to D1 (write -> commit -> notify); connect() forwards a
- *  membership-checked upgrade to that club's object. */
+/** The API's live hub over the ClubRoom namespace; broadcast() runs only after a write commits to D1. */
 export function clubRoomHub(ns: DurableObjectNamespace<ClubRoom>): ClubLiveHub {
   return {
     async broadcast(clubId, message) {
@@ -131,8 +104,6 @@ export function clubRoomHub(ns: DurableObjectNamespace<ClubRoom>): ClubLiveHub {
       await ns.getByName(clubId).disconnect(userId);
     },
     async connect(clubId, userId, request) {
-      // Pass the verified user id on the URL; new Request(url, request) preserves the
-      // WebSocket upgrade so the ClubRoom can accept it.
       const url = new URL(request.url);
       url.searchParams.set("uid", userId);
       return ns.getByName(clubId).fetch(new Request(url, request));

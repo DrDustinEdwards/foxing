@@ -1,7 +1,3 @@
-// Shelf-status control for a book. The write goes through @foxing/client's
-// useSetBookStatus, which patches the library and this book's cached state at once
-// and rolls back on failure, so the page never reloads. Anonymous readers get a
-// sign-in link instead. Used on /library, the book page and find-next-book.
 import { useSetBookStatus } from "@foxing/client";
 import type { BookRef, ShelfStatus } from "@foxing/types";
 import { useState } from "react";
@@ -30,7 +26,6 @@ export function BookStatusControl({
   loginHref: string;
 }) {
   const setStatus = useSetBookStatus();
-  // Follows the cache when the page has one; otherwise remembers the last pick.
   const [status, setLocal] = useState<ShelfStatus | null>(currentStatus);
   const [followed, setFollowed] = useState(currentStatus);
   if (currentStatus !== followed) {

@@ -1,6 +1,3 @@
-// Validators for the Phase 6 social write paths: diary/reviews, reading lists,
-// reactions. Follows/close-friends take no body (the target user is a path param).
-// Enums come from the single source in enums.ts; core domain trusts the parsed shape.
 import { z } from "zod";
 import { webUrl } from "./web-url";
 import { diaryVisibility, reactionTarget } from "../enums";
@@ -54,8 +51,7 @@ export const addListBookInput = z.object({
 });
 export type AddListBookInput = z.infer<typeof addListBookInput>;
 
-// Generic like/reaction. Phase 6 wires reading_list + diary_entry targets; the enum
-// carries the full set for later phases. kind is 'like' by default (no emoji in UI).
+// Generic like/reaction; kind defaults to 'like' (no emoji in UI).
 
 export const reactionInput = z.object({
   targetType: reactionTarget,

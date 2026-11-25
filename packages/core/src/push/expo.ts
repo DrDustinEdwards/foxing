@@ -1,11 +1,7 @@
-// Expo push delivery. Builds Expo messages, sends them in <=100 chunks to the
-// Expo push API, and extracts tokens Expo reports as DeviceNotRegistered so the caller
-// can prune them. The fetch is injected so the queue consumer passes the Worker's fetch
-// and tests pass a stub. Message building + ticket parsing are pure and unit-testable.
+// Expo push delivery. The fetch is injected (the queue consumer passes the Worker's, tests a stub); message building and ticket parsing are pure.
 
 import { chunked } from "../db";
 
-/** Expo accepts at most 100 messages per push request. */
 const EXPO_BATCH = 100;
 
 export type ExpoMessage = {
@@ -36,8 +32,6 @@ export function buildExpoMessages(
   }));
 }
 
-/** Tokens whose ticket came back DeviceNotRegistered, aligned by index to the messages
- *  that were sent. Expo returns tickets in request order. */
 export function deadTokensFromTickets(messages: ExpoMessage[], tickets: ExpoTicket[]): string[] {
   const dead: string[] = [];
   for (let i = 0; i < tickets.length && i < messages.length; i++) {
@@ -51,8 +45,7 @@ export function deadTokensFromTickets(messages: ExpoMessage[], tickets: ExpoTick
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 
-/** Send messages to Expo in chunks of 100; returns the flat ticket list in request
- *  order. A failed chunk yields error tickets for its messages so callers still align. */
+/** A failed chunk yields error tickets for its messages so callers still align by index. */
 export async function sendExpoPush(
   messages: ExpoMessage[],
   fetchImpl: typeof fetch,

@@ -26,21 +26,7 @@ export function BottomSheetMenu({
       onClose={onClose}
       variant="bottom"
       scroll={false}
-      header={
-        <Text
-          style={{
-            fontFamily: Fonts.uiMedium,
-            fontSize: 12,
-            color: colors.textTertiary,
-            textTransform: "uppercase",
-            letterSpacing: 0.6,
-            paddingHorizontal: 20,
-            marginBottom: 8,
-          }}
-        >
-          {title}
-        </Text>
-      }
+      title={title}
     >
       {items.map((item, i) => (
         <Pressable

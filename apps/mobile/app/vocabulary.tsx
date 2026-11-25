@@ -9,11 +9,8 @@ import { CaretLeft, X as XIcon, Check } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
-/** A saved word with the title of the book it came from, when that book is in the library. */
 type VocabRow = W.VocabularyWord & { bookTitle: string | null };
 
-// Words looked up while reading (GET /vocabulary), newest first; mastering one patches
-// the list at once.
 export default function VocabularyScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -40,8 +37,6 @@ export default function VocabularyScreen() {
     ? rows.filter((r) => r.word.toLowerCase().includes(filter.toLowerCase()))
     : rows;
   const masteredCount = rows.filter((r) => r.mastered).length;
-
-  // ── Render ──────────────────────────────────────────────────────────
 
   if (flashMode) {
     return (
@@ -234,8 +229,6 @@ export default function VocabularyScreen() {
     </Screen>
   );
 }
-
-// ── Flashcard mode ────────────────────────────────────────────────────
 
 interface FlashcardProps {
   rows: VocabRow[];

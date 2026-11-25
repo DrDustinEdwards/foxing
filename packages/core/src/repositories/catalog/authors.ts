@@ -1,5 +1,4 @@
-// Authors are derived from books.author_slug (there is no authors table). One page
-// per author slug, per the standing URL decision (/authors/:slug).
+// Authors are derived from books.author_slug (there is no authors table).
 import type { Db } from "../../db";
 import { type BookCard, listBooksByAuthorSlug } from "./books";
 

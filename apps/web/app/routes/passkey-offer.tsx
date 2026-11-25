@@ -1,7 +1,4 @@
-// After an email link, code, Google or Apple: offer a passkey, so next time there is no email to
-// wait for. Someone who already has one, said "Not now" in the last 30 days, or is on a device
-// that cannot make one goes straight on (site-runtime shouldOfferPasskey, canOfferPasskey). `next`
-// is where they were headed (/me, or /onboarding for a new reader), a path on this site only.
+// After a sign-in: offer a passkey unless they have one, said "Not now" in the last 30 days, or the device cannot make one. `next` is a path on this site only.
 import { dismissPasskeyOffer, shouldOfferPasskey } from "@dustinedwards/site-runtime/sign-in";
 import { safeNextPath } from "@dustinedwards/site-runtime/sign-in-form";
 import { canOfferPasskey } from "@dustinedwards/site-runtime/sign-in-client";
@@ -20,7 +17,6 @@ export function meta() {
   return noindexMeta("Create a passkey | Foxing");
 }
 
-/** The signed-in reader, their auth and where they were headed; no session goes to /login. */
 async function signedIn({ context, request }: Route.LoaderArgs | Route.ActionArgs) {
   const { env } = context.get(cloudflareContext);
   const next = safeNextPath(new URL(request.url).searchParams.get("next"), { fallback: "/me" });
@@ -37,7 +33,6 @@ export async function loader(args: Route.LoaderArgs) {
   return { next };
 }
 
-// "Not now": held for 30 days, for the person rather than this browser.
 export async function action(args: Route.ActionArgs) {
   const { env, next, userId } = await signedIn(args);
   await dismissPasskeyOffer(env.DB, userId, { request: args.request });
@@ -48,7 +43,6 @@ export default function PasskeyOffer({ loaderData }: Route.ComponentProps) {
   const { next } = loaderData;
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // A device with no built-in way to make a passkey skips the offer.
   useEffect(() => {
     void canOfferPasskey().then((can) => {
       if (!can) window.location.replace(next);
@@ -96,5 +90,4 @@ export default function PasskeyOffer({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

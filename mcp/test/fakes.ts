@@ -4,7 +4,7 @@
  */
 import type { AuditRow } from "@dustinedwards/site-runtime/audit-log";
 import type { Caller } from "../src/auth.ts";
-import type { ToolEnv } from "../src/tools.ts";
+import type { ToolEnv } from "../src/tool-kit.ts";
 
 export const TOKEN = "t".repeat(40);
 export const ADMIN_EMAIL = "admin@example.com";

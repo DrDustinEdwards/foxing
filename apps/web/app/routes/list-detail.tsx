@@ -1,10 +1,6 @@
-// Reading list at /lists/:id. Public lists are visible to anyone; a private list only
-// to its owner (enforced in views.listPage). The owner can add/remove books and edit;
-// any signed-in viewer can like the list (reactions, target_type='reading_list').
 import { useListPage, useReaction } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import { LikeButton } from "capsomer/react/like-button";
-// The like button's styles load only on a list's page (React 19 hoists the link).
 import likeButtonCss from "capsomer/like-button.css?url";
 import { ButtonLink, Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
@@ -49,7 +45,6 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
     loaderData.page.list.id,
     loaderData.page,
   ).data;
-  // Reading-list likes go through the generic reactions endpoint; the list page's cache holds the count.
   const like = useReaction();
 
   return (

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { periodRange } from "../src/repositories/library";
+import { periodRange } from "../src/repositories/goals";
 
 // periodRange is the pure date math behind books-goal progress. The D1-backed
 // count + event emission are covered by the API integration tests in apps/web.

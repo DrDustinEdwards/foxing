@@ -27,7 +27,6 @@ export function meta({ location }: Route.MetaArgs) {
       "Every published essay and close reading from the Foxing Journal, on the great books and why they endure, browsable by tag.",
     pathname: location.pathname,
     pageType: "CollectionPage",
-    // The visible trail above the heading, from the home page down.
     breadcrumbs: [
       { name: SITE_NAME, path: "/" },
       { name: "Journal", path: "/journal" },

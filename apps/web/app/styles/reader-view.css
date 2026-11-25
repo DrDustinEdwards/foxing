@@ -1,0 +1,133 @@
+.fx-reader-view-btn,
+.fx-reader-view-btn-2 {
+  top: 0;
+  z-index: 5;
+  height: 100%;
+  width: 12%;
+  background-color: transparent;
+}
+.fx-reader-view-btn {
+  position: absolute;
+  left: 0;
+  cursor: w-resize;
+}
+.fx-reader-view-btn-2 {
+  position: absolute;
+  right: 0;
+  cursor: e-resize;
+}
+.fx-reader-view-box-2 {
+  margin-inline: auto;
+  height: 100%;
+  width: 100%;
+}
+.fx-reader-view-foot {
+  border-block-start: var(--line-w) solid var(--line);
+  padding-inline: var(--space-5);
+}
+.fx-reader-view-row {
+  color: color-mix(in srgb, currentColor 60%, transparent);
+}
+.fx-reader-view-input {
+  height: 0.25rem;
+  flex: 1 1 0%;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+/* Reader engine frame sizing. @readium/navigator tags its content iframes with
+   .readium-navigator-iframe but ships no CSS and never sets their size, so without this they fall
+   back to the intrinsic 300x150 and ReadiumCSS lays the book out in that 300px viewport. Fill the
+   (centered, max-width) reader container so the book paginates across the real reading width. */
+.readium-navigator-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.fx-reader-theme {
+  flex: 1;
+  border: var(--line-w) solid var(--line);
+  border-radius: var(--radius-m);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--fs-body);
+  text-transform: capitalize;
+}
+.fx-reader-theme[aria-pressed="true"] {
+  border-color: var(--line-strong);
+  box-shadow: inset 0 0 0 var(--line-w) var(--line-strong);
+}
+.fx-reader-cols {
+  block-size: 1.75rem;
+  inline-size: 2.5rem;
+  border: var(--line-w) solid var(--line);
+  border-radius: var(--radius-m);
+  font-size: var(--fs-body);
+}
+.fx-reader-cols[aria-pressed="true"] {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.fx-reader-swatch {
+  block-size: 1.25rem;
+  inline-size: 1.25rem;
+  border: var(--line-w) solid var(--line-strong);
+  border-radius: var(--radius-full);
+}
+.fx-reader-swatch[aria-pressed="true"] {
+  box-shadow: 0 0 0 var(--line-w-thick) var(--ring);
+}
+.fx-reader-note {
+  block-size: 6rem;
+  inline-size: 100%;
+  resize: none;
+}
+
+.fx-reader-pop {
+  position: fixed;
+  z-index: var(--z-tabbar);
+  inline-size: min(30rem, 92vw);
+  border: var(--line-w) solid var(--line);
+  border-radius: var(--radius-l);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-l);
+}
+.fx-reader-pop-narrow {
+  inline-size: min(28rem, 90vw);
+}
+.fx-reader-pop-docked {
+  inset-block-end: var(--space-9);
+  inset-inline-start: 50%;
+  translate: -50% 0;
+}
+
+/* The reader's toolbar toggles and layer chips take their edges from the canvas's own text
+   color, so they read on every reading theme. */
+.fx-reader-toggle,
+.fx-reader-layer {
+  border: var(--line-w) solid color-mix(in srgb, currentColor 30%, transparent);
+  font-size: var(--fs-body);
+}
+.fx-reader-toggle {
+  border-radius: var(--radius-m);
+  padding: var(--space-2) var(--space-4);
+}
+.fx-reader-layer {
+  border-radius: var(--radius-full);
+  padding: var(--space-1) var(--space-3);
+}
+.fx-reader-toggle:hover,
+.fx-reader-layer:hover {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+.fx-reader-toggle[aria-pressed="true"] {
+  background: color-mix(in srgb, currentColor 20%, transparent);
+}
+.fx-reader-layer[aria-pressed="true"] {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}

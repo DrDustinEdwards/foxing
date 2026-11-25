@@ -1,8 +1,4 @@
-// The one place the Worker builds the companion's model callers, on site-runtime's
-// Anthropic caller: its route (straight to Anthropic), timeout, one
-// retry layer, stop-reason check and log line. A reply that did not finish (cut off,
-// refused, failed) throws here, so companion chat, Find next book and the catalog cache
-// queue never store or cache it as complete. Null with no key.
+// The Worker's companion model callers, on site-runtime's Anthropic caller. A reply that did not finish throws here, so nothing stores it as complete. Null with no key.
 import {
   type MessageFailure,
   messages,
@@ -15,11 +11,9 @@ import type { companion } from "@foxing/core";
 const APP = "foxing";
 
 function failed(result: MessageFailure): Error {
-  // The kind only: the provider's message is never passed on (site-runtime logs the call).
   return new Error(`The model call did not finish (${result.kind}).`);
 }
 
-// /health's ai-companion check: each real call's outcome, kept in APP_KV until a call works.
 function outcome(env: Env) {
   return (result: Record<string, unknown>) =>
     recordAiOutcome(env.APP_KV, "companion", {
@@ -66,7 +60,6 @@ export function anthropicStructured(env: Env): companion.StructuredCaller | null
   };
 }
 
-// Where the fact-check may look: reference sources about books and their authors.
 const FACT_CHECK_DOMAINS = [
   "en.wikipedia.org",
   "gutenberg.org",
@@ -78,7 +71,6 @@ const FACT_CHECK_DOMAINS = [
   "openlibrary.org",
 ];
 
-/** The fact-check's call: one Messages request with the web search tool, at most three searches. */
 export function anthropicFactChecker(env: Env): companion.FactChecker | null {
   if (!env.ANTHROPIC_API_KEY) return null;
   return async ({ model, system, user }) => {
@@ -87,8 +79,7 @@ export function anthropicFactChecker(env: Env): companion.FactChecker | null {
       APP,
       {
         model,
-        // The reply is the corrected texts as JSON plus the search narration. 6000 cut it off (stop_reason max_tokens)
-        // on 8 of 10 trial books: each cut-off call was billed, thrown away and retried.
+        // 6000 tokens cut the reply off (max_tokens) on 8 of 10 trial books, and each cut-off call was billed and retried.
         max_tokens: 16000,
         system,
         messages: [{ role: "user", content: user }],

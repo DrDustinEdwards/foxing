@@ -1,4 +1,3 @@
-/* /books only, linked by routes/books.tsx: the filter card and its disclosure. */
 .fx-books-card {
   gap: var(--space-6);
   --pad-card: var(--space-5-5);

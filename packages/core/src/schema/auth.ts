@@ -1,8 +1,5 @@
-// Better Auth tables. Property names MUST match Better Auth's field names
-// (id, email, emailVerified, createdAt, ...) because the Drizzle adapter maps
-// by property, not by SQL column name. Better Auth supplies ids and timestamps;
-// the app never writes these tables directly. Generated shape per better-auth
-// drizzle adapter (sqlite provider).
+// Better Auth tables. Property names MUST match Better Auth's field names: the Drizzle adapter maps by property, not SQL column. Better Auth
+// supplies ids and timestamps; the app never writes these tables directly.
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { cascadeFk } from "./_helpers";
 

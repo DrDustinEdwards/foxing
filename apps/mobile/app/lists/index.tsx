@@ -7,7 +7,6 @@ import { Fonts } from "@/constants/fonts";
 import { BackHeader } from "@/components/ui/back-header";
 import { Screen } from "@/components/ui/screen";
 
-// The reader's own lists from GET /lists; a create or delete elsewhere patches this.
 export default function MyListsScreen() {
   const colors = useColors();
   const router = useRouter();

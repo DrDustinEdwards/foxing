@@ -1,9 +1,3 @@
-// Offline sync queue: the mobile half of the /api/v1/sync protocol whose server resolver
-// lives in @foxing/core (domain/sync.ts). Every offline write becomes an op with a
-// client-generated id that doubles as the row primary key, so a replayed op is an
-// idempotent no-op server-side. The transport is injected (lib/api.ts adds the session
-// cookie). Screens read through the query cache, so the queue only ever pushes.
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export type SyncResource = "annotation" | "user_book" | "session" | "vocabulary" | "diary";
@@ -13,14 +7,10 @@ interface SyncOp {
   id: string;
   resource: SyncResource;
   verb: SyncVerb;
-  // Delete carries no payload; create/update carry the resource fields. Kept generic on
-  // purpose: the server validates each payload against its zod schema, so the client stays
-  // a thin envelope and does not duplicate every field shape.
   payload?: Record<string, unknown>;
   clientTs: number;
 }
 
-// Per-op server result, echoed back so we know which ops to drop from the queue.
 interface SyncOpResult {
   id: string;
   status: "applied" | "skipped";
@@ -33,8 +23,6 @@ interface SyncPushResponse {
   results: SyncOpResult[];
 }
 
-// Injected authenticated transport: (path, init) => Response. Path is relative to the API
-// base (e.g. '/api/v1/sync'); the caller's implementation supplies base URL + auth headers.
 export type SyncTransport = (path: string, init: RequestInit) => Promise<Response>;
 
 const QUEUE_KEY = "sync_queue_v1";
@@ -42,10 +30,7 @@ const MAX_BATCH = 500;
 
 let flushing = false;
 
-// 21-char url-safe id used as both op id and row primary key. nanoid is not installed and
-// pulling a native crypto dep is a device gate, so this uses Math.random -- adequate for a
-// per-device offline queue (collisions across a single user's device are vanishingly rare
-// and a collision only replays as an idempotent no-op server-side).
+// Math.random id: nanoid is not installed and a native crypto dep is a device gate; a collision only replays as an idempotent no-op.
 const ID_ALPHABET = "useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict";
 export function clientId(): string {
   let out = "";
@@ -66,13 +51,10 @@ async function readQueue(): Promise<SyncOp[]> {
   }
 }
 
-// A failed write throws: the caller must know the op was not stored.
 async function writeQueue(ops: SyncOp[]): Promise<void> {
   await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(ops));
 }
 
-// Every read-modify-write of the stored queue runs one at a time, so an enqueue during a
-// flush cannot be overwritten by the flush's stale snapshot.
 let chain: Promise<unknown> = Promise.resolve();
 function exclusive<T>(fn: () => Promise<T>): Promise<T> {
   const next = chain.then(fn, fn);
@@ -80,14 +62,10 @@ function exclusive<T>(fn: () => Promise<T>): Promise<T> {
   return next;
 }
 
-// Drop every queued op. Called on sign-out and account deletion: the queue is device-wide,
-// so leftover ops would replay into the next account.
 export function clearQueue(): Promise<void> {
   return exclusive(() => AsyncStorage.removeItem(QUEUE_KEY));
 }
 
-// Queue one offline write. Returns the op id (also the row primary key) so the caller can
-// reflect the write in local UI immediately under the same id the server will use.
 export async function enqueue(input: {
   resource: SyncResource;
   verb: SyncVerb;
@@ -105,10 +83,7 @@ export async function enqueue(input: {
   return op.id;
 }
 
-// Flush queued ops to /api/v1/sync in <=500 batches, dropping any op the server reports as
-// applied or skipped (both are terminal: skipped means replay/stale/idempotent, never
-// retry). Ops the server never answered for (network failure, op-level error) stay queued.
-// Re-entrant safe via the `flushing` latch.
+// Flush in <=500 batches; applied and skipped ops are terminal and dropped, unanswered ops stay queued. The `flushing` latch makes it re-entrant safe.
 export async function flush(
   transport: SyncTransport,
 ): Promise<{ pushed: number; remaining: number }> {
@@ -116,7 +91,6 @@ export async function flush(
   flushing = true;
   let pushed = 0;
   try {
-    // Snapshot then re-read per batch so enqueues during a flush are not lost.
     for (;;) {
       const queue = await readQueue();
       if (queue.length === 0) break;
@@ -138,18 +112,15 @@ export async function flush(
       }
       const body = (await res.json().catch(() => null)) as SyncPushResponse | null;
       const results = body?.results ?? [];
-      // Drop every op the server answered for; an op-level error is terminal (a bad payload
-      // will not become valid on retry), so we drop those too and rely on the server result.
+      // An op-level error is terminal (a bad payload will not become valid on retry), so those are dropped too.
       const answered = new Set(results.map((r) => r.id));
       pushed += results.filter((r) => r.status === "applied").length;
-      // Re-read under the lock: ops enqueued during the request stay, a clear stays cleared.
       const rest = await exclusive(async () => {
         const fresh = (await readQueue()).filter((op) => !answered.has(op.id));
         await writeQueue(fresh);
         return fresh;
       });
-      // No forward progress (server answered for nothing in this batch): stop to avoid a
-      // hot loop on a persistently failing head op.
+      // No forward progress: stop rather than hot-loop on a failing head op.
       if (results.length === 0 || rest.length === 0) break;
     }
     return { pushed, remaining: (await readQueue()).length };

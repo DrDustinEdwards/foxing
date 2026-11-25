@@ -1,15 +1,6 @@
-// Account data rights: GDPR export and erasure, driven by ONE registry of every
-// user-scoped table so export and delete can never drift apart. A table is
-// user-scoped if it holds rows owned or authored by a user. The completeness test
-// (packages/core/test/account-export.test.ts) enumerates every table with a
-// foreign key to `user` and fails if it is not represented here or explicitly
-// excluded, so a table added later cannot silently fall out of the export.
-//
-// Deletion is explicit and child-first (grandchildren, then children, then the
-// parent), then removes the Better Auth rows. D1 also enforces the ON DELETE
-// CASCADE from the user root, so the final user-row delete is a backstop for
-// anything not enumerated; the explicit deletes make erasure deterministic
-// regardless of foreign-key enforcement in a given environment.
+// Account export and erasure from ONE registry of user-scoped tables, so they cannot drift. The completeness test
+// (packages/core/test/account-export.test.ts) fails if a table with a foreign key to `user` is neither here nor excluded.
+// Deletion is child-first; D1's ON DELETE CASCADE from user is only a backstop, so erasure does not depend on foreign-key enforcement.
 import type { SQLiteColumn, SQLiteTable } from "drizzle-orm/sqlite-core";
 import { and, eq, getTableName, inArray, or } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
@@ -59,16 +50,12 @@ import {
 } from "../schema";
 
 type Entry = {
-  /** camelCase key in the export JSON. */
   key: string;
-  /** SQL table name, used by the completeness test. */
   tableName: string;
   select: (db: Db, userId: string) => Promise<unknown[]>;
-  /** One DELETE statement, so the whole erasure runs as a single D1 batch. */
   del: (db: Db, userId: string) => BatchItem<"sqlite">;
 };
 
-/** Rows owned via a single user-id-like column (userId, reporterId, creatorId, ...). */
 function byColumn(key: string, table: SQLiteTable, column: SQLiteColumn): Entry {
   return {
     key,
@@ -78,7 +65,6 @@ function byColumn(key: string, table: SQLiteTable, column: SQLiteColumn): Entry 
   };
 }
 
-/** Rows the user is on either side of (follows: follower or following). */
 function byEitherColumn(key: string, table: SQLiteTable, a: SQLiteColumn, b: SQLiteColumn): Entry {
   return {
     key,
@@ -115,7 +101,6 @@ function byParent(
   };
 }
 
-// Ordered child-first so explicit deletes never orphan a grandchild.
 const REGISTRY: Entry[] = [
   byParent(
     "customShelfBooks",
@@ -169,28 +154,13 @@ const REGISTRY: Entry[] = [
   byColumn("profiles", profiles, profiles.id),
 ];
 
-/** Every export key, in registry order. Endpoint output has exactly these keys. */
 export const ACCOUNT_EXPORT_KEYS: string[] = REGISTRY.map((e) => e.key);
 
-/** SQL names covered by the registry; the completeness test checks against these. */
 export const USER_SCOPED_TABLE_NAMES: ReadonlySet<string> = new Set(
   REGISTRY.map((e) => e.tableName),
 );
 
-/**
- * Tables with a foreign key to `user` that are intentionally NOT in the per-user
- * export or delete:
- *  - Better Auth infrastructure (user, session, account, verification, passkey). `user`
- *    basics travel with the export via the caller's session; `account` holds sign-in
- *    links to Google or Apple and `passkey` the devices' public keys, neither the
- *    reader's own content. Better Auth's deleteUser removes these for the reader's own
- *    deletion (eraseAccountData runs first), and deleteAccount for an admin's.
- *  - Public content the user contributed or authored (catalog books via added_by,
- *    journal posts + versions via author_id / saved_by, admin announcements via
- *    created_by). These outlive the account: their FK is ON DELETE SET NULL, so
- *    deleting the user nulls the attribution and the content stays. They are not
- *    personal data to erase or export per-user.
- */
+/** Tables with a foreign key to `user` left out on purpose: Better Auth's own rows (its deleteUser removes them) and public content whose FK is ON DELETE SET NULL, so attribution is nulled and the content stays. */
 export const ACCOUNT_EXPORT_EXCLUDED: ReadonlySet<string> = new Set([
   getTableName(user),
   getTableName(session),
@@ -203,7 +173,6 @@ export const ACCOUNT_EXPORT_EXCLUDED: ReadonlySet<string> = new Set([
   getTableName(announcements),
 ]);
 
-/** GDPR export: every user-owned table as JSON, keyed by ACCOUNT_EXPORT_KEYS. */
 export async function exportAccount(db: Db, userId: string): Promise<Record<string, unknown[]>> {
   const out: Record<string, unknown[]> = {};
   for (const entry of REGISTRY) {
@@ -212,8 +181,6 @@ export async function exportAccount(db: Db, userId: string): Promise<Record<stri
   return out;
 }
 
-/** A club the user created, the members who may take it over (best first, see
- *  rankSuccessors) and the default. No candidates: the club is deleted with the account. */
 export type ClubHandover = {
   clubId: string;
   name: string;
@@ -221,9 +188,7 @@ export type ClubHandover = {
   suggested: string | null;
 };
 
-/** The clubs a user would hand over on deleting their account (Dustin, 2026-10-23: one
- *  person leaving must not delete everyone else's discussion; the owner picks who takes
- *  over, as Slack, GitHub and Discord have an owner hand over before leaving). */
+/** One person leaving must not delete everyone else's discussion, so the owner of a club hands it over. */
 export async function clubsToHandOver(db: Db, userId: string): Promise<ClubHandover[]> {
   const owned = await db
     .select({ id: clubs.id, name: clubs.name })
@@ -258,11 +223,9 @@ export async function clubsToHandOver(db: Db, userId: string): Promise<ClubHando
   return out;
 }
 
-/** The owner's choice per club: a candidate's user id, or null to delete the club. A club
- *  left out gets its suggested successor (an admin deletion, or an older client). */
+/** The owner's choice per club: a candidate's user id, or null to delete it. A club left out gets its suggested successor. */
 export type ClubSuccessors = Record<string, string | null>;
 
-/** The statements that hand each club over, checked before anything is written. */
 async function handoverStatements(
   db: Db,
   userId: string,
@@ -301,9 +264,7 @@ async function handoverStatements(
   return stmts;
 }
 
-/** The rows a deletion removes before the Better Auth ones: each club the user created handed
- *  to the member they chose (or the suggested one), then every user-owned row, then the
- *  sign-in codes and links kept under their email. Checks every choice before it returns. */
+/** Rows a deletion removes before Better Auth's: club hand-overs, user-owned rows, then sign-in codes kept under the email. */
 async function erasureStatements(
   db: Db,
   userId: string,
@@ -320,10 +281,7 @@ async function erasureStatements(
   ];
 }
 
-/** The reader's own deletion, run by Better Auth's deleteUser before it removes the sessions,
- *  the Google and Apple links and the user (its passkeys go with the user): Foxing's part, in
- *  one D1 batch, so a refused hand-over leaves nothing half-done. If Better Auth then fails,
- *  the account is left empty and the reader can delete it again. */
+/** The reader's own deletion (Better Auth's deleteUser runs it first), one D1 batch so a refused hand-over leaves nothing half-done. */
 export async function eraseAccountData(
   db: Db,
   userId: string,
@@ -333,8 +291,6 @@ export async function eraseAccountData(
   if (stmts.length > 0) await db.batch(stmts as [BatchItem<"sqlite">, ...BatchItem<"sqlite">[]]);
 }
 
-/** Checks the reader's hand-over choices without writing anything: the 422 comes before the
- *  deletion starts. */
 export async function checkSuccessors(
   db: Db,
   userId: string,
@@ -343,9 +299,7 @@ export async function checkSuccessors(
   await handoverStatements(db, userId, successors);
 }
 
-/** GDPR erasure by an admin, in one D1 batch so a failure leaves nothing half-done: Foxing's
- *  part (eraseAccountData's rows), then the Better Auth rows. Clubs nobody takes over go with
- *  the account. */
+/** GDPR erasure by an admin, one D1 batch so a failure leaves nothing half-done. */
 export async function deleteAccount(
   db: Db,
   userId: string,

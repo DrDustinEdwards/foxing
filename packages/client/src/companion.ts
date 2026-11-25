@@ -1,6 +1,4 @@
-// The AI companion: POST /companion streams the answer as server-sent events. The
-// server builds every prompt; a screen sends only the action, the book and what the
-// reader picked or typed. Plus only: a free reader gets ApiError code "plus_required".
+// POST /companion streams the answer as server-sent events. Plus only: a free reader gets ApiError code "plus_required".
 import { useCallback, useRef, useState } from "react";
 import { ApiError, failedRequestMessage } from "./http";
 import { useApi } from "./provider";
@@ -25,16 +23,13 @@ export type CompanionAction =
 export interface CompanionRequest {
   action: CompanionAction;
   bookId: string;
-  /** Continues an earlier conversation; the server keeps its history. */
   threadId?: string;
   message?: string;
   selection?: { text: string; chapter?: string | null; locator?: unknown };
-  /** Where the reader is, for chapter actions sent without a selection. */
   chapter?: string;
   targetLanguage?: string;
 }
 
-/** Runs one companion request at a time; `text` grows as the answer streams in. */
 export function useCompanion() {
   const api = useApi();
   const [text, setText] = useState("");
@@ -43,7 +38,6 @@ export function useCompanion() {
   const [threadId, setThreadId] = useState<string | null>(null);
   const abort = useRef<AbortController | null>(null);
 
-  /** Resolves to the whole answer, or null when it failed (shown in `error`). */
   const run = useCallback(
     async (req: CompanionRequest): Promise<string | null> => {
       abort.current?.abort();

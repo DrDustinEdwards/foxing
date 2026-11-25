@@ -1,7 +1,3 @@
-// The signed-in reader's own reading log index (auth-gated, noindex). Reads run
-// in-process via views.diary (the same view GET /diary serves) and seed the shared cache,
-// so a new or edited entry shows here without a reload. Client-side filters by rating and whether
-// an entry has a review. Logging a new entry lives at /diary/new.
 import { useDiary } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import type { DiaryEntry as OwnDiaryEntry } from "@foxing/types";
@@ -61,7 +57,6 @@ function sortEntries(list: OwnDiaryEntry[], order: SortOrder): OwnDiaryEntry[] {
       (a, b) => (b.ratingHalf ?? -1) - (a.ratingHalf ?? -1) || (b.logDate ?? 0) - (a.logDate ?? 0),
     );
   } else {
-    // Nulls last for both directions.
     copy.sort((a, b) => {
       const av = a.logDate ?? -Infinity;
       const bv = b.logDate ?? -Infinity;
@@ -71,8 +66,7 @@ function sortEntries(list: OwnDiaryEntry[], order: SortOrder): OwnDiaryEntry[] {
   return copy;
 }
 
-/** Group a chronologically-sorted list under year headings (a timeline). Rating sort keeps
- *  one flat group since years interleave. */
+/** Group a chronologically-sorted list under year headings; a rating sort keeps one flat group since years interleave. */
 function groupByYear(
   sorted: OwnDiaryEntry[],
   order: SortOrder,
@@ -93,7 +87,6 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
   const [rating, setRating] = useState<RatingFilter>("all");
   const [review, setReview] = useState<ReviewFilter>("all");
   const [sort, setSort] = useState<SortOrder>("newest");
-  // A book logged more than once anywhere in the diary is a re-read, flagged on each entry.
   const rereadIds = new Set<string>();
   const seen = new Set<string>();
   for (const e of entries) {
@@ -241,5 +234,4 @@ function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

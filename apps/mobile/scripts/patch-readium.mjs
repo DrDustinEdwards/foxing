@@ -1,30 +1,8 @@
 #!/usr/bin/env node
-// Patches react-native-readium's Android EpubReaderFragment so the
-// Android system text-selection ActionMode (Copy / Translate / Select
-// all / Share) never renders. Runs as the mobile package's postinstall
-// on every install (local dev, EAS Build, CI).
-//
-// Two edits, both idempotent:
-//
-//   1. GATE: remove the `if (selectionActions.isNotEmpty())` guard
-//      around `selectionActionModeCallback = customSelectionActionModeCallback`.
-//      Upstream only installs the custom callback when the RN
-//      `selectionActions` prop has been pushed down before the
-//      fragment's onCreate runs. On Android the WebView's long-press
-//      timer (~400 ms) frequently fires before the JS bridge has
-//      propagated that prop, so the default callback wins and the
-//      system bar renders. Always installing the custom callback
-//      sidesteps the race.
-//
-//   2. METHOD: rewrite the body of the custom callback's
-//      `onCreateActionMode` to clear the action map and return false,
-//      which tells Android not to render any ActionMode. Text
-//      selection itself still works (handles / drag are a separate
-//      WebView mechanism) and onSelectionChange keeps firing so the
-//      Foxing floating pill is the only user-facing surface.
-//
-// Why not patch-package: a postinstall script needs no extra dependency
-// and works the same on EAS, CI and Windows.
+// Patches react-native-readium's Android EpubReaderFragment so the system selection ActionMode never renders (postinstall, idempotent).
+// Gate: always install the custom callback; upstream only does so if selectionActions arrived before onCreate, and the WebView long-press timer (~400ms) often wins that race.
+// Method: onCreateActionMode clears the action map and returns false; selection and onSelectionChange still work, so the floating pill is the only surface.
+// Not patch-package: a postinstall script needs no dependency and works on EAS, CI and Windows.
 
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
@@ -45,12 +23,7 @@ const RELATIVE_KT_PATH = join(
 );
 
 const PATCHED_METHOD = `        override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
-            // FOXING PATCH: suppress the Android system selection ActionMode
-            // (Copy / Translate / Select all / Share). Returning false here
-            // tells Android not to show the toolbar. Text selection itself
-            // still works (highlight + drag handles are a separate WebView
-            // mechanism) and onSelectionChange keeps firing so the Foxing
-            // floating pill can render.
+            // FOXING PATCH: returning false suppresses the system ActionMode; selection and onSelectionChange still work.
             actionIdMap.clear()
             return false
         }`;
@@ -59,11 +32,7 @@ const ORIGINAL_METHOD_REGEX =
   /        override fun onCreateActionMode\(mode: ActionMode, menu: Menu\): Boolean \{[\s\S]*?\n        \}/;
 
 const PATCHED_GATE = `              configuration = EpubNavigatorFragment.Configuration {
-                // FOXING PATCH: always install the custom selection callback
-                // so onCreateActionMode (returning false above) suppresses
-                // the system bar even when the JS-side selectionActions
-                // prop has not yet been propagated by the time the
-                // WebView's long-press timer fires.
+                // FOXING PATCH: always install the custom callback (the selectionActions prop may arrive after the long-press timer fires).
                 selectionActionModeCallback = customSelectionActionModeCallback
               }`;
 
@@ -71,8 +40,6 @@ const ORIGINAL_GATE_REGEX =
   /              configuration = EpubNavigatorFragment\.Configuration \{\s*\n\s*if \(selectionActions\.isNotEmpty\(\)\) \{\s*\n\s*selectionActionModeCallback = customSelectionActionModeCallback\s*\n\s*\}\s*\n\s*\}/;
 
 function resolveTargetFile() {
-  // Resolve the package's installed path through require.resolve so we
-  // find the installed copy, wherever npm hoisted it.
   const require = createRequire(import.meta.url);
   try {
     const pkgJson = require.resolve("react-native-readium/package.json");
@@ -92,7 +59,6 @@ function main() {
   const applied = [];
   const skipped = [];
 
-  // Method patch
   if (contents.includes(MARKER_METHOD)) {
     skipped.push("method (already applied)");
   } else if (!ORIGINAL_METHOD_REGEX.test(contents)) {
@@ -102,7 +68,6 @@ function main() {
     applied.push("method");
   }
 
-  // Gate patch
   if (contents.includes(MARKER_GATE)) {
     skipped.push("gate (already applied)");
   } else if (!ORIGINAL_GATE_REGEX.test(contents)) {

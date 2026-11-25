@@ -1,6 +1,3 @@
-// Public invite landing page for /join/:code. Shows a club preview (name, member count)
-// resolved in-process from the join code, then joins on click. A signed-out visitor is
-// sent to sign in first and returned here. Joining is free.
 import { useJoinByCode } from "@foxing/client";
 import { redirect, useNavigate } from "react-router";
 import { PageShell } from "~/components/page-shell";
@@ -89,7 +86,6 @@ export default function JoinCode({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
 
 export { ErrorBoundary } from "~/components/route-error";

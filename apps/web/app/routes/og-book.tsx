@@ -6,7 +6,6 @@ import { ogCard } from "~/lib/og.server";
 import type { Route } from "./+types/og-book";
 import { COVER_ORIGIN, OG_CACHE_ORIGIN, SITE_ORIGIN } from "~/lib/origins";
 
-/** The cover's original from the COVERS bucket, as the card's data URI; null for none. */
 async function coverDataUri(env: Env, url: string): Promise<string | null> {
   if (!url.startsWith(`${COVER_ORIGIN}/`)) return null;
   const object = await env.COVERS.get(url.slice(COVER_ORIGIN.length + 1));
@@ -23,15 +22,12 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const cardRequest = new Request(
     `${OG_CACHE_ORIGIN}/book/${book.slug}?v=${book.updatedAt?.getTime() ?? 0}`,
   );
-  // The card, or when it cannot be drawn (no font, a render error), the cover (or home), so
-  // crawlers still get art. The cover is fetched only on a cache miss.
   const card = await ogCard(cardRequest, async ({ titleFamily }) => {
     const cover = book.coverUrl ? await coverDataUri(env, book.coverUrl) : null;
     const title = cardText(book.title.length > 80 ? `${book.title.slice(0, 77)}...` : book.title);
     const author = cardText(book.author);
 
-    // Single line, no whitespace between tags: satori counts whitespace text nodes as
-    // children and requires display:flex on any multi-child element.
+    // Single line with no whitespace between tags: satori counts whitespace text nodes as children and requires display:flex on any multi-child element.
     const coverBlock = cover
       ? `<div style="display:flex;width:340px;height:100%;align-items:center;"><img src="${cover}" width="340" height="510" style="border-radius:10px;object-fit:cover;box-shadow:0 20px 45px rgba(22,16,11,0.28);"/></div>`
       : "";

@@ -1,4 +1,5 @@
 import { View, Text, Pressable, TextInput, ActivityIndicator } from "react-native";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { SectionBlock } from "@/components/ui/section-label";
@@ -89,22 +90,7 @@ export function YearGoalCard({
 
         {goalsRow ? (
           <View style={{ marginTop: 16 }}>
-            <View
-              style={{
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: colors.bgSunken,
-                overflow: "hidden",
-              }}
-            >
-              <View
-                style={{
-                  height: 6,
-                  width: `${Math.round(progress * 100)}%`,
-                  backgroundColor: colors.brandUi,
-                }}
-              />
-            </View>
+            <ProgressBar ratio={progress} />
             <View className="flex-row items-center justify-between" style={{ marginTop: 6 }}>
               <Text style={{ fontFamily: Fonts.mono, fontSize: 12, color: colors.textTertiary }}>
                 {Math.round(progress * 100)}% complete

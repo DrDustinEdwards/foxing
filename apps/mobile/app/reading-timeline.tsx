@@ -15,12 +15,9 @@ interface Row {
   author: string;
   coverUrl: string | null;
   finishedAt: number | null;
-  /** Half stars, 1 to 10, from the reader's latest diary entry for the book. */
   ratingHalf: number | null;
 }
 
-// Every finished book by the year it was finished: the library's finish dates with the
-// rating from the reader's diary.
 export default function ReadingTimelineScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -39,8 +36,6 @@ export default function ReadingTimelineScreen() {
       .sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0));
   }, [library.data, diary.data]);
 
-  // Group by the year each book was finished; rows are newest first, so the groups come
-  // out newest first with the undated books last.
   const grouped = useMemo(() => {
     const m = new Map<string, Row[]>();
     for (const r of rows) {

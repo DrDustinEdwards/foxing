@@ -3,33 +3,26 @@
 import { type AnySQLiteColumn, integer, text } from "drizzle-orm/sqlite-core";
 import { nanoid } from "nanoid";
 
-/** text primary key, server-defaulted to a nanoid (clients MAY supply their own). */
 export const idPk = () =>
   text("id")
     .primaryKey()
     .$defaultFn(() => nanoid());
 
-/** created_at, defaulted to insert time. */
 export const createdAt = () =>
   integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date());
 
-/** updated_at, defaulted to insert time; core bumps it on every update. */
 export const updatedAt = () =>
   integer("updated_at", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date());
 
-/** a timestamp_ms column (nullable by default). */
 export const ts = (name: string) => integer(name, { mode: "timestamp_ms" });
 
-/** an integer-backed boolean column. */
 export const bool = (name: string) => integer(name, { mode: "boolean" });
 
-/** a text column carrying JSON, typed as T. */
 export const json = <T>(name: string) => text(name, { mode: "json" }).$type<T>();
 
-/** a required text foreign key that deletes with the row it points at. */
 export const cascadeFk = (name: string, target: () => AnySQLiteColumn) =>
   text(name).notNull().references(target, { onDelete: "cascade" });

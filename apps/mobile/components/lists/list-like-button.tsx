@@ -8,11 +8,9 @@ interface Props {
   listId: string;
   liked: boolean;
   count: number;
-  /** Signed out readers see the count but cannot like. */
   canLike: boolean;
 }
 
-/** Like a reading list; the list page's count patches at once and rolls back on failure. */
 export function ListLikeButton({ listId, liked, count, canLike }: Props) {
   const colors = useColors();
   const reaction = useReaction();

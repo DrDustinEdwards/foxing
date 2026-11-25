@@ -6,15 +6,12 @@
   --fx-body: "Source Serif 4 Variable", "Source Serif 4", Georgia, serif;
   --fx-radius-hero: 1rem;
   --fx-hover: color-mix(in srgb, var(--sunken), var(--line) 50%);
-  /* The paywall's dark band keeps its charcoal and cream in both themes. */
   --fx-charcoal: #16100b;
   --fx-on-dark: #f5edde;
 }
-/* Rule 05: a checked box, a chosen radio and an on switch are sky blue (--on), never the accent. */
 :root {
   accent-color: var(--on);
 }
-/* design-system.md, prefers-contrast: more. */
 @media (prefers-contrast: more) {
   :root[data-theme="light"] {
     --dim: #443122;
@@ -53,7 +50,6 @@
   a:hover {
     color: inherit;
   }
-  /* Rule 03: the focus ring is always visible, 3px in the focus color. */
   :focus-visible {
     outline: var(--line-w-bar) solid var(--ring);
     outline-offset: var(--focus-offset);
@@ -70,7 +66,6 @@
   }
 }
 
-/* The page column: one measure for every catalog surface. */
 .fx-wrap {
   inline-size: 100%;
   max-inline-size: 72rem;
@@ -83,7 +78,6 @@
   }
 }
 
-/* Measures. */
 .measure-xs {
   max-inline-size: 20rem;
 }
@@ -225,12 +219,10 @@
   color: var(--accent-text);
 }
 
-/* A list with a rule between items. */
 .divided > * + * {
   border-block-start: var(--line-w) solid var(--line);
 }
 
-/* Fields: Capsomer's input, with Foxing's ground fill where a form sits on a card. */
 .cap-input[data-fill="ground"],
 .cap-select[data-fill="ground"],
 .fx-input-ground {
@@ -242,7 +234,6 @@ textarea.cap-input {
   line-height: var(--leading-normal);
 }
 
-/* A stat tile is <dt> then <dd> in the markup (valid), the number drawn above its label. */
 .fx-flip {
   display: flex;
   flex-direction: column-reverse;

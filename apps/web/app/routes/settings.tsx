@@ -1,6 +1,4 @@
-// Account settings (auth-gated, noindex): profile fields, plan, visibility, appearance,
-// close friends, sign-in (passkeys, Google and Apple), signed-in devices, data export, and
-// account deletion. Every write shows a visible pending + role=alert error, never a silent no-op.
+// Account settings (auth-gated, noindex). Every write shows a visible pending state and a role=alert error.
 import { readCapped } from "@dustinedwards/site-runtime/body";
 import { securityHistoryWords } from "@dustinedwards/site-runtime/sign-in-words";
 import {
@@ -23,15 +21,17 @@ import { Container, PageHeader } from "~/components/ui";
 import type { Route } from "./+types/settings";
 import {
   AdminSection,
-  DangerSection,
   DataSection,
   EmailSection,
   ProfileSection,
+  UsernameSection,
+} from "../components/settings/account-sections";
+import { DangerSection } from "../components/settings/account-danger-section";
+import {
   SecurityHistorySection,
   SessionsSection,
   SignInSection,
-  UsernameSection,
-} from "../components/settings/account-sections";
+} from "../components/settings/account-sign-in-sections";
 import {
   AppearanceSection,
   BillingSection,
@@ -52,15 +52,12 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     auth.api.listPasskeys({ headers: request.headers }),
     passkeyLastUsed(env.DB, user.id),
     auth.api.listUserAccounts({ headers: request.headers }),
-    // Listing sessions needs a sign-in from the last 10 minutes; past that it is null and the
-    // section asks for one. Any other failure fails the page.
+    // Listing sessions needs a sign-in from the last 10 minutes; past that it is null and the section asks for one.
     accountSessions(auth, request),
     securityHistory(env.DB, user.id, 10),
   ]);
   const methods = signInMethods(env, { social: true });
-  // The joined account's own id, which Disconnect names.
   const linked = new Map(accounts.map((a) => [a.providerId, a.id]));
-  // The same resolved visibility and push switches GET /me sends the mobile app.
   const { visibility, notificationPrefs } = views.myProfile(profile);
   return {
     username: profile.username,
@@ -71,7 +68,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     bio: profile.bio ?? "",
     favoriteGenres: (profile.favoriteGenres ?? []).join(", "),
     tier: isPlus ? ("plus" as const) : ("free" as const),
-    // Plus is offered only once it can be bought (CLAUDE.md rule 7).
     canUpgrade: !isPlus && billing.stripeSettings(env) !== null,
     subscriptionStatus: profile.subscriptionStatus,
     periodEndLabel: profile.subscriptionPeriodEnd
@@ -87,8 +83,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       userId: user.id,
       email: user.email,
       displayName: profile.displayName ?? "",
-      // site-runtime's accountPasskeys rows (name, provider, created, last used), kept with each
-      // passkey's credential id so a removed one can be signaled to the password manager.
       passkeys: passkeyRows(passkeys, lastUsed).map((p) => ({
         id: p.id,
         credentialId: passkeys.find((raw) => raw.id === p.id)?.credentialID ?? "",
@@ -112,7 +106,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       device: h.device,
       location: h.location,
     })),
-    // This device first, then the most recently active.
     sessions: sessions
       ? sessions.map((row) => ({
           id: row.id,
@@ -126,12 +119,10 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   };
 }
 
-// Signs another device out by its session id, so no session token reaches the page (site-runtime
-// ./sign-in). A Better Auth write, like the sign-in link's confirm page, not a /api/v1 one.
+// Signs another device out by session id, so no session token reaches the page; a Better Auth write, not /api/v1.
 export async function action({ context, request }: Route.ActionArgs) {
   const { env } = context.get(cloudflareContext);
   await requireProfile(env, request);
-  // The form is one session id, read to a ceiling (site-runtime ./body), never the platform's uncapped formData().
   const form = await readCapped(request, 4 * 1024);
   if (form === null)
     throw new Response("Payload Too Large", {
@@ -194,5 +185,4 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

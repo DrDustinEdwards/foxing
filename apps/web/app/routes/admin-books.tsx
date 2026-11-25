@@ -1,7 +1,4 @@
-// Admin: Books. Search the catalog, toggle the staff-pick (featured) flag, and edit
-// core metadata on a book. A featured book surfaces on the home and discovery rails.
-// Reads in-process; writes to /api/v1/admin/books with a visible error on failure.
-import { adminRepo, createDb } from "@foxing/core";
+import { adminRepo } from "@foxing/core";
 import { useState } from "react";
 import { useRevalidator } from "react-router";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
@@ -13,15 +10,12 @@ import {
   AdminRow,
   AdminField,
 } from "~/components/admin/admin-form";
-import { cloudflareContext } from "~/context";
-import { requireAdmin } from "~/lib/admin.server";
+import { adminLoaderBase } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-books";
 import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { env } = context.get(cloudflareContext);
-  await requireAdmin(env, request);
-  const db = createDb(env.DB);
+  const { db } = await adminLoaderBase(context, request);
   const q = new URL(request.url).searchParams.get("q")?.trim() || undefined;
   const books = await adminRepo.listBooksAdmin(db, { q });
   return { q: q ?? "", books };
@@ -31,7 +25,6 @@ export function meta() {
   return noindexMeta("Admin · Books | Foxing");
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
 
 export default function AdminBooks({ loaderData }: Route.ComponentProps) {

@@ -1,6 +1,3 @@
-// The signed-in reader's own reading lists index (auth-gated, noindex). Reads run
-// in-process through the same core view GET /lists serves the app; requireProfile gates
-// access. Each list links to its detail page; "New list" links to the create route.
 import { createDb, views } from "@foxing/core";
 import { useState } from "react";
 import { ButtonLink } from "capsomer/react/link";
@@ -96,8 +93,6 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// A small overlapping fan of up to four covers as a list preview. Decorative (the list
-// title carries the link's meaning), so the images are alt-empty.
 function CoverStack({ covers }: { covers: string[] }) {
   return (
     <div className="cap-keep fx-lists-row-5">
@@ -115,5 +110,4 @@ function CoverStack({ covers }: { covers: string[] }) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

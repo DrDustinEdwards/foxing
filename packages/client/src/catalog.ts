@@ -1,6 +1,4 @@
-// Catalog hooks: discover, browse, search, a book page, an author page and
-// recommendations.
-// All but recommendations are the same for every reader.
+// Catalog hooks. All but recommendations are the same for every reader.
 import type * as W from "@foxing/types";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { qs } from "./http";
@@ -23,7 +21,6 @@ export function useBrowse(query: CatalogQuery) {
   });
 }
 
-/** Full search; nothing is fetched until there is a query. */
 export function useSearch(q: string, query: CatalogQuery = {}) {
   const api = useApi();
   const term = q.trim();
@@ -71,7 +68,6 @@ export function useRecommendations<S extends W.Recommendations | undefined = und
   );
 }
 
-/** Asks for a fresh set (the AI tier re-picks for Plus readers) and swaps it in. */
 export function useRefreshRecommendations() {
   const api = useApi();
   return useWrite<void, W.Recommendations>({

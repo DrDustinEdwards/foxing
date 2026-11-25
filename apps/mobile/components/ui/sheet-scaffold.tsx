@@ -1,38 +1,26 @@
 import { type ReactNode } from "react";
-import { View, Modal, Pressable, type StyleProp, type ViewStyle } from "react-native";
+import { View, Text, Modal, Pressable, type StyleProp, type ViewStyle } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 import { KeyboardAwareScrollView, KeyboardStickyView } from "react-native-keyboard-controller";
 
-// Shared sheet wrapper. Provides the one-and-only keyboard layer for sheets
-// (react-native-keyboard-controller's KeyboardAwareScrollView) plus a footer
-// slot that always clears the home-bar inset.
-//
-// CRITICAL: this owns the keyboard handling. Do NOT pass a ScrollView in
-// `children` (it would nest inside KeyboardAwareScrollView) and do NOT wrap
-// this in a KeyboardAvoidingView. Pass `scroll={false}` for short, fixed-height
-// content that never needs to scroll.
-//
-//  variant="page"   full-height pageSheet modal (top safe-area, header, body,
-//                   footer) -- the default for form sheets.
-//  variant="bottom" bottom-anchored rounded sheet that dismisses on backdrop
-//                   tap -- for choosers and compact action sheets.
+// Owns the keyboard handling (KeyboardAwareScrollView): do not pass a ScrollView in children or wrap in a KeyboardAvoidingView; use scroll={false} for short fixed content.
+// variant="page" is a full-height pageSheet; "bottom" is a bottom-anchored sheet dismissed by backdrop tap.
 
 interface SheetScaffoldProps {
   visible: boolean;
   onClose: () => void;
   children: ReactNode;
   header?: ReactNode;
+  /** Small uppercase heading for a bottom sheet; replaces `header`. */
+  title?: string;
   footer?: ReactNode;
   variant?: "page" | "bottom";
-  // Wrap children in the keyboard-aware scroll view (default true). Set false
-  // for short content with no inputs that should not scroll.
   scroll?: boolean;
   contentContainerStyle?: StyleProp<ViewStyle>;
-  // bottom variant only: cap the sheet height. Default '85%'.
   maxHeight?: number | `${number}%`;
-  // Lift the footer above the keyboard (chat-style composers). Uses
-  // keyboard-controller's KeyboardStickyView -- still a single keyboard library.
   stickyFooter?: boolean;
 }
 
@@ -43,6 +31,7 @@ export function SheetScaffold({
   onClose,
   children,
   header,
+  title,
   footer,
   variant = "page",
   scroll = true,
@@ -51,6 +40,7 @@ export function SheetScaffold({
   stickyFooter = false,
 }: SheetScaffoldProps) {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
 
   const body = scroll ? (
     <KeyboardAwareScrollView
@@ -95,7 +85,23 @@ export function SheetScaffold({
             className="rounded-t-3xl bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
             style={{ maxHeight, paddingTop: 12 }}
           >
-            {header}
+            {title ? (
+              <Text
+                style={{
+                  fontFamily: Fonts.uiMedium,
+                  fontSize: 12,
+                  color: colors.textTertiary,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.6,
+                  paddingHorizontal: 20,
+                  marginBottom: 8,
+                }}
+              >
+                {title}
+              </Text>
+            ) : (
+              header
+            )}
             {body}
             {footerNode ?? <View style={{ height: insets.bottom + 12 }} />}
           </Pressable>

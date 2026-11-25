@@ -1,8 +1,3 @@
-// Local (device-scheduled) notifications via expo-notifications.
-//
-// expo-notifications is required inside a try so a build without the native
-// module no-ops every call.
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type NotificationsModule = {
@@ -16,23 +11,19 @@ type NotificationsModule = {
     content: { title: string; body?: string; data?: Record<string, unknown> };
     trigger: unknown;
   }) => Promise<string>;
-  // SchedulableTriggerInputTypes lives on the module export in newer
-  // versions; older versions accept the raw `{ hour, minute, repeats }`
-  // shape that we send here.
+  // Older expo-notifications versions accept the raw { hour, minute, repeats } shape.
   SchedulableTriggerInputTypes?: Record<string, string>;
 };
 
 let Notifications: NotificationsModule | null = null;
 try {
   Notifications = require("expo-notifications") as NotificationsModule;
-  // Set the default in-foreground behavior, show alerts even when the app
-  // is open, since most of these are timely (streak risk at 8pm).
+  // Show alerts in the foreground; they are timely (8pm streak risk).
   Notifications?.setNotificationHandler?.({
     handleNotification: async () => ({
       shouldShowAlert: true,
       shouldPlaySound: false,
       shouldSetBadge: true,
-      // SDK 50+ added these:
       shouldShowBanner: true,
       shouldShowList: true,
     }),
@@ -53,8 +44,6 @@ async function ensureNotificationPermission(): Promise<boolean> {
   }
 }
 
-// Two identifiers we manage. Cancel by these before rescheduling so we
-// don't pile up duplicates after a settings change.
 const REMINDER_ID = "foxing-daily-reading-reminder";
 const STREAK_RISK_ID = "foxing-streak-risk-8pm";
 
@@ -88,8 +77,6 @@ export async function rescheduleAll(): Promise<void> {
   const granted = await ensureNotificationPermission();
   if (!granted) return;
   const prefs = await readPrefs();
-  // Always clear our two managed identifiers first so toggling a pref off
-  // actually removes the schedule.
   try {
     await Notifications.cancelScheduledNotificationAsync(REMINDER_ID);
   } catch {}
@@ -107,8 +94,6 @@ export async function rescheduleAll(): Promise<void> {
           title: "Time to read",
           body: "Open a book, even five minutes counts.",
         },
-        // Daily trigger, works across SDK 49/50/51 versions. Newer SDKs
-        // accept `type: 'daily'`; older SDKs accept the bare shape.
         trigger: { hour: t.hour, minute: t.minute, repeats: true },
       });
     } catch (e) {
@@ -117,7 +102,6 @@ export async function rescheduleAll(): Promise<void> {
   }
 
   if (prefs.streakAtRisk !== false) {
-    // Always 8pm local, gives the user a few hours to act before midnight.
     try {
       await Notifications.scheduleNotificationAsync({
         identifier: STREAK_RISK_ID,

@@ -44,7 +44,6 @@ a:hover > .fx-book > :is(h2, h3) {
   }
 }
 
-/* Covers: a 2:3 box on the sunken color until the image paints. */
 .cover-img {
   position: relative;
   aspect-ratio: 2 / 3;
@@ -77,7 +76,6 @@ a:hover > .fx-book > :is(h2, h3) {
   color: var(--dim);
 }
 
-/* The search box: a taller field (Capsomer search suggestions draws the list). */
 .fx-search-field {
   --control: 3rem;
 }
@@ -445,9 +443,13 @@ a:hover > .fx-book > :is(h2, h3) {
 }
 
 .fx-picks-grid,
-.fx-awards-grid {
+.fx-awards-grid,
+.fx-pick-club-grid,
+.fx-u-profile-grid,
+.fx-journal-tag-grid,
+.fx-journal-grid {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--grid-gap, var(--space-5));
   @media (min-width: 40rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

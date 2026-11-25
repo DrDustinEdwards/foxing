@@ -4,7 +4,8 @@ import { useColors } from "@/constants/colors";
 import { Pressable, Text, View } from "react-native";
 import { Fonts } from "@/constants/fonts";
 import { relativeTime } from "@/lib/relative-time";
-import { ChatCircleDots, Eye, EyeSlash } from "phosphor-react-native";
+import { Byline, SpoilerGate } from "@/components/ui/spoiler-gate";
+import { ChatCircleDots } from "phosphor-react-native";
 
 export function PostCard({
   post,
@@ -40,69 +41,20 @@ export function PostCard({
         <Avatar profile={post.author} size={nested ? 32 : 36} style={{ marginRight: 10 }} />
       </Pressable>
       <View style={{ flex: 1 }}>
-        <View className="flex-row items-center" style={{ marginBottom: 2 }}>
-          <Text
-            onPress={() => post.author && onOpenAuthor(post.author.username)}
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 13,
-              color: colors.textPrimary,
-              marginRight: 6,
-            }}
-            numberOfLines={1}
-          >
-            {name}
-          </Text>
-          <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary }}>
-            {relativeTime(post.createdAt)}
-            {post.isEdited ? " · edited" : ""}
-          </Text>
-        </View>
+        <Byline
+          name={name}
+          meta={`${relativeTime(post.createdAt)}${post.isEdited ? " · edited" : ""}`}
+          onPressName={() => post.author && onOpenAuthor(post.author.username)}
+        />
 
-        {hidden ? (
-          <Pressable onPress={onToggleReveal}>
-            <View
-              style={{
-                paddingVertical: 12,
-                paddingHorizontal: 10,
-                borderRadius: 8,
-                backgroundColor: colors.bgSelected,
-                borderColor: colors.borderBrand,
-                borderWidth: 1,
-                borderStyle: "dashed",
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <EyeSlash color={colors.brandText} size={14} weight="regular" />
-              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.brandText }}>
-                Spoiler, tap to reveal
-              </Text>
-            </View>
-          </Pressable>
-        ) : (
-          <>
-            <Text
-              style={{
-                fontFamily: Fonts.body,
-                fontSize: 14,
-                color: colors.textPrimary,
-                lineHeight: 21,
-              }}
-            >
-              {post.content}
-            </Text>
-            {post.hasSpoiler ? (
-              <Pressable onPress={onToggleReveal} className="flex-row items-center gap-1 mt-2">
-                <Eye color={colors.textTertiary} size={11} />
-                <Text style={{ fontFamily: Fonts.ui, fontSize: 10, color: colors.textTertiary }}>
-                  Spoiler shown, tap to hide
-                </Text>
-              </Pressable>
-            ) : null}
-          </>
-        )}
+        <SpoilerGate
+          hidden={hidden}
+          gated={post.hasSpoiler}
+          body={post.content}
+          hiddenLabel="Spoiler, tap to reveal"
+          shownLabel="Spoiler shown, tap to hide"
+          onToggle={onToggleReveal}
+        />
 
         <View className="flex-row items-center mt-3 gap-1 flex-wrap">
           {onReply && canReply && !nested ? (

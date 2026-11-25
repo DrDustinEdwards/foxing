@@ -1,7 +1,4 @@
-// Trimmed rewrite of legacy /features (1,043 lines describing a much larger, mostly
-// unbuilt product: reader, AI companion, clubs, social, vocabulary, stats charts).
-// This page describes only what ships in this build today. It grows as slices land;
-// do not describe the reader, AI companion, or clubs as if they exist (deferred_items).
+// Describes only what ships in this build today; do not describe the reader, AI companion or clubs as if they exist beyond it (deferred_items).
 import { PageShell } from "~/components/page-shell";
 import { FeatureList, GuideFooter, GuideNav, Prose, Section } from "~/components/guide-page";
 import { Container, PageHeader } from "~/components/ui";

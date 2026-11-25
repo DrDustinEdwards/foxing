@@ -1,7 +1,3 @@
-// The signed-in reader's saved vocabulary (auth-gated, noindex). Words looked up while
-// reading collect here. The loader reads core's vocabulary view; the list then lives in
-// the @foxing/client cache and the mastered toggle flips in place (rolled back if the
-// write fails). A filter narrows to still-to-master or mastered.
 import { useSetMastered, useVocabulary } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import type { VocabularyWord } from "@foxing/types";
@@ -102,5 +98,4 @@ function WordItem({ word }: { word: VocabularyWord }) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

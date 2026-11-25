@@ -12,13 +12,11 @@ import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { articleLd, buildMeta, journalSeriesPath } from "~/lib/seo";
 import { SeriesNav } from "capsomer/react/series-nav";
-// The series nav and the signs it uses load only on a post in a series (React 19 hoists the link).
 import seriesCss from "~/styles/journal-series.css?url";
 import type { Route } from "./+types/journal-post";
 import { markup } from "capsomer/behavior/trusted-html";
 
-// The series nav's parts: the live posts of the series in reading order. A Carrel preview of a part
-// not yet live joins at its part number, so the preview shows the nav the post will have.
+// A Carrel preview of a part not yet live joins at its part number, so the preview shows the nav the post will have.
 function seriesNav(
   post: { slug: string; title: string; series: string | null; seriesPart: number | null },
   live: Array<{ slug: string; title: string; seriesPart: number | null }>,
@@ -39,19 +37,15 @@ function seriesNav(
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db } = loaderBase(context, request);
-  // A Carrel preview hands the route its post; every other render reads the live one.
   const preview = context.get(journalPreviewContext);
   const post = preview ?? (await catalogRepo.getPostBySlug(db, params.slug));
   if (!post) {
-    // A post Carrel renamed: its old address answers a permanent redirect to the new one (site-api's
-    // rename), through site-runtime's renameRedirect, which follows a chain of renames in one hop.
-    // Read only on a miss, so a live post's page costs no extra query.
+    // A renamed post's old address redirects permanently (renameRedirect follows a chain in one hop); read only on a miss.
     const moved = await renameRedirect(request, {
       prefix: "/journal/",
       renames: (slug) => catalogRepo.getJournalSlugRedirect(db, slug),
     });
     if (moved) throw moved;
-    // A post taken down on purpose (trashed after it was live) is gone, 410, not missing.
     if (await catalogRepo.isJournalPostWithdrawn(db, params.slug)) {
       throw (
         goneResponse(request, [`/journal/${params.slug}`]) ??
@@ -67,7 +61,6 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
           covers.get(post.coverImageUrl ?? ""),
         )
       : undefined,
-    // The Article's picture is the cover, else the share image Carrel set.
     journalArticleImages(db, post.coverImageUrl ?? post.ogImageUrl),
     catalogRepo.getJournalAuthor(db, post),
     post.series ? catalogRepo.listJournalSeriesParts(db, post.series) : [],
@@ -78,7 +71,6 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     cover,
     articleImages,
     preview: preview !== null,
-    // The byline names a staff member only when the post credits one; otherwise it is Foxing's.
     author,
     series: post.series ? seriesNav(post, seriesParts) : null,
     post: {
@@ -111,7 +103,6 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
     title: post.ogTitle ?? post.title,
     description: post.ogDescription ?? post.excerpt ?? `${post.title}, from the Foxing Journal.`,
     pathname: location.pathname,
-    // Carrel's share image (site-api's image and imageAlt search fields) ahead of the cover.
     image: post.ogImageUrl ?? post.coverImageUrl ?? undefined,
     imageAlt: (post.ogImageUrl ? post.ogImageAlt : post.coverImageAlt) ?? undefined,
     canonical: post.canonicalUrl ?? undefined,
@@ -119,7 +110,6 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
     type: "article",
   });
   return [
-    // A preview is never indexed, whatever headers carry it.
     ...(data.preview
       ? [
           ...meta.filter((m) => !("name" in m && m.name === "robots")),

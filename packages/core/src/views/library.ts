@@ -1,12 +1,11 @@
-// Library views: the reader's shelf state, shelves, goals, streak, vocabulary and
-// notifications in their /api/v1 wire shape (@foxing/types). One function per view,
-// called by the web loader in-process and by the matching GET route, so the page's
-// first paint and every later refetch are the same object.
+// Library views in their /api/v1 wire shape (@foxing/types), one function per view, called by the web loader in-process and by the
+// matching GET route, so first paint and refetch are the same object.
 import { decodeCursor, encodeCursor } from "@dustinedwards/site-runtime/d1";
 import type * as W from "@foxing/types";
 import type { Db } from "../db";
 import * as annotationsRepo from "../repositories/annotations";
 import { genreLabel, toGenres } from "../repositories/catalog/facets";
+import * as goalsRepo from "../repositories/goals";
 import * as libraryRepo from "../repositories/library";
 import * as notificationsRepo from "../repositories/notifications";
 import * as profilesRepo from "../repositories/profiles";
@@ -38,7 +37,6 @@ export async function shelves(db: Db, userId: string): Promise<W.Shelf[]> {
   }));
 }
 
-/** A shelf the reader owns with its books, or null when it is not theirs. */
 export async function shelfDetail(
   db: Db,
   userId: string,
@@ -59,10 +57,9 @@ export async function shelfDetail(
   };
 }
 
-/** Goals with progress; books-type goals count finishes in their period. */
 export async function goals(db: Db, userId: string): Promise<W.GoalWithProgress[]> {
   const [rows, profile] = await Promise.all([
-    libraryRepo.listGoals(db, userId),
+    goalsRepo.listGoals(db, userId),
     profilesRepo.getProfileById(db, userId),
   ]);
   const tz = profile?.timezone ?? null;
@@ -78,15 +75,14 @@ export async function goals(db: Db, userId: string): Promise<W.GoalWithProgress[
         week: goal.week,
       },
       progress:
-        goal.type === "books" ? await libraryRepo.countFinishedInPeriod(db, userId, goal, tz) : 0,
+        goal.type === "books" ? await goalsRepo.countFinishedInPeriod(db, userId, goal, tz) : 0,
     })),
   );
 }
 
-/** The day streak reads 0 once a full day has passed without reading. */
 export async function streak(db: Db, userId: string, now = Date.now()): Promise<W.Streak> {
   const [s, profile, finished, highlights, words] = await Promise.all([
-    libraryRepo.getStreak(db, userId),
+    goalsRepo.getStreak(db, userId),
     profilesRepo.getProfileById(db, userId),
     libraryRepo.countFinishedBooks(db, userId),
     annotationsRepo.countHighlights(db, userId),
@@ -107,8 +103,6 @@ export async function streak(db: Db, userId: string, now = Date.now()): Promise<
 
 const DAY_MS = 86_400_000;
 
-/** Books finished in each month of a year and the year's most-read genres, the shape
- *  both the stats page and the Year in Reading recap chart. */
 export async function finishedSpread(
   db: Db,
   userId: string,
@@ -153,12 +147,12 @@ export async function stats(db: Db, userId: string, now = Date.now()): Promise<W
   const year = new Date(today).getUTCFullYear();
   const weekStart = today - 6 * DAY_MS;
   const [finishedThisYear, goals, spread, s, sessions] = await Promise.all([
-    libraryRepo.countFinishedInPeriod(db, userId, { periodType: "year", year }, tz),
-    libraryRepo.listGoals(db, userId),
+    goalsRepo.countFinishedInPeriod(db, userId, { periodType: "year", year }, tz),
+    goalsRepo.listGoals(db, userId),
     finishedSpread(db, userId, year, tz),
     streak(db, userId, now),
     // A day earlier than the local week start: UTC+14 is a day ahead of UTC.
-    libraryRepo.listSessionsSince(db, userId, weekStart - DAY_MS),
+    goalsRepo.listSessionsSince(db, userId, weekStart - DAY_MS),
   ]);
 
   const week = Array.from({ length: 7 }, (_, i) => ({
@@ -198,8 +192,6 @@ export async function vocabulary(db: Db, userId: string): Promise<W.VocabularyWo
   }));
 }
 
-/** Where one book sits in the reader's library. A book they have never touched is
- *  status null, no progress, on no shelves. */
 export async function myBook(db: Db, userId: string, bookId: string): Promise<W.MyBookState> {
   const [row, shelfIds] = await Promise.all([
     libraryRepo.getUserBook(db, userId, bookId),

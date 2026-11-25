@@ -13,7 +13,6 @@ const MODES: Array<{ action: CompanionAction; label: string }> = [
   { action: "language_difficulty", label: "Difficulty" },
 ];
 
-// A selected passage: four ways to read it closer, and a save to the commonplace book.
 export function PassageAnalysisSheet({
   visible,
   passage,

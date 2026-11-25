@@ -1,8 +1,4 @@
-// Privacy policy. Static content, edge-cached. The infrastructure / subprocessor
-// and storage sections describe the real Cloudflare-native stack (D1, R2, KV,
-// Workers, Email Sending), not the legacy Supabase/Vercel stack. Sections for
-// payments and the AI companion describe processing that begins when those
-// features ship, phrased in the future so nothing overstates today.
+// Static, edge-cached. Sections for payments and the AI companion are phrased in the future so nothing overstates today.
 import { PageShell } from "~/components/page-shell";
 import { LegalDoc, type LegalSection } from "capsomer/react/legal-doc";
 import "capsomer/legal-doc.css";

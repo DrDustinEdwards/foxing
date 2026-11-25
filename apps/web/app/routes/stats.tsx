@@ -1,7 +1,4 @@
-// The signed-in reader's reading stats (auth-gated, noindex). Reads run in-process via
-// core; requireProfile gates access. The page is StatsView (components/reading/stats-view.tsx),
-// which /demos/stats draws with sample numbers. Read-only.
-import { createDb, libraryRepo, views } from "@foxing/core";
+import { createDb, goalsRepo, views } from "@foxing/core";
 import { StatsView } from "~/components/reading/stats-view";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
@@ -18,7 +15,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const db = createDb(env.DB);
   const [stats, goals] = await Promise.all([
     views.stats(db, user.id),
-    libraryRepo.listGoals(db, user.id),
+    goalsRepo.listGoals(db, user.id),
   ]);
   return {
     ...stats,
@@ -35,5 +32,4 @@ export default function Stats({ loaderData }: Route.ComponentProps) {
   return <StatsView data={loaderData} />;
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

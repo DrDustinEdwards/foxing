@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectNoSeriousViolations } from "./helpers";
 
 // The anonymous app shell on Capsomer's site header. The signed-in side is
 // e2e/authed/shell.spec.ts. The header's own behavior (panels, the phone sheet,
@@ -75,12 +75,6 @@ test.describe("app shell", () => {
     const header = page.getByRole("banner");
     await header.getByRole("button", { name: /^books$/i }).click();
     await expect(header.getByRole("group", { name: /^books$/i })).toBeVisible();
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      .analyze();
-    const serious = results.violations.filter(
-      (v) => v.impact === "serious" || v.impact === "critical",
-    );
-    expect(serious, JSON.stringify(serious.map((v) => v.id))).toEqual([]);
+    await expectNoSeriousViolations(page);
   });
 });

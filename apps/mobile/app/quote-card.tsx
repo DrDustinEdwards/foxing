@@ -13,10 +13,6 @@ import { TemplatePicker } from "@/components/quote/template-picker";
 import { TEMPLATES, type CardType, type TemplateId } from "@/components/quote/types";
 import { SectionLabel } from "@/components/ui/section-label";
 
-// Five card types now. The original "quote" type renders the editable
-// passage with template picker; the new types are content-shaped one-shots
-// pre-filled from caller route params.
-
 export default function QuoteCardScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -37,7 +33,6 @@ export default function QuoteCardScreen() {
   }>();
 
   const cardType: CardType = (params.type as CardType) ?? "quote";
-  // Each type picks a sensible default template, user can still flip on quote.
   const defaultTemplate: TemplateId =
     cardType === "finished"
       ? "ornate"
@@ -54,8 +49,6 @@ export default function QuoteCardScreen() {
   const [toast, setToast] = useState<string | null>(null);
   const viewShotRef = useRef<ViewShotRef | null>(null);
 
-  // Snapshot the live preview to a PNG file. ViewShot returns a file://
-  // URI we can hand to MediaLibrary / Share.
   const captureCard = useCallback(async (): Promise<string | null> => {
     try {
       const uri = await captureRef(viewShotRef, {
@@ -109,9 +102,7 @@ export default function QuoteCardScreen() {
       setTimeout(() => setToast(null), 1800);
       return;
     }
-    // Capture the live preview to a PNG and share both the image + caption.
-    // Share.share's `url` field is iOS-only for files; on Android Share
-    // accepts message-only, so we always pass the message too.
+    // Share.share's `url` is iOS-only for files; Android takes message-only, so always pass the message.
     const uri = await captureCard();
     try {
       if (uri) {
@@ -131,8 +122,6 @@ export default function QuoteCardScreen() {
       return;
     }
     setSaving(true);
-    // Save the rendered card to Photos. Permission gate first; on iOS the prompt covers
-    // Photos, on Android the Photos API.
     let toastMessage = "Couldn't save the card to Photos.";
     let ok = false;
     try {

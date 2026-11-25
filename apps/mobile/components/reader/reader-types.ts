@@ -28,23 +28,25 @@ export interface ReaderRef {
   goTo: (cfi: string) => void;
   applySettings: (settings: ReaderSettings) => void;
   addHighlight: (cfi: string, color: HighlightColor) => void;
-  // Push the active design-token palette so highlights match the pill swatches.
   setHighlightColors: (map: Record<HighlightColor, string>) => void;
-  // Push the club passage comments so the reader can underline them. Empty list clears.
   setPassageComments: (comments: PassageCommentMarker[], colorHex?: string) => void;
-  // Push popular highlight markers; the saved excerpt (text) builds a text-based Locator decoration.
   setPopularHighlights: (
     list: Array<{ text?: string; cfi: string; count: number }>,
     colorHex?: string,
   ) => void;
-  // Async bridge, returns chapter plain text for TTS.
   getChapterText: () => Promise<string>;
-  // Async bridge, returns chapter TOC items.
   getToc: () => Promise<Array<{ label: string; href: string; cfi: string | null }>>;
-  // Navigate to a fraction of the publication (0..1). Readium's positions
-  // list (cached from onPublicationReady) maps the fraction to the closest Locator.
   jumpToProgress: (fraction: number) => void;
-  // Visually mark a sentence (1-based index within the current chapter)
-  // for the TTS readback. Pass null to clear.
   highlightSentence: (index: number | null) => void;
+}
+
+export interface WordPillState {
+  word: string;
+  surroundingText: string;
+  cfi: string | null;
+}
+
+export interface PassagePillState {
+  text: string;
+  cfi: string | null;
 }

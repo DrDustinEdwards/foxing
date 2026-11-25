@@ -7,7 +7,6 @@ import { Fonts } from "@/constants/fonts";
 import { BackHeader } from "@/components/ui/back-header";
 import { Screen } from "@/components/ui/screen";
 
-// Every highlight the reader has made, newest first, from GET /annotations.
 export default function HighlightsScreen() {
   const colors = useColors();
   const router = useRouter();

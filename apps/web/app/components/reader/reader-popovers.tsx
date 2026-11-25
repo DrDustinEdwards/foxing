@@ -10,8 +10,6 @@ import type { DecorationRect } from "~/lib/reader/engine.client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { tintFor } from "~/lib/reader/locator";
 
-// Semantic meaning per color (design-system.md) doubles as the non-color signal
-// (system Rule 01) and the accessible label.
 const COLOR_MEANING: Record<HighlightColor, string> = {
   amber: "Key ideas",
   auburn: "Emotional",
@@ -22,12 +20,7 @@ const COLOR_MEANING: Record<HighlightColor, string> = {
   purple: "Disagree",
 };
 
-/**
- * A popover anchored to the tapped passage: centered under it, flipped above when there is no
- * room below, clamped to the viewport, and closed by Escape. Measured after render so its real
- * size is used (pos stays null until then, to avoid a flash at the origin); a change in
- * `remeasure` measures it again.
- */
+/** A popover anchored to the tapped passage, flipped above when there is no room below and clamped to the viewport; measured after render (pos stays null until then); a change in `remeasure` measures again. */
 function useAnchoredPopover(
   anchor: DecorationRect | null,
   onClose: () => void,
@@ -45,7 +38,6 @@ function useAnchoredPopover(
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // remeasure is the content-size trigger.
   useLayoutEffect(() => {
     if (!anchor || !ref.current) {
       setPos(null);
@@ -62,8 +54,6 @@ function useAnchoredPopover(
     setPos({ top, left });
   }, [anchor, remeasure]);
 
-  // The popover's own box: placed at pos once measured (hidden until then), or docked above the
-  // bottom bar when there is no anchor; a stack of rows in the canvas's colors either way.
   const colors = { background: canvas.bg, color: canvas.text };
   return {
     ref,
@@ -81,10 +71,7 @@ function authorName(a: AnnotationAuthor): string {
   return a.displayName ?? a.username ?? "A reader";
 }
 
-// Attribution popover for another reader's shared annotation. Anchors to the tapped
-// passage (same math as EditPopover). Shows the author, their note (spoiler/progress
-// gated with a reveal), a like control, and the reply thread with a composer. Replies
-// post into a shared club; a picker appears only when more than one club is shared.
+// Another reader's shared annotation: author, note (spoiler/progress gated), like, and replies, which post into a shared club (a picker only when more than one).
 export function AttributionPopover({
   other,
   anchor,
@@ -111,8 +98,6 @@ export function AttributionPopover({
   const [replyText, setReplyText] = useState("");
   const [clubId, setClubId] = useState(shareableClubs[0]?.id ?? "");
   const [busy, setBusy] = useState(false);
-  // Re-measured when the content changes size (a reply typed, the note revealed, a reply
-  // added), so it stays anchored to the passage.
   const pop = useAnchoredPopover(
     anchor,
     onClose,
@@ -127,8 +112,7 @@ export function AttributionPopover({
   const submit = async () => {
     const body = replyText.trim();
     if (!body || !clubId) return;
-    // The reply shows in the list at once, so the box empties at once too; a failed
-    // write puts the text back.
+    // The reply shows at once, so the box empties at once; a failed write puts the text back.
     setBusy(true);
     setReplyText("");
     const ok = await onReply(clubId, body);
@@ -247,8 +231,7 @@ export function SelectionToolbar({
   canvas: { bg: string; text: string };
   canShareToClub: boolean;
 }) {
-  // When on, the next color tap saves the highlight with club visibility. Explicit,
-  // per-annotation opt-in: nothing is club-shared by surprise.
+  // An explicit per-annotation opt-in: nothing is club-shared by surprise.
   const [share, setShare] = useState(false);
   return (
     <div
@@ -379,9 +362,7 @@ export function EditPopover({
   const [body, setBody] = useState(annotation.body ?? "");
   const pop = useAnchoredPopover(anchor, onClose, canvas);
 
-  // No full-screen backdrop: it would intercept every reader click and read as a
-  // frozen page. The popover closes on Close, Escape, a page turn, or opening
-  // another annotation, so reading interaction is never blocked.
+  // No full-screen backdrop: it would intercept every reader click and read as a frozen page.
   return (
     <div
       role="dialog"

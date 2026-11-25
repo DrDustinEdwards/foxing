@@ -9,9 +9,6 @@ import { Fonts } from "@/constants/fonts";
 import { authClient, queryClient } from "@/lib/api";
 import { clearQueue } from "@/lib/sync-queue";
 
-// Account changes that go through Better Auth (email, linked Apple and Google accounts)
-// or /api/v1/account (deletion).
-
 function FormSheet({
   visible,
   title,
@@ -91,7 +88,6 @@ function FormSheet({
   );
 }
 
-/** Runs one Better Auth call with the pending/done/error state a sheet shows. */
 function useAuthAction() {
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState<string | null>(null);
@@ -241,8 +237,6 @@ export function LinkedAccounts({
 
 const CONFIRM_PHRASE = "delete my account";
 
-/** Clubs the reader created pass to a member they pick first, so leaving does not
- *  delete everyone else's discussion. */
 export function DeleteAccountSheet({
   visible,
   onClose,

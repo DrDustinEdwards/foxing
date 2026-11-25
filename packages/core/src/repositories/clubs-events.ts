@@ -10,17 +10,19 @@ import type {
 import { clubMeetingRsvps, clubMeetings, clubPolls, clubPollVotes, clubSchedule } from "../schema";
 import { and, desc, eq } from "drizzle-orm";
 
+export type NewClubPoll = {
+  title: string;
+  description?: string;
+  pollType?: string;
+  options: { id: string; label: string; bookId?: string }[];
+  closesAt?: number;
+};
+
 export async function createPoll(
   db: Db,
   clubId: string,
   createdBy: string,
-  input: {
-    title: string;
-    description?: string;
-    pollType?: string;
-    options: { id: string; label: string; bookId?: string }[];
-    closesAt?: number;
-  },
+  input: NewClubPoll,
 ): Promise<ClubPoll> {
   const [row] = await db
     .insert(clubPolls)

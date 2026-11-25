@@ -1,6 +1,4 @@
-// Library hooks: shelf status, custom shelves, goals, streak, vocabulary and
-// notifications. Reads take an optional seed (the web loader's data); writes patch
-// the cache first and refetch only what they touched.
+// Reads take an optional seed (the web loader's data); writes patch the cache first and refetch only what they touched.
 import type * as W from "@foxing/types";
 import { keys } from "./keys";
 import { useApi } from "./provider";
@@ -36,9 +34,7 @@ export function useMyBook<S extends W.MyBookState | undefined = undefined>(
 
 export interface SetStatusVars {
   bookId: string;
-  /** null removes the book from the library. */
   status: W.ShelfStatus | null;
-  /** The book's card, so a first add shows in the library list at once. */
   book?: W.BookRef;
 }
 
@@ -254,7 +250,6 @@ export function useNotifications<S extends W.NotificationsPage | undefined = und
   );
 }
 
-/** Marks the given notifications read, or all of them when ids is omitted. */
 export function useMarkNotificationsRead() {
   const api = useApi();
   return useWrite<{ ids?: string[] } | void>({

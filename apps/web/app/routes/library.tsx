@@ -1,8 +1,3 @@
-// The reader's personal library (auth-gated). The first paint comes from the loader,
-// which reads core's views in-process (loaders never self-fetch the Worker's own
-// /api/v1); after that each card lives in the @foxing/client cache. Writes (status,
-// shelves, goals) patch the cache at once and refetch only what they touched, so the
-// page never reloads. Status transitions emit events server-side.
 import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-path";
 import {
   goalPeriodLabel,
@@ -347,5 +342,4 @@ function ShelvesCard({ shelves }: { shelves: Shelf[] }) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

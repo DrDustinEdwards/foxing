@@ -1,8 +1,6 @@
-// Offline sync contract. The mobile client queues single-owner writes locally
-// and flushes them to POST /api/v1/sync; GET /api/v1/sync?since= pulls changed rows back.
-// Single-owner resources ONLY (annotations, user_books/progress, sessions, vocabulary,
-// diary). Clubs/social are online-only v1. Payloads are validated per resource; the
-// server always scopes to the session user and never trusts payload.user_id.
+// Offline sync contract: the mobile client queues single-owner writes (annotations, user_books/progress, sessions, vocabulary, diary) and
+// flushes them to POST /api/v1/sync; GET ?since= pulls changes. Clubs/social are online-only. The server scopes to the session user and
+// never trusts payload.user_id.
 import { z } from "zod";
 import {
   annotationType,
@@ -26,10 +24,8 @@ export const syncVerbValues = ["create", "update", "delete"] as const;
 export const syncVerb = z.enum(syncVerbValues);
 export type SyncVerb = z.infer<typeof syncVerb>;
 
-// A Readium Locator envelope. During the paused Readium reader migration the mobile
-// reader carries its epubjs CFI inside locator.locations.fragment; real Locators land
-// with the Readium reader. The contract is Locator-shaped from day one so no
-// uninterpretable position data is ever written.
+// A Readium Locator envelope; the mobile reader carries its epubjs CFI in locator.locations.fragment until the Readium reader lands.
+// Locator-shaped from day one so no uninterpretable position is ever written.
 const locator = z.record(z.string(), z.unknown());
 
 const annotationPayload = z.object({
@@ -106,7 +102,6 @@ export const syncPushInput = z.object({
 });
 export type SyncPushInput = z.infer<typeof syncPushInput>;
 
-// Payload validators keyed by resource, used by the domain to parse op.payload.
 export const syncPayloadSchemas = {
   annotation: annotationPayload,
   user_book: userBookPayload,

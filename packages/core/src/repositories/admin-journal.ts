@@ -20,23 +20,16 @@ import { journalPostVersions, journalPosts, journalSlugRedirects, profiles, user
 export type JournalAdminQuery = {
   limit?: number;
   offset?: number;
-  /** Published or not; omitted lists both. */
   published?: boolean;
-  /** Matches the title, the body or the slug, case-insensitively. */
   q?: string;
-  /** Carrying this tag. */
   tag?: string;
-  /** First published at or after, and before. */
   publishedAfter?: Date;
   publishedBefore?: Date;
-  /** true lists the trash alone; otherwise the trash is left out. */
   trashed?: boolean;
-  /** Credited to this staff member; null for the posts credited to Foxing alone. */
   authorId?: string | null;
   /** Only these slugs, or all but these (Carrel's scheduled posts, from site-api's table). */
   slugs?: string[];
   exceptSlugs?: string[];
-  /** The newest updated first unless given; titles A to Z by default. */
   sort?: "updated" | "published" | "title";
   dir?: "asc" | "desc";
 };
@@ -119,7 +112,6 @@ export async function getJournalBySlug(db: Db, slug: string) {
   return row ?? null;
 }
 
-/** A Journal post's rules, which Carrel's site API checks every save against (apps/web/app/lib/carrel). */
 export const journalInput = z.object({
   title: z.string().min(1).max(500),
   slug: z
@@ -150,10 +142,7 @@ export type JournalInput = z.infer<typeof journalInput>;
 /** Optimistic concurrency for a journal write: the write lands only while updated_at still holds this. */
 export type JournalWriteGuard = { expectedUpdatedAt?: Date };
 
-/**
- * The updated_at a write stamps: now, but always past the stored one, so two writes in the same
- * millisecond still leave different versions and a stale expectedUpdatedAt can never match again.
- */
+/** The updated_at a write stamps: always past the stored one, so a stale expectedUpdatedAt can never match again. */
 function nextUpdatedAt(stored: Date | null | undefined): Date {
   const now = Date.now();
   return new Date(stored ? Math.max(now, stored.getTime() + 1) : now);
@@ -165,7 +154,6 @@ function journalRow(id: string, guard: JournalWriteGuard): SQL {
   return and(byId, eq(journalPosts.updatedAt, guard.expectedUpdatedAt)) as SQL;
 }
 
-/** authorId is null for a post created outside a user session (the Carrel site API). */
 export async function createJournalPost(
   db: Db,
   input: JournalInput,
@@ -199,15 +187,11 @@ export async function createJournalPost(
   return row.id;
 }
 
-/** The write that replaced a kept version. */
 export type JournalVersionEvent = "save" | "publish" | "unpublish" | "rename";
 
 type JournalRow = typeof journalPosts.$inferSelect;
 
-/**
- * Keeps the whole post as it stood before a write that landed: every field Carrel edits, its
- * credited author and its slug. savedBy is null for a write made outside a user session (Carrel).
- */
+/** Keeps the whole post as it stood before a write. savedBy is null outside a user session (Carrel). */
 async function keepVersion(
   db: Db,
   before: JournalRow,
@@ -241,10 +225,7 @@ async function keepVersion(
   });
 }
 
-/**
- * Saves a journal post, keeping the version it replaces in journal_post_versions. Returns false,
- * having written nothing, when the post does not exist or the guard's updated_at is stale.
- */
+/** Saves a post, keeping the replaced version. False, writing nothing, when the post is missing or the guard is stale. */
 export async function updateJournalPost(
   db: Db,
   id: string,
@@ -264,11 +245,7 @@ export async function updateJournalPost(
   return true;
 }
 
-/**
- * Publishes or unpublishes a journal post. Returns false, having written nothing, when the post
- * does not exist or the guard's updated_at is stale. `publishedAt`, where given, is the date the
- * post is published under, live before or not (Carrel's settable publish date).
- */
+/** Publishes or unpublishes. `publishedAt`, when given, is the date it is published under (Carrel's settable date). False as above. */
 export async function setJournalPublished(
   db: Db,
   id: string,
@@ -282,7 +259,6 @@ export async function setJournalPublished(
     .update(journalPosts)
     .set({
       isPublished: on,
-      // First publish stamps published_at; unpublishing keeps the original stamp.
       publishedAt:
         options.publishedAt ??
         (on && !current.publishedAt ? new Date() : (current.publishedAt ?? null)),
@@ -295,7 +271,6 @@ export async function setJournalPublished(
   return true;
 }
 
-/** The post as it stood before each write, newest first. */
 export async function listJournalVersions(db: Db, postId: string, limit = 50) {
   return db
     .select()
@@ -314,10 +289,7 @@ export async function getJournalVersion(db: Db, postId: string, versionId: strin
   return row ?? null;
 }
 
-/**
- * Into the trash (trashed_at set) or back out of it. Either way the post is a draft: a trashed post
- * is off the Journal, and a restore never republishes. False, having written nothing, as above.
- */
+/** Trashes or restores; either way the post is a draft, and a restore never republishes. */
 export async function setJournalTrashed(
   db: Db,
   id: string,
@@ -338,10 +310,7 @@ export async function setJournalTrashed(
   return updated.length > 0;
 }
 
-/**
- * Deletes a post for good, with its history and the redirects that led to it. The guarded delete
- * goes first, so a stale one removes nothing. False when it matched no row.
- */
+/** Deletes for good, with history and redirects; the guarded delete goes first, so a stale one removes nothing. */
 export async function deleteJournalPost(
   db: Db,
   id: string,
@@ -360,12 +329,8 @@ export async function deleteJournalPost(
 }
 
 /**
- * Moves a post to a new slug, its address, as one batch. History is keyed by the post's id, so it
- * stays with it. With `redirect`, the old address answers a 301 to the new one, and every older
- * address that led to the old one now leads straight to the new one. A post renamed back to an
- * address it had answers it again. Every statement after the first runs only where that first one
- * moved the row (the slug and the new updated_at), so a stale rename writes nothing at all.
- * False when the guard was stale.
+ * Moves a post to a new slug as one batch. With `redirect`, the old address and every older one answer a 301 to the new one.
+ * Every statement after the first runs only where it moved the row, so a stale rename writes nothing.
  */
 export async function renameJournalPost(
   db: Db,
@@ -411,10 +376,7 @@ export async function renameJournalPost(
   return true;
 }
 
-/**
- * The Journal's staff, whom a post may credit: every account whose email is on the admin list
- * (ADMIN_EMAIL and CO_OWNER_EMAILS, lower case), by display name. Admin is that setting, never a stored row.
- */
+/** Staff a post may credit: accounts whose email is on the admin list (ADMIN_EMAIL, CO_OWNER_EMAILS), never a stored row. */
 export async function listJournalStaff(
   db: Db,
   admins: ReadonlyArray<string>,
@@ -429,7 +391,6 @@ export async function listJournalStaff(
   return rows.map((r) => ({ id: r.id, name: r.displayName ?? r.username }));
 }
 
-/** The display names of these accounts, by id; an id with no profile is left out. */
 export async function journalPeopleNames(
   db: Db,
   ids: ReadonlyArray<string | null>,

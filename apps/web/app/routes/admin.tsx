@@ -1,24 +1,13 @@
-// Admin dashboard: at-a-glance counts, recent signups, and the recent operator audit
-// log. Read-only, gated on ADMIN_EMAIL and CO_OWNER_EMAILS. This is the template every other admin
-// page follows: requireAdmin in the loader, adminRepo reads in-process, AdminShell chrome.
-import { adminRepo, createDb } from "@foxing/core";
 import { Link } from "capsomer/react/link";
 import { mediumDateTime } from "~/lib/dates";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
-import { cloudflareContext } from "~/context";
-import { requireAdmin } from "~/lib/admin.server";
+import { adminLoaderBase, adminOverview } from "~/lib/admin.server";
 import type { Route } from "./+types/admin";
 import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { env } = context.get(cloudflareContext);
-  await requireAdmin(env, request);
-  const db = createDb(env.DB);
-  const [stats, audit] = await Promise.all([
-    adminRepo.getAdminStats(db),
-    adminRepo.listAuditLog(db, 12),
-  ]);
-  return { stats, audit };
+  const { db } = await adminLoaderBase(context, request);
+  return adminOverview(db, 12);
 }
 
 export function meta() {
@@ -95,5 +84,4 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

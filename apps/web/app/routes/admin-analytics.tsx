@@ -1,26 +1,15 @@
-// Admin: Analytics. Read-only. At-a-glance platform counts plus the full recent operator
-// audit log. Gated on ADMIN_EMAIL and CO_OWNER_EMAILS; adminRepo reads run in-process.
-import { adminRepo, createDb } from "@foxing/core";
 import { Table } from "capsomer/react/table";
 import { mediumDateTime } from "~/lib/dates";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
-import { cloudflareContext } from "~/context";
-import { requireAdmin } from "~/lib/admin.server";
+import { adminLoaderBase, adminOverview } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-analytics";
 
-// The audit table is the only Capsomer table on the site, so its styles load with this page alone.
 import "capsomer/table.css";
 import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { env } = context.get(cloudflareContext);
-  await requireAdmin(env, request);
-  const db = createDb(env.DB);
-  const [stats, audit] = await Promise.all([
-    adminRepo.getAdminStats(db),
-    adminRepo.listAuditLog(db, 50),
-  ]);
-  return { stats, audit };
+  const { db } = await adminLoaderBase(context, request);
+  return adminOverview(db, 50);
 }
 
 export function meta() {
@@ -82,5 +71,4 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

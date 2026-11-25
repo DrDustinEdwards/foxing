@@ -1,7 +1,3 @@
-// Push token registration + notification endpoints. Tokens register after
-// sign-in; delivery gating (category prefs + quiet hours) happens in the Queue consumer
-// via domain/push. The in-app notification list + read + prefs are here too so the
-// mobile client has one place for the notification surface.
 import {
   markNotificationsReadInput,
   notificationPrefsInput,

@@ -15,12 +15,17 @@ import { useRouter } from "expo-router";
 import { UsersThree, Plus, BookOpen } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { UnderlineTabs } from "@/components/ui/underline-tabs";
 import { ErrorState } from "@/components/ui/error-state";
 import { CreateClubSheet } from "@/components/clubs/create-club-sheet";
 
 type Tab = "mine" | "discover";
 
-// The reader's clubs and public clubs to join, from GET /clubs.
+const CLUB_TABS: { key: Tab; label: string }[] = [
+  { key: "mine", label: "My Clubs" },
+  { key: "discover", label: "Discover" },
+];
+
 export default function ClubsScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -56,34 +61,12 @@ export default function ClubsScreen() {
         </Pressable>
       </View>
 
-      <View className="flex-row px-4 mb-3">
-        {(["mine", "discover"] as Tab[]).map((t) => {
-          const active = tab === t;
-          return (
-            <Pressable
-              key={t}
-              onPress={() => setTab(t)}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
-              className="flex-1 py-2 items-center"
-              style={{
-                borderBottomWidth: 2,
-                borderBottomColor: active ? colors.borderInteractive : colors.borderSubtle,
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: Fonts.uiMedium,
-                  fontSize: 13,
-                  color: active ? colors.brandText : colors.textTertiary,
-                }}
-              >
-                {t === "mine" ? "My Clubs" : "Discover"}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <UnderlineTabs
+        className="flex-row px-4 mb-3"
+        tabs={CLUB_TABS}
+        active={tab}
+        onChange={setTab}
+      />
 
       {loading ? (
         <View className="flex-1 items-center justify-center">

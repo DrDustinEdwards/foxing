@@ -10,13 +10,9 @@ import type { Env } from "../types";
 
 export const companionOpsRoutes = new Hono<Env>();
 
-// Capped low: this runs synchronously in one HTTP request/response, unlike the
-// production Cron+Queue pipeline (which chunks into small per-message batches and has
-// no such limit). This route exists for a fast, visible proof run, not the full
-// catalog sweep -- use the Cron/Queue path for anything larger than a few books.
+// Capped low: this runs synchronously in one HTTP request, unlike the Cron+Queue pipeline; it exists for a fast proof run, not a full sweep.
 const MAX_BATCH = 20;
 
-// Any JSON value: only `limit` is read, and anything else takes the default.
 const batchInput = z.unknown();
 
 companionOpsRoutes.post("/ops/companion-cache-batch", async (c) => {

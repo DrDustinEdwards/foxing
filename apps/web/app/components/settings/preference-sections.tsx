@@ -24,11 +24,9 @@ export function BillingSection({
   tier: "free" | "plus";
   status: string | null;
   periodEndLabel: string | null;
-  /** Opens the paywall, or null while Plus cannot be bought (billing not configured). */
   onUpgrade: (() => void) | null;
 }) {
   const portal = useBillingPortal();
-  // Stays pending while the browser leaves for Stripe.
   const [leaving, setLeaving] = useState(false);
   const pending = portal.pending || leaving;
   const { error } = portal;
@@ -255,7 +253,6 @@ export function AppearanceSection() {
   );
 }
 
-/** Lists and removes close friends; removing one patches this list in place. */
 export function CloseFriendsSection({ people }: { people: PeoplePage }) {
   const friends = usePeople(people).data.closeFriends;
   return (

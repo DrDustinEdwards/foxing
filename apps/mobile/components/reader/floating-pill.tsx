@@ -15,8 +15,6 @@ import { Fonts } from "@/constants/fonts";
 import { PrivacySelector, type PrivacyTier } from "@/components/privacy-selector";
 import { AllOptionsSheet, PillAction } from "./floating-pill-parts";
 
-// Seven Foxing highlight colors. Order matches design-system.md and is
-// tuned for spectrum visibility, warm tones first, cool last.
 export const HIGHLIGHT_COLORS = [
   "amber",
   "auburn",
@@ -43,22 +41,13 @@ interface FloatingPillProps {
   mode: PillMode;
   anchor: PillAnchor | null;
   onDismiss: () => void;
-  // Word-only
   onLookup?: () => void;
-  // Passage-only
   onAnalyze?: () => void;
-  // Both selection types
   onAsk?: () => void;
   onTranslate?: () => void;
-  // Inline passage-comment action, only renders in passage mode and only when
-  // the viewer belongs to a club currently reading this book.
   showClub?: boolean;
   onClub?: () => void;
-  // Shared, both modes show Highlight. Privacy is selected inline after the
-  // color pick. Callers translate to is_public.
   onHighlight: (color: HighlightColor, privacy: PrivacyTier) => void;
-  // Plus gating. When `locked` (the viewer is on the free tier), the AI
-  // actions show a lock badge and route to `onUpgrade` instead of firing.
   locked?: boolean;
   onUpgrade?: (feature: string) => void;
 }
@@ -69,7 +58,6 @@ interface PillActionDef {
   Icon: Icon;
   onPress: () => void;
   primary?: boolean;
-  // AI actions are Plus-gated; Highlight and Comment are not.
   gated?: boolean;
 }
 
@@ -95,15 +83,10 @@ export function FloatingPill({
   const colors = useColors();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const [showColors, setShowColors] = useState(false);
-  // After a color is picked, the pill transitions to the privacy step so
-  // the user can choose where the highlight is visible before it's written.
   const [pendingColor, setPendingColor] = useState<HighlightColor | null>(null);
   const [privacyDraft, setPrivacyDraft] = useState<PrivacyTier>("public");
-  // Long-press shows the full labeled action list as a bottom sheet.
   const [allOptionsOpen, setAllOptionsOpen] = useState(false);
 
-  // Reset color picker when the pill closes or the anchor changes
-  // (new word tap shouldn't inherit prior color-mode state).
   useEffect(() => {
     if (!visible) {
       // oxlint-disable-next-line react/set-state-in-effect -- resets the pill each time it hides
@@ -118,10 +101,6 @@ export function FloatingPill({
 
   const swatchColor = (c: HighlightColor): string => highlightSwatch(colors, c);
 
-  // One contextual menu, actions adapt to the selection type. The first item
-  // is the primary action (labeled, brand-filled); the rest are icon-only so
-  // four or five actions fit inline on a phone. Long-press reveals the full
-  // labeled list.
   const actions: PillActionDef[] =
     mode === "word"
       ? [
@@ -176,9 +155,6 @@ export function FloatingPill({
           },
         ];
 
-  // Pill width is content-driven: one labeled primary chip plus icon-only
-  // chips and the dismiss button. Position above the selection with a gap;
-  // drop below if it would clip the top chrome.
   const LABELED_W = 116;
   const ICON_W = 42;
   const DISMISS_W = 46;
@@ -224,8 +200,6 @@ export function FloatingPill({
   const ICON_SIZE = 18;
   const iconColor = colors.brandText;
 
-  // Color-picker mode: swatch row inside the pill. After a color is picked
-  // (pendingColor !== null) the pill swaps to a privacy selector + Save button.
   if (showColors) {
     if (pendingColor === null) {
       return (
@@ -240,8 +214,6 @@ export function FloatingPill({
               key={c}
               accessibilityRole="button"
               accessibilityLabel={`Highlight ${c}`}
-              // First swatch gets focus so a screen-reader user lands on a
-              // selectable color immediately when the picker opens.
               // oxlint-disable-next-line typescript/no-explicit-any -- accessibilityAutoFocus is missing from React Native's Pressable props type
               {...(idx === 0 ? ({ accessibilityAutoFocus: true } as any) : {})}
               onPress={() => setPendingColor(c)}
@@ -267,8 +239,6 @@ export function FloatingPill({
         </View>
       );
     }
-    // Privacy step, color chosen, now pick who can see it. Wider, taller
-    // pill so the three privacy pills fit comfortably.
     const privacyPillStyle = {
       ...pillStyle,
       left: Math.max(PILL_HORIZONTAL_PAD, anchor.x + anchor.width / 2 - 160),

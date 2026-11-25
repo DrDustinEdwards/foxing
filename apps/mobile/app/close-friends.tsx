@@ -10,8 +10,6 @@ import { BackHeader } from "@/components/ui/back-header";
 import { PersonRow } from "@/components/profile/person-row";
 import { SectionLabel } from "@/components/ui/section-label";
 
-// Close friends see what you share with friends only. They are chosen from the
-// people you follow, as on the web People page; a toggle patches the list in place.
 export default function CloseFriendsScreen() {
   const colors = useColors();
   const router = useRouter();

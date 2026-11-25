@@ -1,13 +1,7 @@
-// The companion action registry: the single source of truth for every AI action
-// Foxing exposes, on-demand (Plus, gated) or cached-catalog (free, Queue-generated).
-// Pure and unit-testable: no DB, no network, no framework import. The API route
-// resolves an action here, builds context, and calls the model; nothing else in the
-// codebase should hardcode a system prompt or a tier decision for these actions.
-//
-// Tier list is authoritative from foxing/free-vs-paid.md (D11). Role assignment is
-// fixed by the Phase 4a plan: fast = word_lookup, word_aspect, word_wise,
-// language_difficulty. deep = deep_dive, reading_personality. standard = every other
-// Plus action and all 4 cached generators.
+// The companion action registry: single source of truth for every AI action (Plus on-demand, or free Queue-generated catalog).
+// Pure: no DB, network or framework import. Nothing else may hardcode a system prompt or tier decision for these actions.
+// Model roles: fast = word_lookup, word_aspect, word_wise, language_difficulty; deep = deep_dive, reading_personality;
+// standard = every other Plus action and all cached generators.
 import { UNTRUSTED_DATA_RULE, untrusted } from "@dustinedwards/site-runtime/anthropic";
 import { WRITING_RULES } from "@dustinedwards/site-runtime/prose";
 import type { CompanionRole } from "./models";
@@ -18,7 +12,6 @@ export type CompanionBookContext = {
   id: string;
   title: string;
   author: string;
-  /** Cached book_description when present, else the raw catalog description. */
   description: string | null;
   publicationYear: number | null;
   subjects: string[] | null;
@@ -33,16 +26,13 @@ export type CompanionSelection = {
   chapter?: string | null;
 };
 
-/** Everything an action's prompt is allowed to see. Assembled server-side only. */
 export type CompanionContext = {
   action: string;
   book: CompanionBookContext;
   selection?: CompanionSelection | null;
   chapter?: string | null;
-  /** The user's current turn (chat-style actions); absent for single-shot actions. */
   message?: string | null;
   targetLanguage?: string | null;
-  /** Recent prior messages in the thread, oldest first. */
   history: CompanionThreadMessage[];
 };
 
@@ -320,7 +310,6 @@ export function getCompanionAction(name: string): CompanionAction | undefined {
   return BY_NAME.get(name);
 }
 
-/** The 15 D11 on-demand actions exposed at POST /api/v1/companion. */
 export const PLUS_ACTION_NAMES: string[] = PLUS_ACTIONS.map((a) => a.name);
 
 /** The 4 free, Queue-generated catalog actions. NOT exposed on the companion endpoint. */

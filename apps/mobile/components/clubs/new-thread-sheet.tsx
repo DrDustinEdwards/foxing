@@ -5,7 +5,7 @@ import { SheetScaffold } from "@/components/ui/sheet-scaffold";
 import { X as XIcon } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
-import { inputStyle } from "@/components/ui/form-field";
+import { FieldLabel, inputStyle } from "@/components/ui/form-field";
 
 export function NewThreadSheet({
   visible,
@@ -93,7 +93,7 @@ export function NewThreadSheet({
         </View>
       }
     >
-      <Text style={fieldLabelStyle(colors)}>Title</Text>
+      <FieldLabel>Title</FieldLabel>
       <TextInput
         value={title}
         onChangeText={setTitle}
@@ -102,7 +102,7 @@ export function NewThreadSheet({
         maxLength={120}
         style={inputStyle(colors)}
       />
-      <Text style={fieldLabelStyle(colors)}>Chapter (optional)</Text>
+      <FieldLabel>Chapter (optional)</FieldLabel>
       <TextInput
         value={chapter}
         onChangeText={setChapter}
@@ -111,7 +111,7 @@ export function NewThreadSheet({
         maxLength={120}
         style={inputStyle(colors)}
       />
-      <Text style={fieldLabelStyle(colors)}>Opening post (optional)</Text>
+      <FieldLabel>Opening post (optional)</FieldLabel>
       <TextInput
         value={opening}
         onChangeText={setOpening}
@@ -132,16 +132,4 @@ export function NewThreadSheet({
       </View>
     </SheetScaffold>
   );
-}
-
-function fieldLabelStyle(colors: ReturnType<typeof useColors>) {
-  return {
-    fontFamily: Fonts.uiMedium,
-    fontSize: 12,
-    color: colors.textTertiary,
-    marginTop: 12,
-    marginBottom: 6,
-    textTransform: "uppercase" as const,
-    letterSpacing: 0.6,
-  };
 }

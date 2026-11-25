@@ -1,7 +1,3 @@
-// Diary entry form (create + edit). Writes POST /diary or PATCH /diary/:id through the
-// shared client, which refetches the diary, profile and feed, then navigates. rating is entered in half-stars
-// (1-10) via a 0.5..5 selector. Visibility drives feed emission server-side (private
-// emits no event). Failed writes surface a visible error.
 import { useCreateDiaryEntry, useUpdateDiaryEntry } from "@foxing/client";
 import type { Visibility } from "@foxing/types";
 import { NativeSelect } from "capsomer/react/select-native";

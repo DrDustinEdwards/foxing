@@ -1,9 +1,5 @@
-// Annotations read/write data access. The reader writes highlights, notes, and
-// bookmarks through the domain layer; these aggregate reads back the /highlights
-// and /commonplace pages, and createAnnotation is the single insert the write path
-// uses (so the default-visibility rule lives in one place: domain/annotations).
-// The reader read/write helpers (listForReader, update, delete) are user-scoped so
-// an org/classroom tenancy layer can wrap them later without touching call sites.
+// createAnnotation is the single insert the write path uses, so the default-visibility rule lives in one place (domain/annotations).
+// Reader helpers are user-scoped so a tenancy layer can wrap them.
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { domainErrors } from "../domain/errors";
 import type { Db } from "../db";
@@ -15,8 +11,7 @@ export type Annotation = typeof annotations.$inferSelect;
 
 const READER_TYPES = ["highlight", "note", "bookmark"] as const;
 
-/** Count of a user's highlights. `publicOnly` is the public profile "Highlights" stat, which never reveals private
- *  annotations; the reader's own totals count all of them. */
+/** Count of a user's highlights; `publicOnly` never reveals private ones. */
 export async function countHighlights(db: Db, userId: string, publicOnly = false): Promise<number> {
   const [row] = await db
     .select({ n: sql<number>`count(*)` })
@@ -47,7 +42,6 @@ export type AnnotationCard = {
   bookAuthor: string | null;
 };
 
-/** A user's own annotations of the given types, newest first, with book context. */
 /** Annotations with their book's title, slug and author: the AnnotationCard columns. */
 function selectCards(db: Db) {
   return db
@@ -83,8 +77,6 @@ export async function listForUser(
     .limit(Math.min(opts.limit ?? 200, 500));
 }
 
-/** A user's public highlights, newest first, with book context, for the profile
- *  highlights preview. Visibility-filtered so only shareable highlights appear. */
 export async function listPublicHighlights(
   db: Db,
   userId: string,
@@ -103,8 +95,7 @@ export async function listPublicHighlights(
 }
 
 export type NewAnnotation = {
-  // Client-generatable so the reader (and mobile offline sync) can insert
-  // idempotently: same id -> same row from any client, no dupes on replay.
+  // Client-generatable, so the reader and offline sync insert idempotently.
   id?: string | null;
   userId: string;
   type: string;
@@ -122,10 +113,7 @@ export type NewAnnotation = {
   parentId?: string | null;
 };
 
-/** The single annotation insert. Returns the full row so the reader can reconcile
- *  its local state. normalized_text is the popular-highlights aggregation key: when
- *  the caller does not supply it, it is derived from the selected text (or the
- *  locator's highlighted text), so re-anchoring survives duplicate phrases (R1). */
+/** The single annotation insert. normalized_text (the popular-highlights key) is derived from the selected text or locator when not supplied. */
 export async function createAnnotation(db: Db, input: NewAnnotation): Promise<Annotation> {
   const anchorText =
     input.selectedText ??
@@ -160,8 +148,6 @@ export async function createAnnotation(db: Db, input: NewAnnotation): Promise<An
   return row;
 }
 
-/** Every annotation a signed-in reader owns for one book (highlights, notes,
- *  bookmarks), oldest first. Top-level only (threaded replies are a club concern). */
 export async function listForReader(db: Db, userId: string, bookId: string): Promise<Annotation[]> {
   return db
     .select()
@@ -176,8 +162,6 @@ export async function listForReader(db: Db, userId: string, bookId: string): Pro
     .orderBy(asc(annotations.createdAt));
 }
 
-/** Ownership-scoped update (body/color/visibility/pin/spoiler). Returns null if
- *  the row is not the caller's. */
 export async function updateAnnotation(
   db: Db,
   userId: string,

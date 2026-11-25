@@ -1,7 +1,4 @@
-// Admin: Notifications. Broadcast a single in-app notification to every active reader.
-// This hits all users, so the form requires a typed confirm before it fires. Reads
-// nothing; writes to /api/v1/admin/notifications/broadcast with a visible success line
-// and a visible error on failure.
+// This hits every active reader, so the form requires a typed confirm before it fires.
 import { useState } from "react";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import {
@@ -93,5 +90,4 @@ export default function AdminNotifications() {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

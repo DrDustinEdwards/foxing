@@ -1,5 +1,3 @@
-// @foxing/api - the Hono app, mountable in any Worker. Routes are thin and call
-// packages/core. The Worker injects resolveSession (Better Auth) via createApi.
 import { applyHeaderSet } from "@dustinedwards/site-runtime/headers";
 import { Hono } from "hono";
 import { errorHandler } from "./error";
@@ -13,6 +11,7 @@ import { profileMw } from "./middleware/profile";
 import { sessionMw } from "./middleware/session";
 import { accountRoutes } from "./routes/account";
 import { adminRoutes } from "./routes/admin";
+import { adminRoleRoutes } from "./routes/admin-roles";
 import { annotationRoutes } from "./routes/annotations";
 import { billingRoutes } from "./routes/billing";
 import { catalogRoutes } from "./routes/catalog";
@@ -46,10 +45,8 @@ export function createApi(deps: ApiDeps) {
     c.res = applyHeaderSet(c.res, PRIVATE_BY_DEFAULT, { overwrite: false });
   });
 
-  // Middleware pipeline (spec-cf-api order): request id + db, session, profile.
-  // Rate limit + zod validate apply per-route. Public reads skip auth naturally.
-  // The operator bearer sits between session and profile, and only on /admin/*, so
-  // its actor gets the same profile checks as a cookie session.
+  // Pipeline: request id + db, session, profile; rate limit and zod validate per route. The operator bearer sits between session and profile,
+  // only on /admin/*, so its actor gets the same profile checks as a cookie session.
   app.use("*", contextMw);
   app.use("*", sessionMw(deps));
   app.use("/admin/*", operatorMw);
@@ -82,6 +79,7 @@ export function createApi(deps: ApiDeps) {
   app.route("/", syncRoutes);
   app.route("/", pushRoutes);
   app.route("/", adminRoutes);
+  app.route("/", adminRoleRoutes);
 
   return app;
 }

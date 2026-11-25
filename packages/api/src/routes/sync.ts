@@ -1,7 +1,4 @@
-// Offline sync endpoints. POST flushes the mobile op queue; GET pulls changed
-// single-owner rows since a cursor. Conflict resolution + scoping live entirely in core
-// (syncDomain); the route is a thin session-scoped wrapper. Online-only data
-// (clubs/social) is never syncable -- the validator's resource enum enforces that.
+// Conflict resolution and scoping live in core (syncDomain); online-only data (clubs/social) is never syncable (the validator's resource enum enforces it).
 import { syncDomain, syncPushInput } from "@foxing/core";
 import { Hono } from "hono";
 import { parseJson, requireSession, SYNC_BODY_MAX_BYTES } from "../http";

@@ -8,24 +8,20 @@ export default [
   route(CONFIRM_PATH.slice(1), "routes/sign-in-confirm.tsx"),
   route("email/confirm", "routes/email-confirm.tsx"),
 
-  // Social, public: profiles, recaps and a shared list.
   route("u/:username", "routes/u-profile.tsx"),
   route("u/:username/recap/:year", "routes/recap.tsx"),
   route("lists/:id", "routes/list-detail.tsx"),
 
-  // Chart demos: the signed-in pages' charts with sample numbers, no sign-in, noindex. They read
-  // nothing from D1, so a live check sees the same charts a reader does (devkit live/areas.json, area 10).
+  // Chart demos with sample numbers: no sign-in, noindex, nothing read from D1, so a live check sees what a reader does.
   ...prefix("demos", [
     route("stats", "routes/demos/stats.tsx"),
     route("year", "routes/demos/year.tsx"),
     route("goals", "routes/demos/goals.tsx"),
   ]),
 
-  // Content pages (static, edge-cached).
   route("guide", "routes/guide.tsx"),
   route("app-guide", "routes/app-guide.tsx"),
 
-  // Public catalog (stored at the edge, workers/app.ts). Slugs for SEO (mobile uses ids).
   route("books", "routes/books.tsx"),
   route("books/:slug", "routes/book-detail.tsx"),
   route("book/:slug", "routes/book-legacy.tsx"),
@@ -43,26 +39,21 @@ export default [
   route("journal/rss.xml", "routes/journal-rss.tsx"),
   route("search", "routes/search.tsx"),
 
-  // Reader (client-only mount). Annotation + progress writes go to /api/v1 from the
-  // browser; the loader reads existing annotations + saved position in-process.
   route("read/:slug", "routes/read.tsx"),
 
-  // Legal + content (static, edge-cached).
   route("privacy", "routes/privacy.tsx"),
   route("terms", "routes/terms.tsx"),
   route("accessibility", "routes/accessibility.tsx"),
   route("about", "routes/about.tsx"),
   route("features", "routes/features.tsx"),
 
-  // SEO + share surfaces.
   route("og/site", "routes/og-site.tsx"),
   route("og/book/:slug", "routes/og-book.tsx"),
   route("og/recap/:username/:year", "routes/og-recap.tsx"),
   route("sitemap.xml", "routes/sitemap.tsx"),
   route("llms.txt", "routes/llms.tsx"),
 
-  // The private pages, signed in or admin. The layout's headers keep Cloudflare's Web Analytics beacon off them
-  // (site-runtime PRIVATE_PAGE_HEADERS), so only public pages are counted.
+  // Private pages: the layout's headers keep Cloudflare's Web Analytics beacon off them.
   layout("routes/private.tsx", [
     route("home", "routes/home.tsx"),
     route("onboarding", "routes/onboarding.tsx"),
@@ -71,21 +62,17 @@ export default [
     route("settings", "routes/settings.tsx"),
     route("library", "routes/library.tsx"),
     route("shelves/:id", "routes/shelf-detail.tsx"),
-    // Clubs. List + create (Plus-gated) + detail with the live layer + threads.
     route("clubs", "routes/clubs.tsx"),
     route("clubs/new", "routes/club-new.tsx"),
     route("clubs/:slug", "routes/club-detail.tsx"),
     route("clubs/:slug/t/:threadId", "routes/club-thread.tsx"),
     route("join/:code", "routes/join-code.tsx"),
-    // Social. Feed, people/close-friends, diary, lists.
     route("feed", "routes/feed.tsx"),
     route("people", "routes/people.tsx"),
     route("diary/new", "routes/diary-new.tsx"),
     route("diary/:id/edit", "routes/diary-edit.tsx"),
     route("lists/new", "routes/list-new.tsx"),
     route("lists/:id/edit", "routes/list-edit.tsx"),
-    // Personal app surfaces. Notifications, vocabulary, commonplace/highlights aggregates, lists index, stats,
-    // diary index, goals, own year-in-reading. Gated in-loader by requireProfile.
     route("notifications", "routes/notifications.tsx"),
     route("vocabulary", "routes/vocabulary.tsx"),
     route("commonplace", "routes/commonplace.tsx"),
@@ -96,8 +83,7 @@ export default [
     route("goals", "routes/goals.tsx"),
     route("year/:year?", "routes/year.tsx"),
     route("find-next-book", "routes/find-next-book.tsx"),
-    // Admin (operator-only, gated on ADMIN_EMAIL and CO_OWNER_EMAILS in every loader). Reads run
-    // in-process via adminRepo; writes go to /api/v1/admin/* with an audit-log entry.
+    // Admin: operator-only, gated on ADMIN_EMAIL and CO_OWNER_EMAILS in every loader.
     route("admin", "routes/admin.tsx"),
     route("admin/book-of-month", "routes/admin-botm.tsx"),
     route("admin/celebrity-picks", "routes/admin-picks.tsx"),
@@ -110,9 +96,7 @@ export default [
     route("admin/analytics", "routes/admin-analytics.tsx"),
   ]),
 
-  // Liveness and backup age for uptime monitors (JSON, no-store, unauthenticated).
   route("health", "routes/health.ts"),
 
-  // Every other address: a 404 drawn in the site's header and footer.
   route("*", "routes/not-found.tsx"),
 ] satisfies RouteConfig;

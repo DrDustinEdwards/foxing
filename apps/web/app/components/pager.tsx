@@ -1,4 +1,3 @@
-// The list pager: Capsomer's Pagination as links, so each page change is a client navigation.
 import { Link } from "capsomer/react/link";
 import { Pagination } from "capsomer/react/pagination";
 

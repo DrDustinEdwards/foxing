@@ -1,6 +1,3 @@
-// Account data rights (spec-cf-api Phase 3): GDPR export and erasure. Thin: guard
-// the session, call the core function, return. The heavy lifting (which tables are
-// user-owned, delete order) lives in @foxing/core domain/account.
 import { Hono } from "hono";
 import { checkSuccessors, clubsToHandOver, deleteAccountInput, exportAccount } from "@foxing/core";
 import { AppError } from "../error";
@@ -18,8 +15,6 @@ const notFresh = (what: string) =>
     `To ${what}, sign in again first: it needs a sign-in from the last 10 minutes.`,
   );
 
-// GET /account/export - every user-owned table as a downloadable JSON archive. It hands over
-// everything, so it needs a sign-in from the last 10 minutes, as deleting does.
 accountRoutes.get("/account/export", async (c) => {
   const session = requireSession(c);
   if (!(await c.get("isFresh")(c.req.raw, c.env))) throw notFresh("download your data");
@@ -37,16 +32,13 @@ accountRoutes.get("/account/export", async (c) => {
   });
 });
 
-// GET /account/clubs - the clubs the user created, who may take each over, and the default.
 accountRoutes.get("/account/clubs", async (c) => {
   const session = requireSession(c);
   return c.json({ clubs: await clubsToHandOver(c.get("db"), session.id) });
 });
 
-// DELETE /account - hand over the user's clubs as chosen, then erase the account and all
-// user-owned data through Better Auth's deleteUser (the Worker's deps.deleteUser), so its
-// sessions, passkeys and Google and Apple links go too and the reader is told. The body
-// ({ successors }) is optional: an empty one takes the defaults.
+// DELETE /account erases through Better Auth's deleteUser (the Worker's deps.deleteUser) so sessions, passkeys and Google and Apple links go too;
+// the optional { successors } body falls back to defaults.
 accountRoutes.delete("/account", rateLimit("write"), async (c) => {
   const session = requireSession(c);
   const input = await parseOptionalJson(c, deleteAccountInput);

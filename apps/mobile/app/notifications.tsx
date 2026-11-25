@@ -29,7 +29,6 @@ const BUCKETS: Array<{ key: BucketKey; label: string }> = [
   { key: "earlier", label: "Earlier" },
 ];
 
-// GET /notifications. Opening one marks it read in the cache straight away.
 export default function NotificationsScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -224,8 +223,6 @@ function iconFor(type: string) {
   }
 }
 
-// ── Grouping ─────────────────────────────────────────────────────────────
-
 function groupByBucket(rows: W.NotificationItem[]): Record<BucketKey, W.NotificationItem[]> {
   const now = Date.now();
   const dayMs = 86_400_000;
@@ -254,7 +251,6 @@ function flattenBuckets(buckets: Record<BucketKey, W.NotificationItem[]>): ListI
   return out;
 }
 
-// Where a notification leads, from the ids the server puts in its data.
 function notificationRoute(n: W.NotificationItem): string | null {
   const str = (k: string) => (typeof n.data[k] === "string" ? (n.data[k] as string) : null);
   switch (n.type) {

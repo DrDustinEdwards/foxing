@@ -1,5 +1,3 @@
-// Annotation exporters, text / csv / markdown. Pure functions: take a list
-// of highlights + book metadata, return a string ready to hand to Share.
 import { csvRow, toCsv } from "@dustinedwards/site-runtime/csv";
 
 export interface ExportableHighlight {
@@ -47,7 +45,6 @@ export function exportAsMarkdown(
   if (author) lines.push(`*${author}*`);
   lines.push("");
 
-  // Group by chapter while preserving the highlight list's original order.
   let currentChapter: string | null = null;
   for (const h of highlights) {
     const chapter = h.chapter ?? "Unsorted";
@@ -56,7 +53,6 @@ export function exportAsMarkdown(
       lines.push(`## ${chapter}`);
       lines.push("");
     }
-    // Indent the quoted text, `>` paragraphs preserve line breaks correctly.
     const quoted = h.text
       .trim()
       .split("\n")
@@ -71,7 +67,6 @@ export function exportAsMarkdown(
     lines.push("---");
     lines.push("");
   }
-  // Drop the trailing divider so the output ends on content.
   while (
     lines.length > 0 &&
     (lines[lines.length - 1] === "" || lines[lines.length - 1] === "---")

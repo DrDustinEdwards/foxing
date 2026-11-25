@@ -1,6 +1,3 @@
-// The provider both apps mount once at the root: a QueryClient with Foxing's
-// defaults and the ApiClient the hooks call. Written with createElement so the
-// package needs no JSX setup of its own.
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { createQueryClient } from "capsomer/react/data";
 import { createContext, createElement, type ReactNode, useContext } from "react";

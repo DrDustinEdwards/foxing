@@ -12,7 +12,6 @@ import { cloudflareContext } from "~/context";
 import type { Route } from "./+types/signup";
 import { noindexMeta } from "~/lib/seo";
 
-// A sign-in page is a private page: no Web Analytics beacon (site-runtime PRIVATE_PAGE_HEADERS).
 export const headers = () => PRIVATE_PAGE_HEADERS;
 
 export function meta() {
@@ -24,8 +23,6 @@ export function loader({ context }: Route.LoaderArgs) {
   return { methods: signInMethods(env, { social: true }) };
 }
 
-// A new account starts from Google, Apple or an email link (which creates the account on its
-// first use); a passkey is offered once the person is in, since there is none to sign in with yet.
 export default function Signup({ loaderData }: Route.ComponentProps) {
   const { methods } = loaderData;
   return (
@@ -46,5 +43,4 @@ export default function Signup({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

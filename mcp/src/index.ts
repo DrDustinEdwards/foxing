@@ -1,20 +1,9 @@
 /**
- * Foxing Admin: the admin MCP server for foxing.app.
- *
- * Ruling capsid/rulings/mcp-2026-10-10.md and capsid/research/design-mcp-servers.md section 5. Its own Worker (rule 9
- * as amended): it holds no Stripe key, no D1 and no Foxing data binding (its one R2 bucket holds only copies of its own
- * tool-call log). Its only route to Foxing is the FOXING service binding to /api/v1/admin, which owns every rule and
- * re-checks the acting admin on every call. If this Worker vanished, nothing about what is allowed on foxing.app would
- * change.
- *
- * The Worker is site-runtime's adminMcpWorker, the door every admin MCP server shares: the Origin and Host checks, the
- * list-only test key, the OAuth provider bound to PUBLIC_ORIGIN + /mcp, the Cloudflare Access sign-in admitting the
- * single ADMIN_EMAIL (on every request too), the rate limit, /owner, /health and the tool-call log's daily copy. What
- * is Foxing's own is below: its name, its consent paragraphs, its binding and its MCP server (mcp-handler.ts).
- *
- * Access rather than Foxing's own Better Auth: this server's sign-in stays independent of foxing.app's sessions. The
- * Foxing account the API acts as is FOXING_ADMIN_ID, and the API re-checks that account's admin standing (ADMIN_EMAIL and CO_OWNER_EMAILS)
- * on every call.
+ * Foxing Admin: the admin MCP server. Its own Worker: no Stripe key, no D1, no Foxing data binding (its one R2 bucket holds copies of its own
+ * tool-call log). Its only route to Foxing is the FOXING service binding to /api/v1/admin, which owns every rule and re-checks the acting admin on every call.
+ * It is site-runtime's adminMcpWorker, the shared door (Origin/Host checks, OAuth, Cloudflare Access sign-in for the single ADMIN_EMAIL, rate limit,
+ * /owner, /health); Foxing's own parts are its name, consent text, binding and MCP server (mcp-handler.ts). Access rather than Foxing's Better Auth
+ * keeps this sign-in independent of foxing.app sessions. The account the API acts as is FOXING_ADMIN_ID.
  */
 
 import OAuthProvider from "@cloudflare/workers-oauth-provider";

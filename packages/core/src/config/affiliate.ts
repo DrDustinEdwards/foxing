@@ -1,10 +1,6 @@
-// Buy / find links. Canonical retailer URLs are stored on the book (tags stripped at
-// import, Phase 2); affiliate tags are appended here at render from config, never baked
-// into stored URLs. When a book has no canonical URL (most Gutenberg classics), we fall
-// back to a title+author search so every book page still shows where to buy or borrow.
-// Bookshop.org always ranks before Amazon (house rule 4); the library link is last.
-// The rel="external sponsored noopener noreferrer" attribute is applied by Capsomer's ButtonLink for
-// affiliate links (sponsored=true); the library link is not sponsored.
+// Canonical retailer URLs are stored on the book; affiliate tags are appended here at render, never baked into stored URLs. A book with no
+// canonical URL falls back to a title+author search. Bookshop.org always ranks before Amazon; the library link is last and not sponsored
+// (rel="sponsored" is applied by Capsomer's ButtonLink for affiliate links).
 
 export type AffiliateConfig = {
   amazonTag?: string | null;
@@ -37,7 +33,6 @@ function withParam(rawUrl: string, key: string, value: string): string {
   }
 }
 
-/** Ordered buy/find links: Bookshop, then Amazon, then a library. */
 export function buyLinks(book: BuyableBook, cfg: AffiliateConfig = {}): BuyLink[] {
   const q = [book.title, book.author].filter(Boolean).join(" ").trim();
   const search = q ? encodeURIComponent(q) : null;

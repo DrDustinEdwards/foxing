@@ -1,5 +1,3 @@
-// Device-only user preferences that don't belong to a single component.
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const PREFS_KEY = "user_prefs_v1";
@@ -8,7 +6,6 @@ const WPM_KEY = "user_calibrated_wpm";
 type SpeedUnit = "wpm" | "pages_per_hour";
 
 export interface UserPrefs {
-  // For displaying reading rate in settings.
   speedUnit: SpeedUnit;
 }
 
@@ -28,9 +25,6 @@ export async function setUserPrefs(next: UserPrefs): Promise<void> {
   await AsyncStorage.setItem(PREFS_KEY, JSON.stringify(next));
 }
 
-// Calibrated WPM is owned by the reader, but the settings screen lets the
-// user inspect it. Kept separate from UserPrefs so it can be
-// updated without serializing the whole prefs blob on every page turn.
 export async function getCalibratedWpm(): Promise<number | null> {
   const raw = await AsyncStorage.getItem(WPM_KEY);
   if (!raw) return null;

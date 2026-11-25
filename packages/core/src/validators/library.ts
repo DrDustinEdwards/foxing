@@ -1,5 +1,3 @@
-// Validators for the library/tracking write paths: shelf status, custom shelves,
-// and reading goals. Enums come from the single source in enums.ts.
 import { z } from "zod";
 import { goalPeriod, goalType, userBookStatus } from "../enums";
 
@@ -47,7 +45,6 @@ export const updateGoalInput = z.object({
 });
 export type UpdateGoalInput = z.infer<typeof updateGoalInput>;
 
-// A saved word is toggled mastered / not-mastered from the vocabulary page.
 export const updateVocabularyInput = z.object({
   mastered: z.boolean(),
 });

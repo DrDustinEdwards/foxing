@@ -1,7 +1,5 @@
-// Sync executors. One adapter per single-owner resource: existence/LWW probe,
-// insert, update, delete, and the pull query. The pure conflict decision lives in
-// domain/sync.ts (resolveSyncOp); this file only executes a decision against D1. Every
-// operation is scoped to the session user id -- payload.user_id is never trusted.
+// Sync executors: one adapter per single-owner resource. The pure conflict decision is domain/sync.ts (resolveSyncOp); this file only executes
+// it against D1, scoped to the session user (payload.user_id never trusted).
 import { toDate } from "@dustinedwards/site-runtime/time";
 import { and, eq, gt, sql } from "drizzle-orm";
 import type { Db } from "../db";
@@ -10,7 +8,14 @@ import { recomputeBookRating } from "./diary";
 import { annotations, diaryEntries, readingSessions, userBooks, vocabulary } from "../schema";
 import type { SyncOp } from "../validators/sync";
 
-/** Minimal existence + freshness probe for the LWW decision. updatedAt is epoch ms. */
+/** The listed keys the op's payload carries, plus the op's timestamp as `updatedAt`. */
+function changedFields(op: SyncOp, keys: string[]): Record<string, unknown> {
+  const p = (op.payload ?? {}) as Record<string, unknown>;
+  const set: Record<string, unknown> = { updatedAt: new Date(op.clientTs) };
+  for (const k of keys) if (k in p) set[k] = p[k];
+  return set;
+}
+
 export type Existing = { updatedAt: number } | null;
 
 export type SyncAdapter = {
@@ -54,8 +59,7 @@ const annotationAdapter: SyncAdapter = {
   },
   async update(db, userId, op) {
     const p = (op.payload ?? {}) as Record<string, unknown>;
-    const set: Record<string, unknown> = { updatedAt: new Date(op.clientTs) };
-    for (const k of [
+    const set = changedFields(op, [
       "bookId",
       "type",
       "locator",
@@ -66,9 +70,7 @@ const annotationAdapter: SyncAdapter = {
       "visibility",
       "containsSpoilers",
       "isPinned",
-    ]) {
-      if (k in p) set[k] = p[k];
-    }
+    ]);
     if ("selectedText" in p) {
       set.normalizedText = p.selectedText ? normalizeText(p.selectedText as string) : null;
     }
@@ -217,11 +219,14 @@ const vocabularyAdapter: SyncAdapter = {
     });
   },
   async update(db, userId, op) {
-    const p = (op.payload ?? {}) as Record<string, unknown>;
-    const set: Record<string, unknown> = { updatedAt: new Date(op.clientTs) };
-    for (const k of ["bookId", "word", "definition", "contextSentence", "aiContext", "mastered"]) {
-      if (k in p) set[k] = p[k];
-    }
+    const set = changedFields(op, [
+      "bookId",
+      "word",
+      "definition",
+      "contextSentence",
+      "aiContext",
+      "mastered",
+    ]);
     await db
       .update(vocabulary)
       .set(set)
@@ -279,11 +284,8 @@ const diaryAdapter: SyncAdapter = {
   },
   async update(db, userId, op) {
     const p = (op.payload ?? {}) as Record<string, unknown>;
-    const set: Record<string, unknown> = { updatedAt: new Date(op.clientTs) };
+    const set = changedFields(op, ["ratingHalf", "review", "containsSpoilers", "visibility"]);
     if ("logDate" in p) set.logDate = toDate(p.logDate as number | null);
-    for (const k of ["ratingHalf", "review", "containsSpoilers", "visibility"]) {
-      if (k in p) set[k] = p[k];
-    }
     await db
       .update(diaryEntries)
       .set(set)

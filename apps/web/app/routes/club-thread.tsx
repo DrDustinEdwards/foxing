@@ -1,7 +1,3 @@
-// A single club thread (auth-gated). Posts arrive live: when another member posts, the
-// club WebSocket pushes {t:'post'} and the thread refetches, so the new post appears
-// without a reload. This is the two-context DO gate surface -- a post made in
-// one browser context shows up in another that has this thread open.
 import { useClubLive, useCreatePost, useThreadPage } from "@foxing/client";
 import { Time } from "capsomer/react/time";
 import { createDb, views } from "@foxing/core";
@@ -106,7 +102,6 @@ export default function ClubThread({ loaderData, params }: Route.ComponentProps)
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
 
 export { ErrorBoundary } from "~/components/route-error";

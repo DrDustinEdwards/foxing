@@ -1,7 +1,4 @@
-// Reader hooks: one book's annotation layers, and every write the reader makes
-// (highlights, notes, bookmarks, likes, passage replies, reading position). Writes
-// carry a client-made id, so the new highlight is on the page before the server
-// answers, and a failure takes it back off with the error shown.
+// Writes carry a client-made id, so a new highlight is on the page before the server answers and a failure takes it back off.
 import type * as W from "@foxing/types";
 import { useQuery } from "@tanstack/react-query";
 import { keys } from "./keys";
@@ -24,8 +21,7 @@ export function useBookAnnotations<S extends W.ReaderAnnotations | undefined = u
   );
 }
 
-/** The book's file, saved position and passage-comment clubs, for opening the reader.
- *  Read once per opening: page turns save the position without reloading this. */
+/** Read once per opening: page turns save the position without reloading this. */
 export function useReaderPage(idOrSlug: string) {
   const api = useApi();
   return useQuery({
@@ -114,7 +110,6 @@ export function useDeleteAnnotation() {
   });
 }
 
-/** Like or unlike another reader's annotation. */
 export function useLikeAnnotation() {
   const api = useApi();
   return useWrite<{ bookId: string; id: string; on: boolean }>({
@@ -136,8 +131,7 @@ export function useLikeAnnotation() {
   });
 }
 
-/** A reply to another reader's annotation, or a comment on a passage, in a club both
- *  belong to. `you` is how the new comment shows until the server's copy arrives. */
+/** `you` is how the new comment shows until the server's copy arrives. */
 export function usePassageComment() {
   const api = useApi();
   return useWrite<{
@@ -180,8 +174,7 @@ export function usePassageComment() {
   });
 }
 
-/** Saves the reading position. Called on every settled page turn, so it patches the
- *  cached progress instead of refetching anything. */
+/** Called on every settled page turn, so it patches the cached progress instead of refetching. */
 export function useSaveProgress() {
   const api = useApi();
   return useWrite<{ bookId: string; locator: W.Locator; progressPct: number }>({
