@@ -32,15 +32,12 @@ const book = (over: Partial<HealthBook>): HealthBook => ({
 const checksOf = (books: HealthBook[]) => auditCatalog(books, ORIGIN).map((f) => f.check);
 
 describe("ISBN check digits", () => {
-  it("accepts real ISBNs and rejects a changed digit", () => {
+  it("validates check digits and converts an ISBN-10 to its ISBN-13", () => {
     expect(isValidIsbn10("0306406152")).toBe(true);
     expect(isValidIsbn10("080442957X")).toBe(true);
     expect(isValidIsbn10("0306406153")).toBe(false);
     expect(isValidIsbn13("9780306406157")).toBe(true);
     expect(isValidIsbn13("9780306406158")).toBe(false);
-  });
-
-  it("converts an ISBN-10 to its ISBN-13", () => {
     expect(isbn10To13("0306406152")).toBe("9780306406157");
     expect(isbn10To13("0306406153")).toBeNull();
   });

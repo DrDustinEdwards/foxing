@@ -1,8 +1,3 @@
-/**
- * The tools against a fake foxing Worker: what each one sends and how a
- * refusal comes back. The security floor (rule 12) around them is
- * site-runtime's invokeTool, tested there; its wiring is in mcp-handler.test.ts.
- */
 import assert from "node:assert/strict";
 import { beforeEach, describe, test } from "node:test";
 
@@ -92,7 +87,6 @@ describe("refusals", () => {
     foxing.reply({ throws: new Error("connection reset") });
     const out = await call("foxing_get_health");
     assert.match(out.content[0].text, /could not complete its request .*unreachable/);
-    // S4: the raw error stays in the log.
     assert.ok(!out.content[0].text.includes("connection reset"));
   });
 
@@ -105,7 +99,7 @@ describe("refusals", () => {
 });
 
 describe("what each tool sends", () => {
-  test("foxing_find_user and foxing_inspect_book pass the search and the page", async () => {
+  test("read tools pass the search, the page and an encoded id", async () => {
     foxing.reply({ body: { items: [], has_more: true, next_offset: 15 } });
     const page = await call("foxing_find_user", {
       query: "ada",
@@ -115,13 +109,12 @@ describe("what each tool sends", () => {
     assert.equal(page.structuredContent?.next_cursor, encodeOffsetCursor(15));
     assert.equal(page.structuredContent?.next_offset, undefined);
     await call("foxing_inspect_book", { query: "Persuasion" });
+    await call("foxing_get_user_state", { user_id: "a/b" });
+    await call("foxing_read_audit_log", { limit: 10, cursor: encodeOffsetCursor(20) });
     assert.equal(path(0), "GET /api/v1/admin/users?q=ada&limit=5&offset=10");
     assert.equal(path(1), "GET /api/v1/admin/books?q=Persuasion");
-  });
-
-  test("foxing_get_user_state reads one user, with the id encoded", async () => {
-    await call("foxing_get_user_state", { user_id: "a/b" });
-    assert.equal(path(), "GET /api/v1/admin/users/a%2Fb");
+    assert.equal(path(2), "GET /api/v1/admin/users/a%2Fb");
+    assert.equal(path(3), "GET /api/v1/admin/audit-log?limit=10&offset=20");
   });
 
   test("foxing_edit_book maps fields to the API's names and sets the staff pick", async () => {
@@ -156,12 +149,6 @@ describe("what each tool sends", () => {
       out.content[0].text,
       /^The field changes were applied; the staff pick was refused\.\nNot found\./,
     );
-  });
-
-  test("foxing_edit_book with nothing to change sends nothing", async () => {
-    const out = await call("foxing_edit_book", { book_id: "b1" });
-    assert.equal(out.isError, true);
-    assert.equal(foxing.calls.length, 0);
   });
 
   test("foxing_set_book_of_month creates, updates and publishes; foxing_read_book_of_month pages the list", async () => {
@@ -205,9 +192,11 @@ describe("what each tool sends", () => {
     });
   });
 
-  test("foxing_set_book_of_month refuses a create with no month before any request", async () => {
-    const out = await call("foxing_set_book_of_month", { action: "create", year: 2026 });
-    assert.equal(out.isError, true);
+  test("an edit with nothing to change and a create with no month send nothing", async () => {
+    const edit = await call("foxing_edit_book", { book_id: "b1" });
+    const create = await call("foxing_set_book_of_month", { action: "create", year: 2026 });
+    assert.equal(edit.isError, true);
+    assert.equal(create.isError, true);
     assert.equal(foxing.calls.length, 0);
   });
 
@@ -241,11 +230,6 @@ describe("what each tool sends", () => {
     assert.deepEqual(foxing.calls[0].body, { curatorQuote: "Yes." });
     assert.equal(path(1), "POST /api/v1/admin/picks/p1/publish");
     assert.deepEqual(foxing.calls[1].body, { on: true });
-  });
-
-  test("foxing_read_audit_log pages the site's log", async () => {
-    await call("foxing_read_audit_log", { limit: 10, cursor: encodeOffsetCursor(20) });
-    assert.equal(path(), "GET /api/v1/admin/audit-log?limit=10&offset=20");
   });
 });
 

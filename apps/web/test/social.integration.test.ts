@@ -4,11 +4,6 @@ import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { callApi, seedUser, testApi } from "./test-api";
 
-// Social write paths, exercised web -> api -> core -> D1 against local D1.
-// Verifies: diary event emission RESPECTS visibility (private emits nothing; friends /
-// public emit the right event), follow emits a new_follower notification, and list likes
-// go through the reactions table.
-
 const call = (path: string, req?: Parameters<typeof callApi>[2]) => callApi(testApi(), path, req);
 
 async function seedBook(id: string) {
@@ -48,7 +43,7 @@ describe("social API (web -> api -> core -> D1)", () => {
     }
   });
 
-  it("PUT /follows/:id creates the edge and emits a new_follower notification to the target", async () => {
+  it("PUT /follows/:id creates the edge and emits one new_follower notification, even when repeated", async () => {
     await seedUser("alice");
     await seedUser("bob");
 
@@ -69,18 +64,13 @@ describe("social API (web -> api -> core -> D1)", () => {
         and(eq(schema.notifications.userId, "bob"), eq(schema.notifications.type, "new_follower")),
       );
     expect(notifs).toHaveLength(1);
-  });
 
-  it("re-following does not emit a second notification", async () => {
-    await seedUser("alice");
-    await seedUser("bob");
     await call("/follows/bob", { method: "PUT", user: "alice" });
-    await call("/follows/bob", { method: "PUT", user: "alice" });
-    const notifs = await db()
+    const again = await db()
       .select()
       .from(schema.notifications)
       .where(eq(schema.notifications.userId, "bob"));
-    expect(notifs).toHaveLength(1);
+    expect(again).toHaveLength(1);
   });
 
   it("cannot follow yourself", async () => {
@@ -89,56 +79,29 @@ describe("social API (web -> api -> core -> D1)", () => {
     expect(res.status).toBe(422);
   });
 
-  it("private diary entry emits NO activity event", async () => {
-    await seedUser("alice");
-    await seedBook("b1");
-    const res = await call("/diary", {
-      method: "POST",
-      user: "alice",
-      body: { bookId: "b1", ratingHalf: 8, review: "Loved it", visibility: "private" },
-    });
-    expect(res.status).toBe(201);
-
-    const events = await db()
-      .select()
-      .from(schema.activityEvents)
-      .where(eq(schema.activityEvents.userId, "alice"));
-    expect(events).toHaveLength(0);
-  });
-
-  it("public diary entry WITH a review emits a 'reviewed' event carrying public visibility", async () => {
-    await seedUser("alice");
-    await seedBook("b1");
-    await call("/diary", {
-      method: "POST",
-      user: "alice",
-      body: { bookId: "b1", ratingHalf: 9, review: "A masterpiece", visibility: "public" },
-    });
-    const events = await db()
-      .select()
-      .from(schema.activityEvents)
-      .where(eq(schema.activityEvents.userId, "alice"));
-    expect(events).toHaveLength(1);
-    expect(events[0].type).toBe("reviewed");
-    expect(events[0].visibility).toBe("public");
-  });
-
-  it("friends diary entry with ONLY a rating emits a 'rated' event carrying friends visibility", async () => {
-    await seedUser("alice");
-    await seedBook("b1");
-    await call("/diary", {
-      method: "POST",
-      user: "alice",
-      body: { bookId: "b1", ratingHalf: 7, visibility: "friends" },
-    });
-    const events = await db()
-      .select()
-      .from(schema.activityEvents)
-      .where(eq(schema.activityEvents.userId, "alice"));
-    expect(events).toHaveLength(1);
-    expect(events[0].type).toBe("rated");
-    expect(events[0].visibility).toBe("friends");
-  });
+  it.each([
+    ["private", { ratingHalf: 8, review: "Loved it", visibility: "private" }, []],
+    ["public", { ratingHalf: 9, review: "A masterpiece", visibility: "public" }, ["reviewed"]],
+    ["friends", { ratingHalf: 7, visibility: "friends" }, ["rated"]],
+  ])(
+    "a %s diary entry emits the matching activity event, private none",
+    async (visibility, body, types) => {
+      await seedUser("alice");
+      await seedBook("b1");
+      const res = await call("/diary", {
+        method: "POST",
+        user: "alice",
+        body: { bookId: "b1", ...body },
+      });
+      expect(res.status).toBe(201);
+      const events = await db()
+        .select()
+        .from(schema.activityEvents)
+        .where(eq(schema.activityEvents.userId, "alice"));
+      expect(events.map((e) => e.type)).toEqual(types);
+      for (const e of events) expect(e.visibility).toBe(visibility);
+    },
+  );
 
   it("diary create recomputes the book rating aggregate", async () => {
     await seedUser("alice");
@@ -146,7 +109,7 @@ describe("social API (web -> api -> core -> D1)", () => {
     await call("/diary", {
       method: "POST",
       user: "alice",
-      body: { bookId: "b1", ratingHalf: 8, visibility: "public" }, // 4.0 stars
+      body: { bookId: "b1", ratingHalf: 8, visibility: "public" },
     });
     const [book] = await db().select().from(schema.books).where(eq(schema.books.id, "b1"));
     expect(book.ratingCount).toBe(1);
@@ -182,7 +145,6 @@ describe("social API (web -> api -> core -> D1)", () => {
     expect(reactions).toHaveLength(1);
     expect(reactions[0].userId).toBe("bob");
 
-    // Owner (alice) gets a reaction notification; the liker (bob) does not.
     const aliceNotifs = await db()
       .select()
       .from(schema.notifications)
@@ -230,9 +192,9 @@ describe("social API (web -> api -> core -> D1)", () => {
     expect(events).toHaveLength(1);
   });
 
-  it("GET /feed shows a followed author's public review but hides their friends-only one", async () => {
-    await seedUser("alice"); // author
-    await seedUser("carol"); // viewer, follows alice but is NOT a close friend
+  it("GET /feed hides a friends-only review from a non-friend follower and shows it to a close friend", async () => {
+    await seedUser("alice");
+    await seedUser("carol");
     await seedBook("b1");
     await seedBook("b2");
     await call("/follows/alice", { method: "PUT", user: "carol" });
@@ -246,38 +208,22 @@ describe("social API (web -> api -> core -> D1)", () => {
       user: "alice",
       body: { bookId: "b2", review: "Friends only", visibility: "friends" },
     });
+    const feedBooks = async () => {
+      const res = await call("/feed", { user: "carol" });
+      const { rows } = (await res.json()) as { rows: { kind: string; book?: { id: string } }[] };
+      return rows
+        .filter((r) => r.kind === "activity")
+        .map((r) => r.book?.id)
+        .sort();
+    };
 
-    const res = await call("/feed", { user: "carol" });
-    const { rows } = (await res.json()) as { rows: { kind: string; book?: { id: string } }[] };
-    const activity = rows.filter((r) => r.kind === "activity");
-    expect(activity).toHaveLength(1);
-    expect(activity[0].book?.id).toBe("b1");
-  });
-
-  it("GET /feed reveals the friends-only review once the viewer is a close friend", async () => {
-    await seedUser("alice");
-    await seedUser("carol");
-    await seedBook("b2");
-    await call("/follows/alice", { method: "PUT", user: "carol" });
-    // Alice adds carol as a close friend (free); the edge is written directly here to
-    // isolate the feed resolver from the write path.
+    expect(await feedBooks()).toEqual(["b1"]);
     await db().insert(schema.closeFriends).values({ userId: "alice", friendId: "carol" });
-    await call("/diary", {
-      method: "POST",
-      user: "alice",
-      body: { bookId: "b2", review: "Friends only", visibility: "friends" },
-    });
-
-    const res = await call("/feed", { user: "carol" });
-    const { rows } = (await res.json()) as { rows: { kind: string; book?: { id: string } }[] };
-    const activity = rows.filter((r) => r.kind === "activity");
-    expect(activity).toHaveLength(1);
-    expect(activity[0].book?.id).toBe("b2");
+    expect(await feedBooks()).toEqual(["b1", "b2"]);
   });
 
   it("GET /feed still answers, newest first, for a reader who follows more people than D1 binds in one query", async () => {
-    // D1 refuses a statement with over 100 bound parameters; the feed once put every followed author in one IN list
-    // and failed at about 95 follows. 150 authors span two chunks; the newest event is in the last one.
+    // D1 refuses over 100 bound parameters per statement; 150 authors span two chunks, the newest in the last.
     const d = db();
     const authors = Array.from({ length: 150 }, (_, i) => `a${String(i).padStart(3, "0")}`);
     await seedUser("carol");
@@ -320,14 +266,13 @@ describe("social API (web -> api -> core -> D1)", () => {
     ).toBe(200);
     expect(await unread()).toEqual(["n2", "n3"]);
 
-    // A malformed body used to fall through to mark-all.
     for (const body of [{ ids: "n2" }, { ids: [] }, { all: false }, { all: "yes" }, "not json"]) {
       const res = await call("/notifications/read", { method: "POST", user: "alice", body });
       expect(res.status).toBe(422);
     }
     expect(await unread()).toEqual(["n2", "n3"]);
 
-    // `{}` is what mobile builds before { all: true } send for mark-all.
+    // Older mobile builds send `{}` for mark-all.
     for (const body of [{}, { all: true }]) {
       const res = await call("/notifications/read", { method: "POST", user: "alice", body });
       expect(res.status).toBe(200);

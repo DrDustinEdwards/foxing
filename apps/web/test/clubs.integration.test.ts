@@ -6,8 +6,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { type ClubRoom, clubRoomHub } from "../workers/club-room";
 import { callApi, seedUser, testApi } from "./test-api";
 
-// Captures every live broadcast so tests can assert the write -> commit -> notify path
-// fires with the right message, without a real Durable Object.
+// Captures live broadcasts without a real Durable Object.
 function captureHub(): { hub: ClubLiveHub; sent: { clubId: string; message: LiveMessage[] }[] } {
   const sent: { clubId: string; message: LiveMessage[] }[] = [];
   return {
@@ -45,7 +44,6 @@ async function createClub(user: string, overrides: Record<string, unknown> = {})
 describe("clubs API (web -> api -> core -> D1)", () => {
   beforeEach(async () => {
     const db = createDb(env.DB);
-    // Children first (FKs), then clubs, then users.
     for (const t of [
       schema.clubPollVotes,
       schema.clubPolls,
@@ -66,20 +64,10 @@ describe("clubs API (web -> api -> core -> D1)", () => {
     }
   });
 
-  it("clubs are free: both free and plus users can create (201)", async () => {
-    await seedUser("free_user", "free");
-    await seedUser("plus_user", "plus");
-
-    const free = await call("/clubs", { method: "POST", user: "free_user", body: { name: "X" } });
-    expect(free.status).toBe(201);
-
-    const plus = await call("/clubs", { method: "POST", user: "plus_user", body: { name: "Y" } });
-    expect(plus.status).toBe(201);
-  });
-
-  it("creating a club makes the creator an active owner", async () => {
-    await seedUser("owner1", "plus");
-    const { body } = await createClub("owner1");
+  it("a free user can create a club and becomes its active owner", async () => {
+    await seedUser("owner1", "free");
+    const { res, body } = await createClub("owner1");
+    expect(res.status).toBe(201);
     const db = createDb(env.DB);
     const [member] = await db
       .select()
@@ -123,18 +111,17 @@ describe("clubs API (web -> api -> core -> D1)", () => {
     expect(await state()).toEqual({ current: null, open: [] });
   });
 
-  it("open club: a free user joins directly and becomes active", async () => {
+  it("an open club activates a joiner directly; an approval-gated one holds them as requested, notifies the owner, and approve activates and notifies", async () => {
     await seedUser("owner2", "plus");
     await seedUser("joiner", "free");
-    const { body } = await createClub("owner2");
+    const open = await createClub("owner2");
+    const joined = await call(`/clubs/${open.body.club.id}/join`, {
+      method: "POST",
+      user: "joiner",
+    });
+    expect(joined.status).toBe(201);
+    expect(((await joined.json()) as { member: { status: string } }).member.status).toBe("active");
 
-    const res = await call(`/clubs/${body.club.id}/join`, { method: "POST", user: "joiner" });
-    expect(res.status).toBe(201);
-    const { member } = (await res.json()) as { member: { status: string } };
-    expect(member.status).toBe("active");
-  });
-
-  it("approval-gated club: join is 'requested' and notifies the owner; approve activates + notifies", async () => {
     await seedUser("owner3", "plus");
     await seedUser("req_user", "free");
     const { body } = await createClub("owner3", { memberApproval: true });
@@ -191,9 +178,6 @@ describe("clubs API (web -> api -> core -> D1)", () => {
   });
 
   it("PLANT: a private club's children and join-by-id are hidden from non-members; the invite code still works", async () => {
-    // Grok audit 2026-10-21, FX-1: only GET /clubs/:id checked membership, and
-    // joinClub let anyone with the id in, at the default settings. The child reads are
-    // now one page read, so the page and the thread read are what must stay hidden.
     await seedUser("owner_p", "plus");
     await seedUser("outsider", "free");
     const { body } = await createClub("owner_p", { visibility: "private" });
@@ -336,13 +320,11 @@ describe("clubs API (web -> api -> core -> D1)", () => {
       .select()
       .from(schema.notifications)
       .where(and(eq(schema.notifications.userId, "voter6"), eq(schema.notifications.type, "poll")));
-    // one for poll.created + one for poll.closed
     expect(closedNotif.length).toBeGreaterThanOrEqual(1);
   });
 
   it("a member's live socket upgrades through the API to the club's ClubRoom", async () => {
-    // The Worker's own hub: the upgrade goes to the real Durable Object, whose 101
-    // carries the socket and headers that cannot be changed.
+    // The real Durable Object: its 101 carries the socket.
     const ns = (env as unknown as { CLUB_ROOM: DurableObjectNamespace<ClubRoom> }).CLUB_ROOM;
     const hub = clubRoomHub(ns);
     await seedUser("liveowner", "plus");
@@ -364,26 +346,7 @@ describe("clubs API (web -> api -> core -> D1)", () => {
     ws.close();
   });
 
-  it("a non-member cannot post", async () => {
-    await seedUser("owner7", "plus");
-    await seedUser("outsider", "free");
-    const { body } = await createClub("owner7");
-    const threadRes = await call(`/clubs/${body.club.id}/threads`, {
-      method: "POST",
-      user: "owner7",
-      body: { title: "T" },
-    });
-    const { thread } = (await threadRes.json()) as { thread: { id: string } };
-
-    const res = await call(`/threads/${thread.id}/posts`, {
-      method: "POST",
-      user: "outsider",
-      body: { content: "let me in" },
-    });
-    expect(res.status).toBe(403);
-  });
-
-  it("a banned member cannot leave to clear the ban, rejoin or post an announcement", async () => {
+  it("a non-member cannot post; a banned member cannot leave to clear the ban or rejoin; a plain member cannot post an announcement", async () => {
     await seedUser("owner8", "plus");
     await seedUser("banned1", "free");
     await seedUser("plain1", "free");
@@ -392,6 +355,20 @@ describe("clubs API (web -> api -> core -> D1)", () => {
     for (const user of ["banned1", "plain1"]) {
       await call(`/clubs/${id}/join`, { method: "POST", user });
     }
+    const thread = await call(`/clubs/${id}/threads`, {
+      method: "POST",
+      user: "owner8",
+      body: { title: "T" },
+    });
+    const { thread: t } = (await thread.json()) as { thread: { id: string } };
+    await seedUser("outsider", "free");
+    const outsiderPost = await call(`/threads/${t.id}/posts`, {
+      method: "POST",
+      user: "outsider",
+      body: { content: "let me in" },
+    });
+    expect(outsiderPost.status).toBe(403);
+
     const ban = await call(`/clubs/${id}/members/banned1/ban`, { method: "POST", user: "owner8" });
     expect(ban.status).toBe(200);
 
@@ -434,7 +411,6 @@ describe("clubs API (web -> api -> core -> D1)", () => {
     expect(clubs).toHaveLength(1);
     expect(clubs[0].suggested).toBe("stayer");
 
-    // A pick who is not an active member is refused, and the batch never runs.
     const bad = await call("/account", {
       method: "DELETE",
       user: "leaver",

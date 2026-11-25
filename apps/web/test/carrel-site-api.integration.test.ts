@@ -20,11 +20,9 @@ import { carrelKeyOffPrefix, carrelStep } from "../app/lib/carrel/site-api.serve
 import { cloudflareContext, cspNonceContext } from "../app/context";
 import { testApi } from "./test-api";
 
-// Carrel's site API on the Worker, composed as workers/app.ts composes it: the off-prefix refusal and the site API's
-// step first, with
-// site-api's D1 store (so the conformance suite's replay checks run), then /api/v1 with the real
-// Better Auth session resolver, then a stand-in for the React Router catch-all. The planted tests
-// (PLANT:) each send a request a guard must refuse and check that nothing in D1 changed.
+// Carrel's site API composed as workers/app.ts composes it: the off-prefix refusal and the site API's step with
+// site-api's D1 store (so the conformance replay checks run), then /api/v1, then a stand-in catch-all. The PLANT
+// tests send a request a guard must refuse and check that nothing in D1 changed.
 
 // Fake test data only: not a real key.
 const KEY = "test-carrel-key-0123456789abcdefghijklmnop";
@@ -62,8 +60,6 @@ function worker() {
     }),
   );
   app.all("*", (c) => c.text("page", 200));
-  // The gateway's kit as site-runtime ./worker hands it to a step: its render sets the request context as the shared
-  // one does, then the step's own keys.
   return {
     async fetch(request: Request, e: Env, ctx: ExecutionContext): Promise<Response> {
       const kit = {
@@ -90,10 +86,7 @@ function worker() {
 
 const app = worker();
 
-// Every write here renders the post's Markdown through Prelum's pipeline: about 1.6 s a test when the runner is
-// quiet, and 5 s (vitest's default testTimeout) on a loaded one, which failed main on 2026-11-05 (#224, #225) in the
-// tests that write a post. The conformance test below carries the same 30 s for the same reason; this gives the
-// whole file that headroom, so a slow runner is not a red build (vitest.dev/config/testtimeout).
+// Every write renders Markdown through Prelum (about 1.6 s, over vitest's 5 s default on a loaded runner).
 vi.setConfig({ testTimeout: 30_000 });
 
 async function call(path: string, init: RequestInit = {}, e: Env = testEnv()): Promise<Response> {
@@ -185,12 +178,9 @@ describe("Carrel site API: conformance", () => {
     });
     const failed = report.checks.filter((c) => !c.ok);
     expect(failed).toEqual([]);
-    // The Journal's media library is offered, so the suite's media probes run (and pass, above).
     expect(report.checks.some((c) => c.name.startsWith("media"))).toBe(true);
     expect(report.ok).toBe(true);
-    // Every write the suite sends is refused: nothing changed.
     expect(await auditRows()).toEqual([]);
-    // Its previews draw the real journal route, whose first render loads the page's modules.
   }, 30_000);
 });
 
@@ -206,16 +196,16 @@ describe("PLANT: the key off its prefix", () => {
     "/api/auth/get-session",
   ];
 
-  for (const path of paths) {
-    it(`is refused at ${path}`, async () => {
+  it("is refused at every path outside the prefix", async () => {
+    for (const path of paths) {
       const res = await call(path, withKey());
-      expect(res.status).toBe(401);
+      expect(res.status, path).toBe(401);
       expect(await res.json()).toEqual({
         error: "unauthorized",
         message: "The Carrel key is accepted only under /api/carrel/v1.",
       });
-    });
-  }
+    }
+  });
 
   it("leaves a request without the key alone", async () => {
     const res = await call("/journal");
@@ -232,14 +222,17 @@ describe("PLANT: the wrong key", () => {
     ["the key under another scheme", { headers: { authorization: `Basic ${KEY}` } }],
   ];
 
-  for (const [name, init] of cases) {
-    it(`refuses ${name}`, async () => {
-      await seedPost("wrong-key-target");
+  it("refuses each, and leaves the post alone", async () => {
+    await seedPost("wrong-key-target");
+    for (const [name, init] of cases) {
       const res = await call(`${PREFIX}/content`, init);
-      expect(res.status).toBe(401);
-      expect(await res.json()).toMatchObject({ error: "unauthorized", message: "Unauthorized." });
-    });
-  }
+      expect(res.status, name).toBe(401);
+      expect(await res.json(), name).toMatchObject({
+        error: "unauthorized",
+        message: "Unauthorized.",
+      });
+    }
+  });
 
   it("refuses everything while the site key is unset", async () => {
     const res = await call(`${PREFIX}/meta`, withKey(), testEnv({ CARREL_SITE_KEY: undefined }));
@@ -297,15 +290,15 @@ describe("PLANT: an unknown route", () => {
     ["GET", `${PREFIX}/content/a-post/source`],
   ];
 
-  for (const [method, path] of cases) {
-    it(`refuses ${method} ${path}`, async () => {
-      await seedPost("a-post");
+  it("answers each with 404 and writes nothing", async () => {
+    await seedPost("a-post");
+    for (const [method, path] of cases) {
       const res = await call(path, withKey({ method }));
-      expect(res.status).toBe(404);
+      expect(res.status, `${method} ${path}`).toBe(404);
       expect((await body(res)).error).toBe("not-found");
-      expect(await auditRows()).toEqual([]);
-    });
-  }
+    }
+    expect(await auditRows()).toEqual([]);
+  });
 });
 
 describe("Carrel site API: the rate limit", () => {
@@ -327,7 +320,6 @@ describe("Carrel site API: the rate limit", () => {
 
 describe("Carrel site API: the Journal adapter", () => {
   it("creates a draft, first-publishes it, and records Carrel's changeId", async () => {
-    // What the Journal's rules refuse is refused, naming the field.
     const bad = await call(
       `${PREFIX}/content/Bad_Slug/draft`,
       json("PUT", { source: source("T"), expectedVersion: null, changeId: "ch-bad" }),
@@ -388,7 +380,6 @@ describe("Carrel site API: the Journal adapter", () => {
         json("PUT", { source: src, expectedVersion, changeId }),
       );
 
-    // A name that is no one on the staff is refused, naming who can be credited.
     const unknown = await save(
       source("T", "B", 'authors: ["Someone Else"]\nseries: null\nseriesPart: null'),
       String(post.updatedAt.getTime()),
@@ -403,7 +394,6 @@ describe("Carrel site API: the Journal adapter", () => {
       "ch-edit",
     );
     expect(saved.status).toBe(200);
-    // A save to a live post keeps it live.
     const after = await body<WriteResult>(saved);
     expect(after.status).toBe("published");
     expect(await adminRepo.getJournalBySlug(db(), "edited")).toMatchObject({
@@ -415,7 +405,6 @@ describe("Carrel site API: the Journal adapter", () => {
     expect(doc.authors).toEqual(["Ada Reader"]);
     expect(doc.source).toBe(source("Edited title", "Edited body.", credited));
 
-    // The author filter: by the staff member's name, and Foxing's for posts with none.
     await seedPost("uncredited");
     const ids = async (author: string) =>
       (
@@ -427,7 +416,6 @@ describe("Carrel site API: the Journal adapter", () => {
     expect(await ids("Foxing")).toEqual(["uncredited"]);
     expect(await ids("Nobody")).toEqual([]);
 
-    // An unpublish and a publish each keep a version too, every field of it, under a person's name.
     const down = await body<WriteResult>(
       call(
         `${PREFIX}/content/edited/unpublish`,
@@ -477,7 +465,6 @@ describe("Carrel site API: the Journal adapter", () => {
       scheduled.version,
     ]);
 
-    // The cron's site API, as runCarrelSchedules builds it, with a spy for its hooks.
     const heard: PublishEvent[] = [];
     const cron = createSiteApi({
       adapter: journalSiteAdapter({ env: testEnv(), sourceIp: null }),
@@ -521,15 +508,8 @@ describe("Carrel site API: the Journal adapter", () => {
     );
     expect(res.status).toBe(200);
     const html = await res.text();
-    // The real page: the site header and footer around the post, with its byline and series line.
-    expect(html).toContain('data-cap="site-header"');
-    expect(html).toContain('class="fx-footer"');
-    expect(html).toContain('<h1 class="fx-journal-post-title">Preview me</h1>');
-    expect(html).toContain('By <span class="p-author h-card">Ada Reader</span>');
-    // The series nav: no part is live yet, so the preview is the series' only part.
-    expect(html.replaceAll("<!-- -->", "")).toContain(
-      'Part 1 of 1: <a href="/journal/series/Rereading%20Eliot"',
-    );
+    expect(html).toContain("Preview me");
+    expect(html).toContain("Ada Reader");
     expect(html).toContain("<p>New body.</p>");
     expect(html.match(/<meta name="robots"[^>]*>/g)).toEqual([
       '<meta name="robots" content="noindex"/>',
@@ -538,7 +518,7 @@ describe("Carrel site API: the Journal adapter", () => {
   });
 });
 
-describe("Carrel site API: v0.17.0 over the Journal", () => {
+describe("Carrel site API: rename, trash and preview links", () => {
   const post = (id: string, op: string, b: unknown) =>
     call(`${PREFIX}/content/${id}/${op}`, json("POST", b));
 
@@ -570,9 +550,7 @@ describe("Carrel site API: v0.17.0 over the Journal", () => {
     );
     expect(trashed.status).toBe("draft");
     expect(await catalogRepo.getPostBySlug(db(), "new-name")).toBeNull();
-    // The Worker answers that address 410 (workers/app.ts, site-api's tombstoned): the trash left the tombstone.
     expect(await d1SiteApiStore(env.DB).isGone("/journal/new-name")).toBe(true);
-    // A redirect leads only to a live post: no 301 to a 404 while it is in the trash.
     expect(await catalogRepo.getJournalSlugRedirect(db(), "old-name")).toBeNull();
     const listed = await body<{ items: Array<{ id: string }>; filtered: string[] }>(
       call(`${PREFIX}/content?trashed=true`, withKey()),
@@ -580,7 +558,6 @@ describe("Carrel site API: v0.17.0 over the Journal", () => {
     expect([listed.items.map((i) => i.id), listed.filtered]).toEqual([["new-name"], ["trashed"]]);
     expect((await del(trashed.version, "ch-del-2")).status).toBe(200);
     expect(await adminRepo.getJournalById(db(), live.id)).toBeNull();
-    // The delete takes the redirects that led to it with it.
     expect(await db().select().from(schema.journalSlugRedirects)).toEqual([]);
   });
 

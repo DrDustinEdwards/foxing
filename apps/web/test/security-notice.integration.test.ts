@@ -51,13 +51,10 @@ async function signInHarness(secret: string) {
   return { sent, testEnv, auth, post, signIn };
 }
 
-// Signing out every other device (settings, Signed-in devices) ends those sessions and mails the
-// reader a security notice through Foxing's own sender, after the answer (waitUntil).
 describe("signing out the other devices", () => {
   it("ends them and mails a security notice", async () => {
     const { sent, auth, post, signIn } = await signInHarness("test-secret-value-for-notice-only");
 
-    // Two devices: each asks for a code and signs in with it.
     const email = "notice-reader@example.com";
     const here = await signIn(email);
     await signIn(email);
@@ -73,9 +70,8 @@ describe("signing out the other devices", () => {
   });
 });
 
-// Better Auth's own email-change link (/api/auth/verify-email) acts on a GET, so a mail scanner
-// that opens links could approve the change. The mail carries /email/confirm instead, whose
-// button's POST is the only thing that acts (site-runtime emailConfirmURL, confirmEmailLink).
+// Better Auth's own email-change link acts on a GET, so a mail scanner could approve the change;
+// the mail must carry the /email/confirm page, whose POST is the only thing that acts.
 describe("changing the email", () => {
   it("mails the confirm page, never Better Auth's GET link", async () => {
     const { sent, post, signIn } = await signInHarness("test-secret-value-for-email-change");
@@ -90,8 +86,6 @@ describe("changing the email", () => {
   });
 });
 
-// Deleting the account (Settings, DELETE /api/v1/account) is Better Auth's deleteUser: Foxing's
-// own rows go first, then the sessions and the user, and the reader is told.
 describe("deleting the account", () => {
   it("removes the user and their sessions through Better Auth and mails a notice", async () => {
     const { sent, testEnv, auth, signIn } = await signInHarness(
@@ -122,9 +116,8 @@ describe("deleting the account", () => {
   });
 });
 
-// A signed-in page's loader reads the session from its GET (sessionLookup, with the request for
-// sessionDetails' place). Better Auth answers a call that carries a request with a Response
-// unless asked not to, which once sent every signed-in reader back to /login.
+// Better Auth answers a call that carries a request with a Response unless asked not to, which
+// sent every signed-in reader back to /login.
 describe("a signed-in GET", () => {
   it("finds the reader's session", async () => {
     const { testEnv, signIn } = await signInHarness("test-secret-value-for-get-session");

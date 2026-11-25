@@ -3,14 +3,9 @@ import { createDb, push, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
-// Push delivery pipeline against local D1 with a STUB Expo fetch. Proves the
-// whole chain minus the real Expo network + a real device: prefs/quiet-hours gating,
-// Expo message build, and DeviceNotRegistered token pruning. Device receipt is a
-// separate human gate.
-
 const db = () => createDb(env.DB);
 
-// 2026-01-15T15:00:00Z -> 10:00 in New York (daytime, outside a 22:00-07:00 quiet window).
+// 15:00 UTC is 10:00 in New York.
 const NOON_ISH = Date.UTC(2026, 0, 15, 15, 0, 0);
 
 async function seed(opts: {
@@ -55,9 +50,7 @@ async function seed(opts: {
   return n.id;
 }
 
-// Stub Expo: return one ticket per message, in request order (as Expo does). Any token
-// whose value contains "dead" comes back DeviceNotRegistered, so the test is independent
-// of the (unordered) token fetch order.
+// Stub Expo: one ticket per message, in request order; a token containing "dead" is DeviceNotRegistered.
 function stubFetch(): { fetchImpl: typeof fetch; calls: number } {
   const state = { calls: 0 };
   const fetchImpl = (async (_url: string, init?: RequestInit) => {
@@ -105,36 +98,22 @@ describe("push delivery (core -> local D1, stub Expo)", () => {
     expect(remaining.map((t) => t.token)).toEqual(["ExponentPushToken[live]"]);
   });
 
-  it("suppresses a category the user turned off (no Expo call)", async () => {
-    const id = await seed({
-      prefs: { categories: { club_replies: false } },
-      tokens: ["ExponentPushToken[x]"],
-      notifType: "post_reply",
-    });
+  it.each([
+    [
+      "category_off",
+      { prefs: { categories: { club_replies: false } }, tokens: ["ExponentPushToken[x]"] },
+    ],
+    [
+      "quiet_hours",
+      { prefs: { quietHours: { start: "09:00", end: "11:00" } }, tokens: ["ExponentPushToken[x]"] },
+    ],
+    ["no_tokens", { tokens: [] }],
+  ])("sends nothing and reports %s", async (reason, opts) => {
+    const id = await seed({ ...opts, notifType: "post_reply" });
     const stub = stubFetch();
     const res = await push.deliverPush(db(), { fetchImpl: stub.fetchImpl, nowUtcMs: NOON_ISH }, id);
-    expect(res.reason).toBe("category_off");
+    expect(res.reason).toBe(reason);
     expect(res.delivered).toBe(0);
     expect(stub.calls).toBe(0);
-  });
-
-  it("suppresses inside quiet hours", async () => {
-    // 15:00 UTC = 10:00 New York; set quiet 09:00-11:00 to land inside.
-    const id = await seed({
-      prefs: { quietHours: { start: "09:00", end: "11:00" } },
-      tokens: ["ExponentPushToken[x]"],
-      notifType: "post_reply",
-    });
-    const stub = stubFetch();
-    const res = await push.deliverPush(db(), { fetchImpl: stub.fetchImpl, nowUtcMs: NOON_ISH }, id);
-    expect(res.reason).toBe("quiet_hours");
-    expect(stub.calls).toBe(0);
-  });
-
-  it("reports no_tokens when the user has none registered", async () => {
-    const id = await seed({ tokens: [], notifType: "post_reply" });
-    const stub = stubFetch();
-    const res = await push.deliverPush(db(), { fetchImpl: stub.fetchImpl, nowUtcMs: NOON_ISH }, id);
-    expect(res.reason).toBe("no_tokens");
   });
 });

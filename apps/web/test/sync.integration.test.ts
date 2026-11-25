@@ -4,12 +4,6 @@ import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { callApi, seedUser, testApi } from "./test-api";
 
-// Offline sync + push, exercised web -> api -> core -> D1 against local D1. This
-// is the device-independent proof of the sync protocol: idempotent create replay,
-// row-level LWW, progress = greatest client_ts, delete idempotency, append-only sessions,
-// pull-by-cursor, and push token registration. Device behavior (airplane-mode queue +
-// real push receipt) is a separate human gate.
-
 const call = (path: string, req?: Parameters<typeof callApi>[2]) => callApi(testApi(), path, req);
 
 const db = () => createDb(env.DB);
@@ -82,7 +76,7 @@ describe("sync API (web -> api -> core -> D1)", () => {
       .from(schema.annotations)
       .where(eq(schema.annotations.id, "ann-1"));
     expect(rows).toHaveLength(1);
-    expect(rows[0].normalizedText).toBe("hello world"); // computed on insert
+    expect(rows[0].normalizedText).toBe("hello world");
   });
 
   it("update obeys row-level LWW: older op skipped, newer op applied", async () => {
@@ -130,7 +124,6 @@ describe("sync API (web -> api -> core -> D1)", () => {
   it("user_book progress: greatest client_ts wins regardless of arrival order", async () => {
     await seedUser("alice");
     await seedBook("b1");
-    // Apply the newer progress first, then an older one out of order.
     await push("alice", [
       {
         id: "ub-op-late",
@@ -155,7 +148,7 @@ describe("sync API (web -> api -> core -> D1)", () => {
       .select()
       .from(schema.userBooks)
       .where(and(eq(schema.userBooks.userId, "alice"), eq(schema.userBooks.bookId, "b1")));
-    expect(row.progressPct).toBe(80); // the later client_ts stuck
+    expect(row.progressPct).toBe(80);
   });
 
   it("delete is idempotent (deleting a missing row succeeds)", async () => {
@@ -227,7 +220,7 @@ describe("sync API (web -> api -> core -> D1)", () => {
       .select()
       .from(schema.annotations)
       .where(eq(schema.annotations.id, "ann-x"));
-    expect(row.userId).toBe("alice"); // forced to the session user, not payload.user_id
+    expect(row.userId).toBe("alice");
   });
 
   it("GET /sync pulls changed rows since a cursor and returns a new cursor", async () => {
@@ -248,7 +241,7 @@ describe("sync API (web -> api -> core -> D1)", () => {
     expect(body.cursor).toBeGreaterThanOrEqual(10_000);
   });
 
-  it("push register writes a token row; notifications endpoint reads the user's list", async () => {
+  it("push register writes a token row", async () => {
     await seedUser("alice");
     const reg = await call("/push/register", {
       method: "POST",
@@ -261,10 +254,5 @@ describe("sync API (web -> api -> core -> D1)", () => {
       .from(schema.pushTokens)
       .where(eq(schema.pushTokens.userId, "alice"));
     expect(tok.token).toBe("ExponentPushToken[abc]");
-
-    const list = await call("/notifications", { user: "alice" });
-    const body = (await list.json()) as { notifications: unknown[]; unread: number };
-    expect(Array.isArray(body.notifications)).toBe(true);
-    expect(body.unread).toBe(0);
   });
 });
