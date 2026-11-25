@@ -74,7 +74,7 @@ export function buildMeta({ pathname, ...page }: MetaInput): MetaDescriptor[] {
   return head({ ...page, path: canonicalPathname(pathname) });
 }
 
-export function noindexMeta(title: string): MetaDescriptor[] {
+export function noindexPageMeta(title: string): MetaDescriptor[] {
   return [{ title }, { name: "robots", content: "noindex" }];
 }
 

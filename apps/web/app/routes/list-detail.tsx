@@ -9,7 +9,7 @@ import { RemoveBookButton } from "~/components/social/remove-book-button";
 import { Avatar, Container, EmptyState } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { sessionUserFromRequest } from "~/lib/auth.server";
-import { buildMeta, noindexMeta } from "~/lib/seo";
+import { buildMeta, noindexPageMeta } from "~/lib/seo";
 import type { Route } from "./+types/list-detail";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
@@ -22,7 +22,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 }
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
-  if (!data) return noindexMeta("List | Foxing");
+  if (!data) return noindexPageMeta("List | Foxing");
   const { list, owner, books } = data.page;
   const by = owner ? (owner.displayName ?? owner.username) : null;
   const titles = books.flatMap((b) => (b.book ? [b.book.title] : [])).slice(0, 3);

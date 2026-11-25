@@ -21,10 +21,10 @@ import { Container, EmptyState, FormError, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/goals";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export function meta() {
-  return noindexMeta("Reading goals | Foxing");
+  return noindexPageMeta("Reading goals | Foxing");
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {

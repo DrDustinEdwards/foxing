@@ -11,7 +11,7 @@ import {
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-notifications";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -20,7 +20,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return noindexMeta("Admin · Notifications | Foxing");
+  return noindexPageMeta("Admin · Notifications | Foxing");
 }
 
 const CONFIRM_WORD = "BROADCAST";

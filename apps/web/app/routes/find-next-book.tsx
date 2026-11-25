@@ -13,10 +13,10 @@ import { billing, type Recommendation } from "@foxing/core";
 import { requireProfile } from "~/lib/profile.server";
 import { loadRecommendations } from "~/lib/recommendations.server";
 import type { Route } from "./+types/find-next-book";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export function meta() {
-  return noindexMeta("Find your next book | Foxing");
+  return noindexPageMeta("Find your next book | Foxing");
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {

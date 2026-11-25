@@ -9,7 +9,7 @@ import "~/styles/reader-popovers.css";
 import "~/styles/reader-view.css";
 import type { Route } from "./+types/read";
 import { signInHref } from "~/lib/sign-in-path";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db, env, origin } = loaderBase(context, request);
@@ -45,7 +45,7 @@ export async function clientLoader({ request, serverLoader }: Route.ClientLoader
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const title = loaderData ? `Reading ${loaderData.book.title}` : "Reader";
-  return noindexMeta(`${title} | Foxing`);
+  return noindexPageMeta(`${title} | Foxing`);
 }
 
 export default function Read({ loaderData }: Route.ComponentProps) {

@@ -7,7 +7,7 @@ import { SuspendButton, useRoleChange } from "~/components/admin/confirm-change"
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-users";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -18,7 +18,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return noindexMeta("Admin · Users | Foxing");
+  return noindexPageMeta("Admin · Users | Foxing");
 }
 
 export default function AdminUsers({ loaderData }: Route.ComponentProps) {

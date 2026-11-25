@@ -12,7 +12,7 @@ import {
 } from "~/components/admin/admin-form";
 import { adminLoaderBase } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-books";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { db } = await adminLoaderBase(context, request);
@@ -22,7 +22,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return noindexMeta("Admin · Books | Foxing");
+  return noindexPageMeta("Admin · Books | Foxing");
 }
 
 export const handle = { hydrate: true };

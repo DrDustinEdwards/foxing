@@ -5,7 +5,7 @@ import { adminLoaderBase, adminOverview } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-analytics";
 
 import "capsomer/table.css";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { db } = await adminLoaderBase(context, request);
@@ -13,7 +13,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return noindexMeta("Admin · Analytics | Foxing");
+  return noindexPageMeta("Admin · Analytics | Foxing");
 }
 
 export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {

@@ -8,7 +8,7 @@ import type { Route } from "./+types/club-new";
 import { signInFrom } from "~/lib/sign-in-path";
 import { NativeSelect } from "capsomer/react/select-native";
 import { useHydrated } from "capsomer/react/hooks";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -18,7 +18,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return noindexMeta("New club | Foxing");
+  return noindexPageMeta("New club | Foxing");
 }
 
 export default function ClubNew() {

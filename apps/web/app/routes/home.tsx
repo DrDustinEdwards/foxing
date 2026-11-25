@@ -10,7 +10,7 @@ import type { LibraryEntry as Entry, Streak } from "@foxing/types";
 import { loadLibraryData } from "~/lib/library.server";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/home";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 function timeOfDay(hour: number): string {
   if (hour < 12) return "morning";
@@ -51,7 +51,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return noindexMeta("Home | Foxing");
+  return noindexPageMeta("Home | Foxing");
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {

@@ -8,7 +8,7 @@ import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/club-thread";
 import { useHydrated } from "capsomer/react/hooks";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -19,7 +19,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return noindexMeta(`${loaderData?.page.thread.title ?? "Thread"} | Foxing`);
+  return noindexPageMeta(`${loaderData?.page.thread.title ?? "Thread"} | Foxing`);
 }
 
 export default function ClubThread({ loaderData, params }: Route.ComponentProps) {

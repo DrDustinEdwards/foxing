@@ -16,7 +16,7 @@ import { BookPicker } from "~/components/admin/book-picker";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-botm";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -26,7 +26,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return noindexMeta("Admin · Book of the Month | Foxing");
+  return noindexPageMeta("Admin · Book of the Month | Foxing");
 }
 
 export default function AdminBotm({ loaderData }: Route.ComponentProps) {

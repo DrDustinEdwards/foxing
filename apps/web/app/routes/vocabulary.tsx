@@ -7,10 +7,10 @@ import { Container, EmptyState, FilterTab, FormError, PageHeader } from "~/compo
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/vocabulary";
-import { noindexMeta } from "~/lib/seo";
+import { noindexPageMeta } from "~/lib/seo";
 
 export function meta() {
-  return noindexMeta("Vocabulary | Foxing");
+  return noindexPageMeta("Vocabulary | Foxing");
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {
