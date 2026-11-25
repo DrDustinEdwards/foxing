@@ -21,7 +21,7 @@ import {
   type WriteResult,
 } from "@dustinedwards/site-api";
 import { SEARCH_FIELDS } from "@dustinedwards/site-api/frontmatter";
-import { d1ScheduledUpdates, utc, waitingUpdates } from "@dustinedwards/site-api/schedules";
+import { d1ScheduledUpdates, waitingUpdates } from "@dustinedwards/site-api/schedules";
 import { adminEmails } from "@dustinedwards/site-runtime/access";
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
 import { adminRepo, createDb, type Db, isUniqueViolation } from "@foxing/core";
@@ -182,7 +182,7 @@ export function journalSiteAdapter(options: {
     await audit("journal.schedule", {
       id: row.id,
       slug: row.slug,
-      publishAt: utc(publishAt),
+      publishAt: new Date(publishAt).toISOString(),
       changeId,
     });
     return written(row.id, changeId);
