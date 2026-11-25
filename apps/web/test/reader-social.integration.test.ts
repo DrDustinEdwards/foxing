@@ -147,23 +147,26 @@ async function resolve(viewerId: string | null, opts?: { progressGate?: boolean 
   return loadReaderAnnotations(db(), viewerId, BOOK, opts);
 }
 
+async function resetTables() {
+  annSeq = 0;
+  for (const t of [
+    schema.annotations,
+    schema.userBooks,
+    schema.clubBooks,
+    schema.clubMembers,
+    schema.clubs,
+    schema.closeFriends,
+    schema.books,
+    schema.profiles,
+    schema.user,
+  ]) {
+    await db().delete(t);
+  }
+}
+
 describe("reader social-layer resolution matrix (local D1)", () => {
   beforeEach(async () => {
-    const d = db();
-    annSeq = 0;
-    for (const t of [
-      schema.annotations,
-      schema.userBooks,
-      schema.clubBooks,
-      schema.clubMembers,
-      schema.clubs,
-      schema.closeFriends,
-      schema.books,
-      schema.profiles,
-      schema.user,
-    ]) {
-      await d.delete(t);
-    }
+    await resetTables();
     await seedBook(BOOK);
     await seedBook(OTHER_BOOK);
   });
@@ -464,21 +467,7 @@ describe("GET /api/v1/books/:id/annotations (endpoint wiring + optional session)
   }
 
   beforeEach(async () => {
-    const d = db();
-    annSeq = 0;
-    for (const t of [
-      schema.annotations,
-      schema.userBooks,
-      schema.clubBooks,
-      schema.clubMembers,
-      schema.clubs,
-      schema.closeFriends,
-      schema.books,
-      schema.profiles,
-      schema.user,
-    ]) {
-      await d.delete(t);
-    }
+    await resetTables();
     await seedBook(BOOK);
   });
 
@@ -564,21 +553,7 @@ describe("POST /api/v1/annotations/comments (assertActiveMember gate)", () => {
   });
 
   beforeEach(async () => {
-    const d = db();
-    annSeq = 0;
-    for (const t of [
-      schema.annotations,
-      schema.userBooks,
-      schema.clubBooks,
-      schema.clubMembers,
-      schema.clubs,
-      schema.closeFriends,
-      schema.books,
-      schema.profiles,
-      schema.user,
-    ]) {
-      await d.delete(t);
-    }
+    await resetTables();
     await seedBook(BOOK);
     await seedUser("member");
     await seedUser("outsider");

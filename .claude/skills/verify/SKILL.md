@@ -86,20 +86,7 @@ const browser = await chromium.launch(
 );
 const context = await browser.newContext({ baseURL: base });
 const page = await context.newPage();
-const errors = [];
-page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
-page.on("pageerror", (e) => errors.push(String(e)));
-const log = [];
-async function step(name, fn) {
-  try {
-    await fn();
-    log.push(`ok   ${name}`);
-  } catch (e) {
-    log.push(`FAIL ${name}: ${e.message.split("\n")[0]}`);
-    await page.screenshot({ path: "fail.png", fullPage: true });
-    throw e;
-  }
-}
+// errors, log and step(): the helpers in devkit docs/verify.md
 try {
   await step("open the home page (this is Foxing)", async () => {
     const r = await page.goto("/");
@@ -125,11 +112,6 @@ For a public flow, skip the sign-in step (the seeded books are `frankenstein-see
 before the next change. Drive the whole flow (act, see the result, reload and see it
 hold); repeat the end state at 390 px and dark when the change is responsive or
 themed.
-
-Playwright here is the repo's `@playwright/test`. In a cloud session
-`PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers` already matches it. If launch ever fails with
-"Executable doesn't exist", set `PW_CHROMIUM=/opt/pw-browsers/chromium`. Do not run
-`playwright install`.
 
 ## 4. Run the specs that cover the area
 
@@ -161,20 +143,19 @@ For logic below the UI, the web app's integration tests run in a few seconds eac
 kill $(cat $SCRATCH/vite.pid)
 ```
 
-## Rules
+`wrangler.jsonc`, `.dev.vars`, `.wrangler/` and `e2e/.auth/` are gitignored; leave them
+or delete them, but never commit them (CLAUDE.md, public repo rule).
 
-A failed step is a finding about the change: fix the code and rerun the same script;
-no sleeps, no looser selectors. Stop the server by its process id, never `pkill` by name.
+## Rules and report
 
-## The report
+Follow the Rules and the report in [devkit's docs/verify.md](https://github.com/DrDustinEdwards/devkit/blob/main/docs/verify.md). For this repo:
 
-Put this in the reply and the pull request body:
-
-- First line: verified, partly verified (and what was not), or failed.
-- Each step's ok or FAIL line, the console errors line, the end-state screenshot
-  attached, and the spec run's summary line.
-- Not verified: R2/Images, email and OAuth sign-in, Stripe, Anthropic, the club DO,
-  edge headers. After the merge deploys: the `deploy` job in
+- Never run the seed scripts or a spec that writes with `--remote`, and never print the passkey key; keep the key in the scratchpad.
+- Anything the local build cannot show, named as not verified: the real catalog and
+  its covers and EPUBs (R2), the Images binding, real email and sign-in (Google, Apple,
+  Turnstile, a new reader's email link), Stripe billing, the Anthropic companion, the
+  club live room Durable Object over a real network, the edge cache and the deploy's
+  headers. The check after the merge deploys runs by itself: the `deploy` job in
   `.github/workflows/ci-cf.yml` waits for `/health` and the home page and rolls back
   on failure, then the `e2e` job runs the full suite against the live site. Read both
   on the merged commit.
