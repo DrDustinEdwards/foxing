@@ -1,27 +1,11 @@
 import { useBookAnnotations, useBookPage, useMyBook, useSetBookStatus } from "@foxing/client";
 import type * as W from "@foxing/types";
 import { useRef, useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  Image,
-  ActivityIndicator,
-  Share,
-  Alert,
-  Linking,
-} from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
-  CaretLeft,
   ShareNetwork,
-  Star,
-  BookOpen,
-  ImageSquare,
-  Link as LinkIcon,
-  Megaphone,
   CaretRight,
   CaretDown,
   BookmarkSimple,
@@ -42,14 +26,14 @@ import {
   SecondaryButton,
   SectionHeading,
 } from "@/components/book/book-detail-parts";
+import { BookHero } from "@/components/book/book-hero";
+import { BookIdentity } from "@/components/book/book-identity";
+import { BookCommunity } from "@/components/book/book-community";
+import { BookSocialSections } from "@/components/book/book-social-sections";
+import { BookClubs } from "@/components/book/book-clubs";
+import { BookRow } from "@/components/book/book-row";
+import { BookShareMenu } from "@/components/book/book-share-menu";
 import { CompanionSheet } from "@/components/reader/companion-sheet";
-
-function pacingLabel(p: string | null | undefined): string {
-  if (p === "slow") return "Slow-paced";
-  if (p === "fast") return "Fast-paced";
-  if (p === "medium") return "Medium-paced";
-  return "";
-}
 
 export default function BookDetail() {
   const colors = useColors();
@@ -75,7 +59,6 @@ export default function BookDetail() {
   const [companion, setCompanion] = useState<"book_insight" | "deep_dive" | null>(null);
 
   const [showDescription, setShowDescription] = useState(false);
-  const [showContentWarnings, setShowContentWarnings] = useState(false);
 
   function setStatus(status: W.ShelfStatus) {
     setStatusMenuOpen(false);
@@ -157,233 +140,13 @@ export default function BookDetail() {
   }
 
   const description = page.ai.description ?? book.description;
-  const readMinutes = book.wordCount ? Math.round(book.wordCount / 250) : null;
-  const readingTimeLabel = readMinutes
-    ? readMinutes >= 60
-      ? `~${Math.round(readMinutes / 60)} hr read`
-      : `~${readMinutes} min read`
-    : null;
-
-  const subjects = (book.subjects ?? []).slice(0, 8);
-
   return (
     <View className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
-        {/* Header with cover hero + gradient */}
-        <View style={{ height: 320, backgroundColor: colors.bgSunken }}>
-          {book.coverUrl ? (
-            <Image
-              source={{ uri: book.coverUrl }}
-              style={{ width: "100%", height: "100%" }}
-              resizeMode="cover"
-              blurRadius={4}
-            />
-          ) : null}
-          {/* Faux-gradient: solid translucent stripes at the bottom faking a fade.
-              Avoids adding expo-linear-gradient as a native dep just for this. */}
-          <View
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 120,
-              backgroundColor: colors.bgBase,
-              opacity: 0.55,
-            }}
-          />
-          <View
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 60,
-              backgroundColor: colors.bgBase,
-              opacity: 0.85,
-            }}
-          />
-          <View
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              paddingHorizontal: 12,
-              paddingTop: 48,
-            }}
-          >
-            <Pressable
-              onPress={() => router.back()}
-              hitSlop={10}
-              accessibilityRole="button"
-              accessibilityLabel="Back"
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                backgroundColor: colors.scrimLight,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <CaretLeft color={colors.textOnDark} size={18} />
-            </Pressable>
-            <Pressable
-              onPress={() => setShareMenuOpen(true)}
-              hitSlop={10}
-              accessibilityRole="button"
-              accessibilityLabel="Share book"
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                backgroundColor: colors.scrimLight,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <ShareNetwork color={colors.textOnDark} size={18} />
-            </Pressable>
-          </View>
-          {/* Cover thumbnail centered over the bottom of the hero */}
-          <View
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              bottom: -30,
-              alignItems: "center",
-            }}
-          >
-            <View
-              style={{
-                width: 120,
-                height: 180,
-                borderRadius: 8,
-                overflow: "hidden",
-                backgroundColor: colors.bgSurface,
-                borderWidth: 1,
-                borderColor: colors.borderSubtle,
-              }}
-            >
-              {book.coverUrl ? (
-                <Image
-                  source={{ uri: book.coverUrl }}
-                  style={{ width: "100%", height: "100%" }}
-                  resizeMode="cover"
-                  accessibilityRole="image"
-                  accessibilityLabel={`${book.title} book cover`}
-                />
-              ) : (
-                <View
-                  style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 8 }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: Fonts.display,
-                      fontSize: 14,
-                      color: colors.textTertiary,
-                      textAlign: "center",
-                    }}
-                    numberOfLines={4}
-                  >
-                    {book.title}
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        </View>
+        <BookHero book={book} onBack={() => router.back()} onShare={() => setShareMenuOpen(true)} />
 
         <View style={{ marginTop: 48, paddingHorizontal: 20 }}>
-          <Text
-            style={{
-              fontFamily: Fonts.displayBold,
-              fontSize: 22,
-              color: colors.textPrimary,
-              textAlign: "center",
-            }}
-          >
-            {book.title}
-          </Text>
-          <Pressable
-            onPress={() => book.authorSlug && router.push(`/author/${book.authorSlug}` as never)}
-          >
-            <Text
-              style={{
-                fontFamily: Fonts.uiMedium,
-                fontSize: 14,
-                color: colors.brandText,
-                textAlign: "center",
-                marginTop: 4,
-              }}
-            >
-              {book.author}
-            </Text>
-          </Pressable>
-          {book.seriesName ? (
-            <Text
-              style={{
-                fontFamily: Fonts.ui,
-                fontSize: 11,
-                color: colors.textTertiary,
-                textAlign: "center",
-                marginTop: 2,
-              }}
-            >
-              {book.seriesName}
-              {book.seriesOrder ? `, book ${book.seriesOrder}` : ""}
-            </Text>
-          ) : null}
-          {readingTimeLabel ? (
-            <Text
-              style={{
-                fontFamily: Fonts.mono,
-                fontSize: 11,
-                color: colors.textTertiary,
-                textAlign: "center",
-                marginTop: 4,
-              }}
-            >
-              {readingTimeLabel}
-            </Text>
-          ) : null}
-
-          {subjects.length > 0 ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingVertical: 12, gap: 6 }}
-            >
-              {subjects.map((s) => (
-                <View
-                  key={s}
-                  className="px-3 py-1 rounded-full"
-                  style={{ backgroundColor: colors.brandSubtle }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: Fonts.ui,
-                      fontSize: 11,
-                      color: colors.brandSubtleText,
-                    }}
-                    numberOfLines={1}
-                  >
-                    {s
-                      .split(/[\u2014\u2013\-:]/)[0]
-                      .trim()
-                      .slice(0, 40)}
-                  </Text>
-                </View>
-              ))}
-            </ScrollView>
-          ) : null}
+          <BookIdentity book={book} />
 
           {/* Primary CTA */}
           <PrimaryCta
@@ -422,112 +185,7 @@ export default function BookDetail() {
           </View>
         </View>
 
-        {/* Community, rating + mood + pacing, above Where to Read and the AI sections. */}
-        <SectionHeading>Community</SectionHeading>
-        <View style={{ paddingHorizontal: 20 }}>
-          <View className="flex-row items-center" style={{ marginBottom: 12 }}>
-            <Star color={colors.brandSecondary} size={18} weight="fill" />
-            <Text
-              style={{
-                fontFamily: Fonts.uiMedium,
-                fontSize: 15,
-                color: colors.textPrimary,
-                marginLeft: 6,
-              }}
-            >
-              {book.rating ? book.rating.toFixed(1) : ""}
-            </Text>
-            <Text
-              style={{
-                fontFamily: Fonts.ui,
-                fontSize: 12,
-                color: colors.textTertiary,
-                marginLeft: 10,
-              }}
-            >
-              {book.ratingCount > 0
-                ? `${book.ratingCount} rating${book.ratingCount === 1 ? "" : "s"}, `
-                : ""}
-              {page.readerCount} reader{page.readerCount === 1 ? "" : "s"}
-            </Text>
-          </View>
-          {book.moodTags && book.moodTags.length > 0 ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 6, paddingBottom: 4 }}
-              style={{ marginBottom: 8 }}
-            >
-              {book.moodTags.map((m) => (
-                <View
-                  key={m}
-                  className="px-3 py-1 rounded-full"
-                  style={{ backgroundColor: colors.brandSubtle }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: Fonts.uiMedium,
-                      fontSize: 11,
-                      color: colors.brandSubtleText,
-                    }}
-                    numberOfLines={1}
-                  >
-                    {m}
-                  </Text>
-                </View>
-              ))}
-            </ScrollView>
-          ) : null}
-          {book.pacing ? (
-            <Text style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textSecondary }}>
-              Most readers say:{" "}
-              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textPrimary }}>
-                {pacingLabel(book.pacing)}
-              </Text>
-            </Text>
-          ) : null}
-        </View>
-
-        {/* Content warnings, collapsed by default so they don't dominate. */}
-        {book.contentWarnings && book.contentWarnings.length > 0 ? (
-          <View style={{ paddingHorizontal: 20, marginTop: 16 }}>
-            <Pressable
-              onPress={() => setShowContentWarnings((v) => !v)}
-              accessibilityRole="button"
-              accessibilityLabel={
-                showContentWarnings ? "Hide content warnings" : "Show content warnings"
-              }
-              accessibilityState={{ expanded: showContentWarnings }}
-              className="flex-row items-center justify-between px-4 py-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-            >
-              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary }}>
-                Content warnings
-              </Text>
-              {showContentWarnings ? (
-                <CaretDown color={colors.textTertiary} size={14} />
-              ) : (
-                <CaretRight color={colors.textTertiary} size={14} />
-              )}
-            </Pressable>
-            {showContentWarnings ? (
-              <View className="mt-2 p-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
-                {book.contentWarnings.map((w) => (
-                  <Text
-                    key={w}
-                    style={{
-                      fontFamily: Fonts.body,
-                      fontSize: 13,
-                      color: colors.textSecondary,
-                      marginBottom: 4,
-                    }}
-                  >
-                    • {w}
-                  </Text>
-                ))}
-              </View>
-            ) : null}
-          </View>
-        ) : null}
+        <BookCommunity book={book} page={page} />
 
         {/* Where to Read, high up so read/library/buy options come before the AI cards. */}
         <SectionHeading>Where to read</SectionHeading>
@@ -653,104 +311,7 @@ export default function BookDetail() {
           </>
         ) : null}
 
-        {/* Reviews sit with the social signal; similar books live further down. */}
-        <SectionHeading>Recent reviews</SectionHeading>
-        <View style={{ paddingHorizontal: 20 }}>
-          {page.reviews.length === 0 ? (
-            <Text
-              style={{
-                fontFamily: Fonts.ui,
-                fontSize: 12,
-                color: colors.textTertiary,
-                marginBottom: 12,
-              }}
-            >
-              No public reviews yet.
-            </Text>
-          ) : (
-            page.reviews.map((r) => (
-              <View
-                key={r.id}
-                className="p-3 mb-2 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-              >
-                <View className="flex-row items-center" style={{ marginBottom: 4 }}>
-                  <Text
-                    style={{
-                      fontFamily: Fonts.uiMedium,
-                      fontSize: 12,
-                      color: colors.textPrimary,
-                    }}
-                  >
-                    {r.author?.displayName ?? r.author?.username ?? "Reader"}
-                  </Text>
-                  {r.ratingHalf ? (
-                    <Text
-                      style={{
-                        fontFamily: Fonts.mono,
-                        fontSize: 11,
-                        color: colors.brandSecondary,
-                        marginLeft: 8,
-                      }}
-                    >
-                      {"★".repeat(Math.floor(r.ratingHalf / 2))}
-                      {r.ratingHalf % 2 ? "½" : ""}
-                    </Text>
-                  ) : null}
-                </View>
-                <Text
-                  style={{
-                    fontFamily: Fonts.body,
-                    fontSize: 13,
-                    color: colors.textSecondary,
-                    lineHeight: 18,
-                  }}
-                  numberOfLines={4}
-                >
-                  {r.containsSpoilers ? "Contains spoilers." : r.review}
-                </Text>
-              </View>
-            ))
-          )}
-        </View>
-
-        {/* Popular highlights, public passages from other readers. */}
-        {page.popular.length > 0 ? (
-          <>
-            <SectionHeading>Popular highlights</SectionHeading>
-            <View style={{ paddingHorizontal: 20, gap: 8 }}>
-              {page.popular.map((h) => {
-                return (
-                  <View
-                    key={h.normalizedText}
-                    className="p-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-                  >
-                    <Text
-                      style={{
-                        fontFamily: Fonts.bodyItalic,
-                        fontSize: 14,
-                        color: colors.textPrimary,
-                        lineHeight: 21,
-                      }}
-                      numberOfLines={4}
-                    >
-                      "{h.normalizedText}"
-                    </Text>
-                    <Text
-                      style={{
-                        fontFamily: Fonts.ui,
-                        fontSize: 11,
-                        color: colors.textTertiary,
-                        marginTop: 6,
-                      }}
-                    >
-                      Highlighted by {h.count} readers
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-          </>
-        ) : null}
+        <BookSocialSections page={page} />
 
         {/* Similar books. */}
         {page.ai.similarBooks ? (
@@ -799,49 +360,7 @@ export default function BookDetail() {
           </>
         ) : null}
 
-        {/* Clubs reading this */}
-        {page.clubs.length > 0 ? (
-          <>
-            <SectionHeading>Clubs reading this</SectionHeading>
-            <View style={{ paddingHorizontal: 20, gap: 8 }}>
-              {page.clubs.map((c) => (
-                <Pressable
-                  key={c.id}
-                  onPress={() => router.push(`/clubs/${c.id}` as never)}
-                  className="flex-row items-center p-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      style={{
-                        fontFamily: Fonts.uiMedium,
-                        fontSize: 14,
-                        color: colors.textPrimary,
-                      }}
-                      numberOfLines={1}
-                    >
-                      {c.name}
-                    </Text>
-                    <Text
-                      style={{
-                        fontFamily: Fonts.mono,
-                        fontSize: 11,
-                        color: colors.textTertiary,
-                        marginTop: 2,
-                      }}
-                    >
-                      {c.memberCount} members
-                    </Text>
-                  </View>
-                  <Text
-                    style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.brandText }}
-                  >
-                    Open
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </>
-        ) : null}
+        {page.clubs.length > 0 ? <BookClubs clubs={page.clubs} /> : null}
       </ScrollView>
 
       {/* Add to Library status menu */}
@@ -906,44 +425,7 @@ export default function BookDetail() {
         }}
       />
 
-      {/* Share menu */}
-      <BottomSheetMenu
-        visible={shareMenuOpen}
-        title="Share"
-        onClose={() => setShareMenuOpen(false)}
-        items={[
-          {
-            id: "quote",
-            label: "Create Quote Card",
-            Icon: ImageSquare,
-            onPress: () => {
-              router.push(
-                `/quote-card?bookId=${book.id}&bookTitle=${encodeURIComponent(book.title)}&author=${encodeURIComponent(book.author)}` as never,
-              );
-            },
-          },
-          {
-            id: "reading",
-            label: "I'm Reading This",
-            Icon: Megaphone,
-            onPress: () =>
-              void Share.share({
-                message: `I'm reading "${book.title}" by ${book.author} on Foxing. https://foxing.app/books/${book.slug}`,
-              }).catch(() => {
-                /* user canceled */
-              }),
-          },
-          {
-            id: "link",
-            label: "Share link",
-            Icon: LinkIcon,
-            onPress: () =>
-              void Share.share({ message: `https://foxing.app/books/${book.slug}` }).catch(() => {
-                /* user canceled */
-              }),
-          },
-        ]}
-      />
+      <BookShareMenu book={book} visible={shareMenuOpen} onClose={() => setShareMenuOpen(false)} />
 
       <CompanionSheet
         visible={companion !== null}
@@ -952,63 +434,5 @@ export default function BookDetail() {
         onClose={() => setCompanion(null)}
       />
     </View>
-  );
-}
-
-function BookRow({
-  title,
-  books,
-  onOpen,
-}: {
-  title: string;
-  books: W.BookCard[];
-  onOpen: (slug: string) => void;
-}) {
-  const colors = useColors();
-  if (books.length === 0) return null;
-  return (
-    <>
-      <SectionHeading>{title}</SectionHeading>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}
-      >
-        {books.map((b) => (
-          <Pressable
-            key={b.id}
-            onPress={() => onOpen(b.slug)}
-            accessibilityRole="link"
-            accessibilityLabel={`${b.title} by ${b.author}`}
-            style={{ width: 100 }}
-          >
-            <View
-              style={{
-                width: 100,
-                height: 150,
-                borderRadius: 6,
-                overflow: "hidden",
-                backgroundColor: colors.bgSunken,
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 6,
-              }}
-            >
-              {b.coverUrl ? (
-                <Image source={{ uri: b.coverUrl }} style={{ width: "100%", height: "100%" }} />
-              ) : (
-                <BookOpen color={colors.textTertiary} size={20} />
-              )}
-            </View>
-            <Text
-              style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.textPrimary }}
-              numberOfLines={2}
-            >
-              {b.title}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-    </>
   );
 }

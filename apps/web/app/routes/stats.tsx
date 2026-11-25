@@ -1,4 +1,4 @@
-import { createDb, libraryRepo, views } from "@foxing/core";
+import { createDb, goalsRepo, views } from "@foxing/core";
 import { StatsView } from "~/components/reading/stats-view";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
@@ -15,7 +15,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const db = createDb(env.DB);
   const [stats, goals] = await Promise.all([
     views.stats(db, user.id),
-    libraryRepo.listGoals(db, user.id),
+    goalsRepo.listGoals(db, user.id),
   ]);
   return {
     ...stats,

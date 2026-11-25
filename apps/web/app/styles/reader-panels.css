@@ -1,0 +1,210 @@
+/* The reader at /read/:slug: its toolbar, panels, popovers and the engine frame. Imported by the read
+   route only, so no other page downloads it. */
+.fx-reader-panels-label,
+.fx-reader-popovers-label-5 {
+  margin-inline-start: var(--space-2);
+  font-variant-numeric: tabular-nums;
+}
+/* The reader's side sheet (reader-panels.tsx SidePanel) on Capsomer's dialog, which places it: the
+   reading canvas's colors, set per theme on the element. */
+.fx-reader-sheet {
+  background: var(--fx-canvas-bg, var(--surface));
+  color: var(--fx-canvas-text, var(--text));
+}
+.fx-reader-panels-title {
+  font-family: var(--display);
+  font-size: var(--fs-h3);
+  line-height: var(--line-box-7);
+  color: inherit;
+}
+.fx-reader-panels-label-2 {
+  font-size: var(--fs-body);
+  line-height: var(--line-box-5);
+}
+.fx-reader-panels-btn-4 {
+  height: 1.75rem;
+  width: 1.75rem;
+  border-radius: var(--radius-m);
+  border: var(--line-w) solid var(--line);
+  &:disabled {
+    opacity: var(--opacity-faint);
+  }
+}
+.fx-reader-panels-label-3 {
+  width: 3rem;
+  font-size: var(--fs-body);
+  line-height: var(--line-box-5);
+  font-variant-numeric: tabular-nums;
+}
+.fx-reader-panels-label-4 {
+  font-size: var(--fs-small);
+  line-height: var(--line-box-4);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  color: var(--dim);
+}
+.fx-reader-panels-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.fx-reader-panels-btn-5,
+.fx-reader-panels-btn-6 {
+  border-radius: var(--radius-m);
+  padding: var(--space-2-5) var(--space-3);
+  text-align: left;
+  font-size: var(--fs-body);
+  line-height: var(--line-box-5);
+}
+.fx-reader-panels-btn-5 {
+  width: 100%;
+  &:hover {
+    background-color: var(--fx-hover);
+  }
+}
+.fx-reader-panels-btn-6 {
+  flex: 1 1 0%;
+  &:hover {
+    background-color: var(--fx-hover);
+  }
+}
+.fx-reader-panels-btn-7 {
+  border-radius: var(--radius-m);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-small);
+  line-height: var(--line-box-4);
+  color: var(--dim);
+  &:hover {
+    text-decoration-line: underline;
+  }
+}
+.fx-reader-panels-btn-8 {
+  display: flex;
+  width: 100%;
+  gap: var(--space-3);
+  border-radius: var(--radius-m);
+  padding: var(--space-2-5) var(--space-3);
+  text-align: left;
+  &:hover {
+    background-color: var(--fx-hover);
+  }
+}
+.fx-reader-panels-label-5 {
+  margin-block-start: var(--space-2);
+  height: 0.75rem;
+  width: 0.75rem;
+  flex: none;
+  border-radius: var(--radius-full);
+  border: var(--line-w) solid var(--line);
+}
+.fx-reader-panels-label-6 {
+  flex-grow: 1;
+}
+.fx-reader-panels-label-7,
+.fx-reader-panels-label-10 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.fx-reader-panels-label-7 {
+  overflow: hidden;
+  font-size: var(--fs-body);
+  line-height: var(--line-box-5);
+}
+.fx-reader-panels-label-8 {
+  display: flex;
+  gap: var(--space-2);
+  font-size: var(--fs-small);
+  line-height: var(--line-box-4);
+  color: var(--dim);
+}
+.fx-reader-panels-label-9 {
+  border-radius: var(--radius-s-5);
+  background-color: var(--fx-hover);
+  padding-inline: var(--space-2);
+  font-weight: var(--weight-medium);
+}
+.fx-reader-panels-label-10 {
+  overflow: hidden;
+}
+.fx-reader-panels-text {
+  position: fixed;
+  bottom: var(--space-5);
+  left: 50%;
+  translate: -50% 0;
+  border-radius: var(--radius-m);
+  background-color: color-mix(in srgb, var(--surface) 95%, transparent);
+  padding: var(--space-2-5) var(--space-4);
+  font-family: var(--ui);
+  font-size: var(--fs-small);
+  line-height: var(--line-box-4);
+  color: var(--dim);
+  box-shadow: var(--shadow-m);
+}
+.fx-reader-panels-card-2 {
+  position: fixed;
+  bottom: var(--space-5);
+  left: 50%;
+  display: flex;
+  translate: -50% 0;
+  align-items: center;
+  gap: var(--space-4);
+  border-radius: var(--radius-m);
+  border-width: var(--line-w);
+  border-style: solid;
+  background-color: var(--surface);
+  padding-inline: var(--space-4);
+  font-family: var(--ui);
+  font-size: var(--fs-small);
+  line-height: var(--line-box-4);
+  color: var(--crit);
+  box-shadow: var(--shadow-m);
+  border-color: color-mix(in srgb, var(--crit) 25%, var(--surface));
+}
+.fx-reader-panels-btn-10 {
+  font-weight: var(--weight-medium);
+  color: var(--dim);
+  text-decoration-line: underline;
+  text-underline-offset: 2px;
+}
+.fx-reader-panels-row-3,
+.fx-reader-panels-row-4 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.fx-reader-panels-row-3 {
+  border-block-end: var(--line-w) solid var(--line);
+  padding-inline: var(--space-4);
+}
+.fx-reader-panels-link-2 {
+  border-radius: var(--radius-m);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-body);
+  line-height: var(--line-box-5);
+  &:hover {
+    text-decoration-line: underline;
+  }
+}
+.fx-reader-panels-box-2,
+.fx-reader-popovers-label-2 {
+  min-width: 0;
+  flex: 1 1 0%;
+  font-size: var(--fs-body);
+  line-height: var(--line-box-5);
+}
+.fx-reader-panels-title-3 {
+  font-family: var(--display);
+}
+.fx-reader-panels-label-11 {
+  color: color-mix(in srgb, currentColor 60%, transparent);
+}
+.fx-reader-panels-row-4 {
+  border-block-end: var(--line-w) solid var(--line);
+  padding: var(--space-2-5) var(--space-4);
+  font-size: var(--fs-small);
+  line-height: var(--line-box-4);
+}
+.fx-reader-panels-label-12 {
+  color: color-mix(in srgb, currentColor 70%, transparent);
+}

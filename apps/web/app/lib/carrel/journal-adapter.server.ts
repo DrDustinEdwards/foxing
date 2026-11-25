@@ -13,17 +13,10 @@
 import { RENDER_VERSION } from "@drdustinedwards/site-helpers/render/nomath";
 import {
   ContentId,
-  ContentTag,
-  contentVersion,
   NotFoundError,
   RefusedError,
   VersionConflictError,
   type ContentDoc,
-  type ContentStatus,
-  type ContentSummary,
-  type DueSchedule,
-  type ListQuery,
-  type Revision,
   type SiteAdapter,
   type WriteResult,
 } from "@dustinedwards/site-api";
@@ -31,210 +24,35 @@ import { SEARCH_FIELDS } from "@dustinedwards/site-api/frontmatter";
 import { d1ScheduledUpdates, utc, waitingUpdates } from "@dustinedwards/site-api/schedules";
 import { adminEmails } from "@dustinedwards/site-runtime/access";
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
-import { adminRepo, type catalogRepo, createDb, type Db, isUniqueViolation } from "@foxing/core";
+import { adminRepo, createDb, type Db, isUniqueViolation } from "@foxing/core";
 import type { JournalPreview } from "../../context";
 import {
-  HISTORY_KEYS,
-  JournalSourceError,
-  journalToSource,
-  sourceToJournal,
-  type JournalFields,
-} from "./journal-source";
+  blankPost,
+  creditOf,
+  fieldsOf,
+  FOXING,
+  KIND,
+  listFilter,
+  notTrashed,
+  previewPost,
+  readSource,
+  revisionItems,
+  REVISION_PREFIX,
+  summaryOf,
+  UNSAVED_PREVIEW_SLUG,
+  validated,
+  versionOf,
+  type JournalPost,
+  type Pending,
+} from "./journal-rows.server";
+import { journalScheduleAdapter } from "./journal-schedules.server";
+import { HISTORY_KEYS, journalToSource, type JournalFields } from "./journal-source";
 import { SITE_ORIGIN } from "../origins";
 import { journalMediaAdapter } from "./journal-media-adapter.server";
-
-type JournalPost = catalogRepo.JournalPost;
 
 const FOXING_ORIGIN = SITE_ORIGIN;
 
 const CARREL_ACTOR = "carrel";
-
-const FOXING = "Foxing";
-
-const KIND = "journal";
-
-const UNSAVED_PREVIEW_SLUG = "carrel-preview";
-
-/** Addresses under /journal/ that a route answers before any post, so no post may take one. */
-const RESERVED_SLUGS = new Set(["archive", "tag"]);
-
-/** An earlier version's id, from journal_post_versions: distinct from a current version's digits. */
-const REVISION_PREFIX = "r-";
-
-const EVENT_MESSAGE: Record<string, string> = {
-  save: "The post before a save.",
-  publish: "The post before it was published.",
-  unpublish: "The post before it was taken off the Journal.",
-  rename: "The post before it was renamed, at its old address.",
-};
-
-function blankPost(slug: string): JournalPost {
-  const now = new Date();
-  return {
-    id: UNSAVED_PREVIEW_SLUG,
-    title: "",
-    slug,
-    content: "",
-    excerpt: null,
-    coverImageUrl: null,
-    coverImageAlt: null,
-    authorId: null,
-    tags: null,
-    relatedPostIds: null,
-    featured: false,
-    isPublished: false,
-    publishedAt: null,
-    showPublishedAt: true,
-    showUpdatedAt: true,
-    ogTitle: null,
-    ogDescription: null,
-    ogImageUrl: null,
-    ogImageAlt: null,
-    canonicalUrl: null,
-    noindex: false,
-    readingTimeMinutes: null,
-    series: null,
-    seriesPart: null,
-    trashedAt: null,
-    createdAt: now,
-    updatedAt: now,
-  };
-}
-
-type Pending = { publishAt: string; changeId: string } | null;
-
-/** A post's version: its updated_at in milliseconds, which every Journal write moves forward, and its schedule's. */
-async function versionOf(row: { updatedAt: Date }, pending: Pending): Promise<string> {
-  const updated = String(row.updatedAt.getTime());
-  if (!pending) return updated;
-  return `${updated}.${(await contentVersion([pending.publishAt, pending.changeId])).slice(0, 16)}`;
-}
-
-function iso(at: Date | null | undefined): string | null {
-  return at ? at.toISOString() : null;
-}
-
-function statusOf(row: { isPublished: boolean }, pending: Pending): ContentStatus {
-  if (row.isPublished) return "published";
-  return pending ? "scheduled" : "draft";
-}
-
-function fieldsOf(row: JournalPost, author: string): JournalFields {
-  return {
-    title: row.title,
-    excerpt: row.excerpt,
-    coverImageUrl: row.coverImageUrl,
-    coverImageAlt: row.coverImageAlt,
-    tags: row.tags ?? [],
-    featured: row.featured,
-    ogTitle: row.ogTitle,
-    ogDescription: row.ogDescription,
-    ogImageUrl: row.ogImageUrl,
-    ogImageAlt: row.ogImageAlt,
-    canonicalUrl: row.canonicalUrl,
-    noindex: row.noindex,
-    authors: [author],
-    series: row.series,
-    seriesPart: row.seriesPart,
-    content: row.content,
-  };
-}
-
-function readSource(source: string): JournalFields {
-  try {
-    return sourceToJournal(source);
-  } catch (error) {
-    if (error instanceof JournalSourceError) throw new RefusedError(error.message);
-    throw error;
-  }
-}
-
-const FILE_KEY: Record<string, string> = {
-  seriesPart: "seriesPart",
-  coverImageUrl: "cover_image_url",
-  coverImageAlt: "cover_image_alt",
-  ogTitle: "searchTitle",
-  ogDescription: "description",
-  ogImageUrl: "image",
-  ogImageAlt: "imageAlt",
-  canonicalUrl: "canonical",
-  content: "the body",
-  slug: "the id (slug)",
-};
-
-function validated(slug: string, fields: JournalFields) {
-  if (RESERVED_SLUGS.has(slug))
-    throw new RefusedError(
-      `/journal/${slug} is a Journal page of its own, so no post can take it.`,
-    );
-  const parsed = adminRepo.journalInput.safeParse({ slug, ...fields });
-  if (!parsed.success) {
-    const lines = parsed.error.issues.map((issue) => {
-      const field = String(issue.path[0] ?? "post");
-      return `- ${FILE_KEY[field] ?? field}: ${issue.message}`;
-    });
-    throw new RefusedError(["The Journal refused this post:", ...lines].join("\n"));
-  }
-  const { slug: _slug, isPublished: _isPublished, ...values } = parsed.data;
-  return values;
-}
-
-async function summaryOf(
-  row: {
-    slug: string;
-    title: string;
-    excerpt: string | null;
-    tags: string[] | null;
-    isPublished: boolean;
-    publishedAt: Date | null;
-    updatedAt: Date;
-    trashedAt: Date | null;
-  },
-  pending: Pending,
-  author?: string,
-): Promise<ContentSummary> {
-  const status = statusOf(row, pending);
-  return {
-    id: row.slug,
-    kind: KIND,
-    title: row.title,
-    status,
-    path: status === "published" ? `/journal/${row.slug}` : null,
-    publishAt: status === "scheduled" ? (pending?.publishAt ?? null) : null,
-    publishedAt: status === "published" ? iso(row.publishedAt) : null,
-    updatedAt: iso(row.updatedAt),
-    version: await versionOf(row, pending),
-    scheduledUpdate: row.isPublished && pending ? { ...pending } : null,
-    // Only tags the contract can carry, so one odd tag never fails the list.
-    tags: (row.tags ?? []).filter((t) => ContentTag.safeParse(t).success),
-    ...(author ? { authors: [author] } : {}),
-    ...(row.excerpt ? { excerpt: row.excerpt } : {}),
-    trashedAt: iso(row.trashedAt),
-  };
-}
-
-function listFilter(
-  query: ListQuery,
-  scheduled: string[],
-  authorId: string | null | undefined,
-): adminRepo.JournalAdminQuery {
-  return {
-    authorId,
-    published: query.status === undefined ? undefined : query.status === "published",
-    // A scheduled post is a draft with a schedule waiting; a draft has none.
-    ...(query.status === "scheduled" ? { slugs: scheduled } : {}),
-    ...(query.status === "draft" ? { exceptSlugs: scheduled } : {}),
-    q: query.q,
-    tag: query.tag,
-    publishedAfter: query.publishedAfter ? new Date(query.publishedAfter) : undefined,
-    publishedBefore: query.publishedBefore ? new Date(query.publishedBefore) : undefined,
-    trashed: query.trashed ?? false,
-  };
-}
-
-function notTrashed(row: { trashedAt: Date | null }) {
-  if (row.trashedAt) throw new RefusedError("This post is in the trash. Restore it first.");
-}
 
 export function journalSiteAdapter(options: {
   env: Env;
@@ -246,9 +64,6 @@ export function journalSiteAdapter(options: {
   const schedules = d1ScheduledUpdates(env.DB);
 
   const namesOf = (ids: ReadonlyArray<string | null>) => adminRepo.journalPeopleNames(db, ids);
-
-  const creditOf = (names: Map<string, string>, authorId: string | null) =>
-    (authorId && names.get(authorId)) || FOXING;
 
   async function fileOf(row: JournalPost): Promise<JournalFields> {
     return fieldsOf(row, creditOf(await namesOf([row.authorId]), row.authorId));
@@ -585,30 +400,7 @@ export function journalSiteAdapter(options: {
         row.authorId,
         ...earlier.flatMap((v) => [v.savedBy, v.authorId]),
       ]);
-      const current = creditOf(names, row.authorId);
-      const items: Revision[] = [
-        {
-          version: await currentVersion(row),
-          at: row.updatedAt.toISOString(),
-          author: current,
-          authors: [current],
-          message: "The post as it stands now.",
-        },
-        ...earlier.map((v) => {
-          const credited = creditOf(names, v.fields ? v.authorId : row.authorId);
-          const by = v.savedBy ? (names.get(v.savedBy) ?? "A removed account") : credited;
-          return {
-            version: `${REVISION_PREFIX}${v.id}`,
-            at: v.savedAt.toISOString(),
-            author: by.slice(0, 200),
-            authors: [credited],
-            message: v.fields
-              ? `${EVENT_MESSAGE[v.event ?? "save"] ?? EVENT_MESSAGE.save} Every field is kept.`
-              : "The text before a save. This older version kept the title, excerpt and body; the rest is as it is now.",
-          };
-        }),
-      ];
-      return items;
+      return revisionItems(row, earlier, names, await currentVersion(row));
     },
 
     async revisionSource(id, version) {
@@ -645,99 +437,23 @@ export function journalSiteAdapter(options: {
           content: input.source,
         };
     const values = await rowValues(slug, fields, stored?.authorId ?? null);
-    const post: JournalPreview = {
-      ...(stored ?? blankPost(slug)),
-      title: values.title,
-      content: values.content,
-      excerpt: values.excerpt ?? null,
-      coverImageUrl: values.coverImageUrl ?? null,
-      coverImageAlt: values.coverImageAlt ?? null,
-      tags: values.tags ?? null,
-      featured: values.featured ?? false,
-      ogTitle: values.ogTitle ?? null,
-      ogDescription: values.ogDescription ?? null,
-      ogImageUrl: values.ogImageUrl ?? null,
-      ogImageAlt: values.ogImageAlt ?? null,
-      canonicalUrl: values.canonicalUrl ?? null,
-      noindex: values.noindex ?? false,
-      series: values.series ?? null,
-      seriesPart: values.seriesPart ?? null,
-      authorId: values.authorId,
-      coverFocus: null,
-    };
+    const post = previewPost(stored, slug, values);
     const page = await renderPreview(slug, post);
     if (!page.ok) throw new Error(`the journal route answered a preview with ${page.status}`);
     return page.text();
   }
 
-  const scheduled: NonNullable<SiteAdapter["schedules"]> = {
-    async get(id) {
-      const row = await adminRepo.getJournalBySlug(db, id);
-      if (!row?.isPublished) return null;
-      return schedules.get(id);
-    },
-
-    async update(id, input) {
-      const row = await expected(id, input.expectedVersion);
-      if (!row.isPublished) throw new RefusedError("Only a live post takes a scheduled update.");
-      await rowValues(id, readSource(input.source), row.authorId);
-      return putSchedule(row, input);
-    },
-
-    async cancel(id, input) {
-      const row = await held(id, input.expectedVersion);
-      if (!(await schedules.get(id))) throw new RefusedError("Nothing is scheduled for this post.");
-      await schedules.remove(id).run();
-      await audit("journal.unschedule", { id: row.id, slug: id, changeId: input.changeId });
-      return written(row.id, input.changeId);
-    },
-
-    async due({ now, limit }) {
-      const due = await schedules.due(now, limit);
-      return Promise.all(
-        due.map(async (d): Promise<DueSchedule> => {
-          const row = await adminRepo.getJournalBySlug(db, d.id);
-          return { ...d, kind: row?.isPublished ? "update" : "publish" };
-        }),
-      );
-    },
-
-    // The post's write comes first, the row second (matched on its time and change id, so a reschedule in between
-    // survives); if the drop fails the next pass finds the post already as the row describes.
-    async apply(id, input) {
-      const row = await adminRepo.getJournalBySlug(db, id);
-      const waiting = await schedules.get(id);
-      if (!row || !waiting || row.trashedAt) return null;
-      if (waiting.changeId !== input.changeId || waiting.publishAt !== utc(input.publishAt))
-        return null;
-      if (Date.parse(waiting.publishAt) > input.now.getTime()) return null;
-      if (input.kind === "update") {
-        if (!row.isPublished) return null;
-        await save(row, waiting.source, input.changeId);
-      } else {
-        if (row.isPublished) return null;
-        const done = await adminRepo.setJournalPublished(
-          db,
-          row.id,
-          true,
-          { expectedUpdatedAt: row.updatedAt },
-          row.publishedAt ? {} : { publishedAt: new Date(waiting.publishAt) },
-        );
-        if (!done) return null;
-        await audit("journal.publish", {
-          id: row.id,
-          slug: id,
-          changeId: input.changeId,
-          firstPublish: !row.publishedAt,
-          scheduled: waiting.publishAt,
-        });
-      }
-      await schedules
-        .remove(id, { publishAt: waiting.publishAt, changeId: waiting.changeId })
-        .run();
-      return written(row.id, input.changeId);
-    },
-  };
+  const scheduled = journalScheduleAdapter({
+    db,
+    schedules,
+    expected,
+    held,
+    rowValues,
+    save,
+    putSchedule,
+    audit,
+    written,
+  });
 
   return {
     site: { id: "foxing", name: "Foxing", origin: FOXING_ORIGIN },

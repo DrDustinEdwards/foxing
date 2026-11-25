@@ -20,6 +20,7 @@ export { changeBookStatus } from "./library";
 
 export * from "./errors";
 export * as clubsDomain from "./clubs";
+export * as clubPollsMeetingsDomain from "./club-polls-meetings";
 export type { LiveMessage } from "./clubs";
 
 export * as socialDomain from "./social";

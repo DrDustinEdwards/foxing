@@ -39,3 +39,14 @@ export interface ReaderRef {
   jumpToProgress: (fraction: number) => void;
   highlightSentence: (index: number | null) => void;
 }
+
+export interface WordPillState {
+  word: string;
+  surroundingText: string;
+  cfi: string | null;
+}
+
+export interface PassagePillState {
+  text: string;
+  cfi: string | null;
+}

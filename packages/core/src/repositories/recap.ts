@@ -3,7 +3,7 @@
 import { and, asc, eq, gte, lt } from "drizzle-orm";
 import type { Db } from "../db";
 import { books, userBooks } from "../schema";
-import { periodRange } from "./library";
+import { periodRange } from "./goals";
 
 export type FinishedBook = {
   bookId: string;

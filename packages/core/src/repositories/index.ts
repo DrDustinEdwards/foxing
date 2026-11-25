@@ -6,14 +6,10 @@ export * as catalogRepo from "./catalog";
 export type * from "./catalog";
 
 export * as libraryRepo from "./library";
-export type {
-  LibraryEntry,
-  UserBook,
-  CustomShelf,
-  ReadingGoal,
-  ReadingStreak,
-  VocabularyEntry,
-} from "./library";
+export type { LibraryEntry, UserBook, CustomShelf, VocabularyEntry } from "./library";
+
+export * as goalsRepo from "./goals";
+export type { ReadingGoal, ReadingStreak } from "./goals";
 
 export * as annotationsRepo from "./annotations";
 export type { Annotation, AnnotationCard } from "./annotations";

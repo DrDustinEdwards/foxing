@@ -21,15 +21,17 @@ import { Container, PageHeader } from "~/components/ui";
 import type { Route } from "./+types/settings";
 import {
   AdminSection,
-  DangerSection,
   DataSection,
   EmailSection,
   ProfileSection,
+  UsernameSection,
+} from "../components/settings/account-sections";
+import { DangerSection } from "../components/settings/account-danger-section";
+import {
   SecurityHistorySection,
   SessionsSection,
   SignInSection,
-  UsernameSection,
-} from "../components/settings/account-sections";
+} from "../components/settings/account-sign-in-sections";
 import {
   AppearanceSection,
   BillingSection,

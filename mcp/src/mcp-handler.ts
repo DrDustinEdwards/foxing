@@ -11,7 +11,8 @@ import { isLegacyRequest, McpServer } from "@modelcontextprotocol/server";
 import { createMcpHandler } from "agents/mcp/server";
 
 import { SCOPES, type Caller } from "./auth";
-import { TOOLS, type ToolEnv } from "./tools";
+import type { ToolEnv } from "./tool-kit";
+import { TOOLS } from "./tools";
 
 export const MCP_ROUTE = "/mcp";
 

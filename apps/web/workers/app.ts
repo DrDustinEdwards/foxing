@@ -7,62 +7,26 @@ import { markdownPath } from "@drdustinedwards/site-helpers/llms";
 import { markdownCopies } from "@drdustinedwards/site-helpers/markdown-copy";
 import { standardFiles } from "@drdustinedwards/site-helpers/files";
 import { d1SiteApiStore, tombstoned } from "@dustinedwards/site-api/store";
-import {
-  ACCESS_LOGOUT_PATH,
-  accessAdmin,
-  adminEmails,
-  withAdminIdle,
-} from "@dustinedwards/site-runtime/access";
+import { ACCESS_LOGOUT_PATH, adminEmails, withAdminIdle } from "@dustinedwards/site-runtime/access";
 import { ADMIN_LIST_PATH, adminListResponse } from "@dustinedwards/site-runtime/access-drift";
 import type { CronJob } from "@dustinedwards/site-runtime/cron";
-import { authHandler } from "@dustinedwards/site-runtime/sign-in-form";
-import { IMMUTABLE_CACHE } from "@dustinedwards/site-runtime/image";
-import { r2ObjectResponse } from "@dustinedwards/site-runtime/r2-object";
-import { logEvent } from "@dustinedwards/site-runtime/log";
 import { pruneNotFound } from "@dustinedwards/site-runtime/not-found";
-import { refuseCrossSite } from "@dustinedwards/site-runtime/origin";
 import { pruneAuthEvents, pruneExpiredAuth } from "@dustinedwards/site-runtime/sign-in";
 import {
   defineSite,
   siteRenderer,
   siteWorker,
   type FetchHandler,
-  type GatewayStep,
 } from "@dustinedwards/site-runtime/worker";
-import { createApi } from "@foxing/api";
-import {
-  billing,
-  catalogHealthDomain,
-  catalogRepo,
-  companion,
-  companionRepo,
-  createDb,
-  push,
-  socialRepo,
-} from "@foxing/core";
-import { Hono } from "hono";
+import { createDb, socialRepo } from "@foxing/core";
 import type { ServerBuild } from "react-router";
-import {
-  anthropicCaller,
-  anthropicFactChecker,
-  anthropicStructured,
-} from "../app/lib/anthropic.server";
-import { edgeCache } from "../app/lib/cache.server";
-import { images } from "../app/lib/images";
 import { HELLO_EMAIL, SITE_ORIGIN } from "../app/lib/origins";
-import {
-  deleteUserAccount,
-  getAuth,
-  isFreshSession,
-  sessionUserFromRequest,
-} from "../app/lib/auth.server";
 import {
   carrelKeyOffPrefix,
   carrelStep,
   runCarrelSchedules,
 } from "../app/lib/carrel/site-api.server";
 import { INDEXNOW_KEY } from "../app/lib/indexnow";
-import { readerAssetContentType } from "../app/lib/reader-asset-type";
 import { ROBOTS_DISALLOW, SITE_NAME } from "../app/lib/seo";
 import { FONT_PRELOADS } from "../app/lib/preloads";
 import { operatorTools } from "../app/lib/operator.server";
@@ -70,7 +34,14 @@ import { runBackup, runCoversBackup, runMediaBackup } from "../app/lib/backup.se
 import { CRON_TRIGGERS, type CronJobName } from "../app/lib/cron-jobs";
 import { PAGE_DATES_KEY, TRACKED_PAGES } from "../app/lib/page-dates";
 import { problemResponse } from "@dustinedwards/site-runtime/http-errors";
-import { clubRoomHub } from "./club-room";
+import {
+  enqueueCompanionCache,
+  enqueueFactCheck,
+  queue,
+  runPushSweep,
+  type CacheJobMessage,
+} from "./companion-jobs";
+import { hono } from "./hono-step";
 import { withSecurityHeaders } from "./security-headers";
 
 // Public catalog surfaces: an anonymous GET goes to the Renderer, whose shared responses the Workers cache stores.
@@ -130,237 +101,7 @@ const PREFETCH_EXCLUDE = [
   "/og",
 ];
 
-// Injected at build time (vite define): namespaces the search suggestions' cache per deploy.
-declare const __CACHE_VERSION__: string;
-
-function suggestKeyFor(url: URL): Request {
-  const keyUrl = new URL(url.toString());
-  keyUrl.searchParams.set("__v", __CACHE_VERSION__);
-  return new Request(keyUrl.toString(), { method: "GET" });
-}
-
 const serverBuild = () => import("virtual:react-router/server-build") as Promise<ServerBuild>;
-
-const api = createApi({
-  resolveSession: (req, env) => sessionUserFromRequest(req, env as unknown as Env),
-  isFresh: (req, env) => isFreshSession(req, env as unknown as Env),
-  deleteUser: (req, env, { successors }) =>
-    deleteUserAccount(req, env as unknown as Env, successors),
-  checkAdminAccess: async (req, env, email) =>
-    (await accessAdmin(req, env as unknown as Env, { admins: [email] })) !== null,
-  // Without ANTHROPIC_API_KEY only companion calls fail, cleanly.
-  resolveStructuredCaller: (env) => anthropicStructured(env as unknown as Env),
-  resolveCompanionCaller: (env) => {
-    const caller = anthropicCaller(env as unknown as Env);
-    if (caller) return caller;
-    // oxlint-disable-next-line eslint/require-yield -- throws on first iteration by design, never yields
-    return async function* missingKey() {
-      throw new Error(
-        "ANTHROPIC_API_KEY is not configured. Run: wrangler secret put ANTHROPIC_API_KEY",
-      );
-    };
-  },
-  // Without all four Stripe secrets the stub makes billing routes 503 and the pages offer no upgrade.
-  resolveBilling: (env) => {
-    const stripe = billing.stripeSettings(env as unknown as Env);
-    if (!stripe)
-      return { client: billing.notConfiguredBilling(), prices: { monthly: "", annual: "" } };
-    return {
-      client: billing.createStripeBilling({
-        secretKey: stripe.secretKey,
-        webhookSecret: stripe.webhookSecret,
-      }),
-      prices: stripe.prices,
-    };
-  },
-  resolveHub: (env) => clubRoomHub((env as unknown as Env).CLUB_ROOM),
-});
-
-const app = new Hono<{ Bindings: Env }>();
-
-// Not-found answers (a missing reader asset or picture) are plainNotFound, a real 404.
-const PASS = "x-foxing-pass";
-app.notFound(() => new Response(null, { status: 404, headers: { [PASS]: "1" } }));
-const plainNotFound = () => new Response("Not found", { status: 404 });
-
-// Better Auth answers carry sessions and passkey challenges, so no browser or proxy keeps one.
-app.on(["GET", "POST"], "/api/auth/*", async (c) => authHandler(await getAuth(c.env), c.req.raw));
-
-// Every write is an /api/v1 route that skips React Router's Origin check, so a cross-origin browser write is refused
-// here. An absent Origin passes (mobile app, admin MCP bearer calls, Stripe's webhook).
-app.use("/api/v1/*", async (c, next) => refuseCrossSite(c.req.raw) ?? next());
-
-// Search-as-you-type answers do not depend on the viewer, so the edge cache serves everyone.
-app.get("/api/v1/search/suggest", async (c, next) => {
-  const cache = edgeCache();
-  const key = suggestKeyFor(new URL(c.req.url));
-  const hit = await cache.match(key);
-  if (hit) return hit;
-  await next();
-  if (c.res.status === 200) c.executionCtx.waitUntil(cache.put(key, c.res.clone()));
-});
-
-app.route("/api/v1", api);
-
-// Readium reader assets are served same-origin (no CORS for the HttpFetcher) from MEDIA under reader/<slug>/...;
-// noindex keeps duplicate book text out of search.
-app.get("/reader-assets/*", async (c) => {
-  const url = new URL(c.req.url);
-  let rest: string;
-  try {
-    rest = decodeURIComponent(url.pathname.replace(/^\/reader-assets\//, ""));
-  } catch {
-    return plainNotFound(); // a malformed escape
-  }
-  if (!rest || rest.includes("..")) return plainNotFound();
-
-  const cache = edgeCache();
-  // stored=2 abandons copies cached while stored pages lacked the XML declaration's closing "?" (immutable, so they would live a year).
-  const mediaRequest = new Request(`${url.toString()}${url.search ? "&" : "?"}stored=2`, {
-    method: "GET",
-  });
-  if (c.req.method === "GET") {
-    const cached = await cache.match(mediaRequest);
-    if (cached) return cached;
-  }
-  const res = await r2ObjectResponse(c.req.raw, readerAssets(c.env.MEDIA, rest), `reader/${rest}`, {
-    cacheControl: IMMUTABLE_CACHE,
-    noindex: true,
-  });
-  if (res.status === 200 && c.req.method === "GET")
-    c.executionCtx.waitUntil(cache.put(mediaRequest, res.clone()));
-  return res;
-});
-
-/**
- * The MEDIA bucket as the reader's files. A book's own scripts never run: Readium's frames are same-origin, so the
- * CSP ('self') would let an EPUB's external <script src> load; text/plain plus nosniff makes the browser refuse it.
- */
-function readerAssets(bucket: R2Bucket, path: string) {
-  const typed = <T extends R2Object | null>(object: T): T => {
-    if (!object) return object;
-    return new Proxy(object, {
-      get(target, property) {
-        if (property === "writeHttpMetadata")
-          return (headers: Headers) => {
-            target.writeHttpMetadata(headers);
-            const stored = headers.get("Content-Type") ?? readerAssetContentType(path);
-            headers.set(
-              "Content-Type",
-              /javascript|ecmascript/i.test(stored) ? "text/plain; charset=utf-8" : stored,
-            );
-          };
-        const value = Reflect.get(target, property, target);
-        return typeof value === "function" ? value.bind(target) : value;
-      },
-    });
-  };
-  return {
-    head: async (key: string) => typed(await bucket.head(key)),
-    get: async (key: string, options?: { range?: Headers }) =>
-      typed(await bucket.get(key, options)),
-  };
-}
-
-// Covers from COVERS under covers/ and the Journal's media from MEDIA under journal/ only, so no other key is served
-// here. A size is a year-long immutable copy; a Journal address without its `v` (a replace keeps the key) an hour.
-app.get("/media/*", (c) =>
-  images.serve(c.req.raw, {
-    read: (key) =>
-      key.startsWith("covers/")
-        ? c.env.COVERS.get(key.slice("covers/".length))
-        : key.startsWith("journal/")
-          ? c.env.MEDIA.get(key)
-          : Promise.resolve(null),
-    images: c.env.IMAGES,
-    cache: edgeCache(),
-    cacheControl: ({ key, url }) =>
-      key.startsWith("covers/") || url.searchParams.has("v")
-        ? IMMUTABLE_CACHE
-        : "public, max-age=3600",
-  }),
-);
-
-// Writes that can change a stored page beside Carrel's (the admin API, MCP included, and a reader's visibility: a
-// profile going private must drop its cached recap card). Each accepted one purges every stored page.
-const PAGE_WRITERS = ["/api/v1/admin", "/api/v1/me/visibility"];
-
-const hono: GatewayStep<Env> = async (request, env, ctx, kit) => {
-  const answer = await app.fetch(request, env, ctx);
-  if (answer.headers.has(PASS)) return undefined;
-  const { pathname } = kit.url;
-  if (PAGE_WRITERS.some((p) => pathname === p || pathname.startsWith(`${p}/`)))
-    kit.purgeAfterWrite(request, answer, `${request.method} ${pathname}`);
-  return answer;
-};
-
-type CacheJobMessage = { bookId: string; factCheck?: true };
-
-// Push sweep: kept off the notification write path so core stays binding-free.
-const PUSH_SWEEP_LOOKBACK_MS = 10 * 60 * 1000;
-
-async function runPushSweep(env: Env): Promise<void> {
-  const db = createDb(env.DB);
-  const kv = env.APP_KV;
-  const now = Date.now();
-  const lastRaw = await kv.get("push:last_sweep");
-  const since = lastRaw ? Number(lastRaw) : now - PUSH_SWEEP_LOOKBACK_MS;
-  await push.sweepPushDeliveries(db, { fetchImpl: fetch, nowUtcMs: now, kv }, since);
-  // Only a finished sweep moves the cursor: a thrown one retries from the same point.
-  await kv.put("push:last_sweep", String(now));
-}
-
-const CACHE_LAST_BATCH_KEY = "companion-cache:last-batch";
-
-// A consumer whose model calls all fail would leave this job "ok" and /health green, so books come back
-// oldest-updated first: a batch still uncached on the next run means nothing was written, and the job fails.
-async function enqueueCompanionCache(env: Env): Promise<void> {
-  const db = createDb(env.DB);
-  const limit = Number(env.COMPANION_CACHE_BATCH_SIZE) || 200;
-  const books = await catalogRepo.findBooksNeedingCache(db, companion.CACHED_ACTION_NAMES, limit);
-  const ids = books.map((book) => book.id);
-  const last = ((await env.APP_KV.get(CACHE_LAST_BATCH_KEY, "json")) as string[] | null) ?? [];
-  const stalled = last.length > 0 && last.every((id) => ids.includes(id));
-  await env.APP_KV.put(CACHE_LAST_BATCH_KEY, JSON.stringify(ids));
-  await Promise.all(
-    books.map((book) =>
-      env.COMPANION_CACHE_QUEUE.send({ bookId: book.id } satisfies CacheJobMessage),
-    ),
-  );
-  if (stalled)
-    throw new Error(
-      `the last batch of ${last.length} books is still uncached: the model calls are failing (see companion_cache_failed and anthropic_call in the logs)`,
-    );
-}
-
-// Daily; while KV `companion-fact-check:only` holds a JSON array of book ids only those are checked (delete it to sweep).
-// A run inside FACT_CHECK_HOLD_SECONDS of the last does nothing: the queue is slow and would double-bill the same books.
-const FACT_CHECK_BATCH = 1500;
-const FACT_CHECK_ONLY_KEY = "companion-fact-check:only";
-const FACT_CHECK_HOLD_KEY = "companion-fact-check:enqueued";
-const FACT_CHECK_HOLD_SECONDS = 20 * 60 * 60;
-async function enqueueFactCheck(env: Env): Promise<void> {
-  if (await env.APP_KV.get(FACT_CHECK_HOLD_KEY)) return;
-  const db = createDb(env.DB);
-  const only = (await env.APP_KV.get(FACT_CHECK_ONLY_KEY, "json")) as string[] | null;
-  const books = await companionRepo.findBooksNeedingFactCheck(
-    db,
-    FACT_CHECK_BATCH,
-    only ?? undefined,
-  );
-  await Promise.all(
-    books.map((book) =>
-      env.COMPANION_CACHE_QUEUE.send({
-        bookId: book.id,
-        factCheck: true,
-      } satisfies CacheJobMessage),
-    ),
-  );
-  if (books.length)
-    await env.APP_KV.put(FACT_CHECK_HOLD_KEY, new Date().toISOString(), {
-      expirationTtl: FACT_CHECK_HOLD_SECONDS,
-    });
-}
 
 const CRON_RUNS: Record<CronJobName, (env: Env) => Promise<unknown>> = {
   backup: runBackup,
@@ -392,87 +133,6 @@ function cronLists(env: Env): Record<string, CronJob[]> {
   return Object.fromEntries(
     Object.entries(CRON_TRIGGERS).map(([cron, jobs]) => [cron, jobs.map(withRun(env))]),
   );
-}
-
-async function factCheckMessage(
-  db: ReturnType<typeof createDb>,
-  checker: companion.FactChecker | null,
-  message: Message<CacheJobMessage>,
-): Promise<void> {
-  if (!checker) return message.retry();
-  try {
-    const book = await catalogRepo.getBookById(db, message.body.bookId);
-    const result = book && (await companion.factCheckBook(db, checker, book));
-    if (result) logEvent("companion_fact_checked", { ...result });
-    message.ack();
-  } catch (err) {
-    const limited = err instanceof Error && err.message.includes("(rate_limited)");
-    logEvent(
-      "companion_fact_check_failed",
-      {
-        book_id: message.body.bookId,
-        error: err,
-        reply_tail: (err as { replyTail?: string }).replyTail,
-      },
-      { level: limited ? "warn" : "error" },
-    );
-    // Every attempt is billed, so a failing book is given up after three; a reply cut off at max_tokens recurs.
-    const cutOff = err instanceof Error && err.message.includes("(truncated)");
-    if (cutOff || message.attempts >= 3) return message.ack();
-    message.retry({ delaySeconds: 60 * message.attempts });
-  }
-}
-
-async function queue(
-  batch: MessageBatch<CacheJobMessage>,
-  env: Env,
-  _ctx: ExecutionContext,
-): Promise<void> {
-  const db = createDb(env.DB);
-  const caller = anthropicCaller(env);
-  const checker = anthropicFactChecker(env);
-
-  for (const message of batch.messages) {
-    if (message.body.factCheck) {
-      await factCheckMessage(db, checker, message);
-      continue;
-    }
-    if (!caller) {
-      message.retry();
-      continue;
-    }
-    try {
-      const book = await catalogRepo.getBookById(db, message.body.bookId);
-      if (!book) {
-        message.ack(); // the book no longer exists; nothing to retry
-        continue;
-      }
-      await companion.generateCachedActionsForBook(db, caller, {
-        id: book.id,
-        title: book.title,
-        author: book.author,
-        // Template filler would only teach the model a line that describes nothing.
-        description: catalogHealthDomain.isTemplateDescription(book.description)
-          ? null
-          : book.description,
-        publicationYear: book.publicationYear,
-        subjects: book.subjects,
-      });
-      message.ack();
-    } catch (err) {
-      // A rate limit is the queue outrunning the quota, not a fault: warn and retry later (a minute longer each attempt).
-      const limited = err instanceof Error && err.message.includes("(rate_limited)");
-      logEvent(
-        "companion_cache_failed",
-        { book_id: message.body.bookId, error: err },
-        { level: limited ? "warn" : "error" },
-      );
-      // A billed failed reply or prose-check failure recurs, so give up after three; the next daily run picks it up.
-      if (limited) message.retry({ delaySeconds: 60 * message.attempts });
-      else if (message.attempts >= 3) message.ack();
-      else message.retry();
-    }
-  }
 }
 
 // Must be a named export of the entry module so the runtime can instantiate it for CLUB_ROOM.

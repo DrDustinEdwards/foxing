@@ -1,17 +1,8 @@
 // The reading surface: a server shell that mounts the Readium engine client-side (lazy, so ts-toolkit never loads on
 // catalog pages or during SSR). Writes go to /api/v1 from the browser and surface every failure.
-import {
-  useBookAnnotations,
-  useCreateAnnotation,
-  useDeleteAnnotation,
-  useLikeAnnotation,
-  usePassageComment,
-  useSaveProgress,
-  useUpdateAnnotation,
-} from "@foxing/client";
+import { useBookAnnotations } from "@foxing/client";
 import type { ReaderAnnotations } from "@foxing/types";
 import { readStored } from "capsomer/behavior/hooks";
-import { newId } from "capsomer/behavior/state-hooks";
 import { useRemembered } from "capsomer/react/hooks";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { annotationPct, type HighlightColor } from "@foxing/core";
@@ -23,7 +14,7 @@ import type {
   TocEntry,
 } from "~/lib/reader/engine.client";
 import { enrichSelectionLocator, type Locator } from "~/lib/reader/locator";
-import { READING_CANVAS, type ReaderSettings, type ReaderTheme } from "~/lib/reader/settings";
+import { READING_CANVAS, type ReaderSettings } from "~/lib/reader/settings";
 import {
   LAYERS_KEY,
   type LayerState,
@@ -33,12 +24,15 @@ import {
   type ReaderOther,
   type ReaderPopular,
   SETTINGS_KEY,
-  layerShown,
   parseLayers,
   parseSettings,
   samePosition,
-  visibleFrame,
+  anchorFromRect,
+  highlightSpecs,
+  popularSpecs,
 } from "./reader-types";
+import { ProgressScrubber } from "./reader-scrubber";
+import { usePageKeys, useReaderWrites } from "./reader-writes";
 import { AttributionPopover, EditPopover, NoteComposer, SelectionToolbar } from "./reader-popovers";
 import {
   ContentsList,
@@ -98,27 +92,24 @@ export function ReaderView(props: ReaderViewProps) {
   // Viewport-space rect of the tapped highlight; null from the Contents list (the popover then floats bottom-center).
   const [editAnchor, setEditAnchor] = useState<DecorationRect | null>(null);
   const [signInPrompt, setSignInPrompt] = useState(false);
-  // Writes never swallow a failure: saving drives a role="status" indicator, writeError a role="alert" banner.
-  const writes = [
-    useCreateAnnotation(),
-    useUpdateAnnotation(),
-    useDeleteAnnotation(),
-    useLikeAnnotation(),
-    usePassageComment(),
-    useSaveProgress(),
-  ] as const;
-  const [createAnn, updateAnn, deleteAnn, likeAnn, comment, saveProgress] = writes;
-  const createRun = createAnn.run;
-  const updateFire = updateAnn.fire;
-  const deleteFire = deleteAnn.fire;
-  const likeFire = likeAnn.fire;
-  const commentRun = comment.run;
-  const saveFire = saveProgress.fire;
-  const saving = writes.some((w) => w.pending);
-  const writeError = writes.find((w) => w.error)?.error ?? null;
-  const dismissWriteError = () => {
-    for (const w of writes) w.reset();
-  };
+  const requireSignIn = useCallback((): boolean => {
+    if (signedIn) return true;
+    setSelection(null);
+    setNoteDraft(null);
+    setSignInPrompt(true);
+    return false;
+  }, [signedIn]);
+  const {
+    saving,
+    writeError,
+    dismissWriteError,
+    saveFire,
+    persistAnnotation,
+    patchAnnotation,
+    removeAnnotation,
+    toggleLike,
+    postReply,
+  } = useReaderWrites({ bookId: book.id, currentLocatorRef, requireSignIn, setAttribution });
 
   const settingsRef = useRef(settings);
   const annotationsRef = useRef(annotations);
@@ -133,50 +124,15 @@ export function ReaderView(props: ReaderViewProps) {
     popularRef.current = popular;
   });
 
-  // Redraw the decoration layers from the mine/others sets and the layer toggles ("My clubs" = club + friend, "Everyone" = public).
-  const reapplyHighlights = useCallback(
-    (
-      mine: ReaderAnnotation[],
-      othersList: ReaderOther[],
-      layerState: LayerState,
-      theme: ReaderTheme,
-    ) => {
-      const mineSpecs = layerState.mine
-        ? mine
-            .filter((a) => (a.type === "highlight" || a.type === "note") && a.locator)
-            .map((a) => ({
-              id: a.id,
-              locator: a.locator as Locator,
-              color: (a.color as HighlightColor) ?? "amber",
-              hasNote: !!a.body?.trim(),
-              ownership: "mine" as const,
-            }))
-        : [];
-      const otherSpecs = othersList
-        .filter((o) => o.locator && layerShown(o.layer, layerState))
-        .map((o) => ({
-          id: o.id,
-          locator: o.locator as Locator,
-          color: (o.color as HighlightColor) ?? "amber",
-          hasNote: !!o.body?.trim(),
-          ownership: "other" as const,
-        }));
-      engineRef.current?.applyHighlights([...mineSpecs, ...otherSpecs], theme);
-    },
-    [],
-  );
-
   const redraw = useCallback(() => {
     const layerState = layersRef.current;
     const theme = settingsRef.current.theme;
-    reapplyHighlights(annotationsRef.current, othersRef.current, layerState, theme);
-    const popularSpecs = layerState.everyone
-      ? popularRef.current
-          .filter((p) => p.locator)
-          .map((p, i) => ({ id: `popular-${i}`, locator: p.locator as Locator }))
-      : [];
-    engineRef.current?.applyPopular(popularSpecs, theme);
-  }, [reapplyHighlights]);
+    engineRef.current?.applyHighlights(
+      highlightSpecs(annotationsRef.current, othersRef.current, layerState),
+      theme,
+    );
+    engineRef.current?.applyPopular(popularSpecs(popularRef.current, layerState), theme);
+  }, []);
 
   const scheduleSave = useCallback(
     (loc: Locator) => {
@@ -236,20 +192,7 @@ export function ReaderView(props: ReaderViewProps) {
               const other = mine ? null : othersRef.current.find((o) => o.id === id);
               if (!mine && !other) return;
               setSelection(null);
-              // The rect is in device pixels relative to the content frame's viewport: convert to CSS pixels and offset by the frame's
-              // position. The engine pools frames, so pick the shown one, not the first in DOM order.
-              const iframe = visibleFrame(containerRef.current);
-              const fr = iframe?.getBoundingClientRect();
-              const dpr = window.devicePixelRatio || 1;
-              const anchor =
-                rect && fr
-                  ? {
-                      top: fr.top + rect.top / dpr,
-                      left: fr.left + rect.left / dpr,
-                      width: rect.width / dpr,
-                      height: rect.height / dpr,
-                    }
-                  : null;
+              const anchor = anchorFromRect(containerRef.current, rect);
               if (mine) {
                 setAttribution(null);
                 setAttributionAnchor(null);
@@ -294,22 +237,7 @@ export function ReaderView(props: ReaderViewProps) {
     // oxlint-disable-next-line react/exhaustive-deps -- mount once per book; inputs are session-stable or ref-read
   }, [manifestUrl]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (panel || noteDraft || editing || signInPrompt || attribution) return;
-      const el = document.activeElement;
-      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) return;
-      if (["ArrowRight", "PageDown", " "].includes(e.key)) {
-        e.preventDefault();
-        engineRef.current?.next();
-      } else if (["ArrowLeft", "PageUp"].includes(e.key)) {
-        e.preventDefault();
-        engineRef.current?.prev();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [panel, noteDraft, editing, signInPrompt, attribution]);
+  usePageKeys(engineRef, !!(panel || noteDraft || editing || signInPrompt || attribution));
 
   const updateSettings = useCallback(
     (patch: Partial<ReaderSettings>) => {
@@ -322,14 +250,6 @@ export function ReaderView(props: ReaderViewProps) {
     [redraw, rememberSettings],
   );
 
-  const requireSignIn = useCallback((): boolean => {
-    if (signedIn) return true;
-    setSelection(null);
-    setNoteDraft(null);
-    setSignInPrompt(true);
-    return false;
-  }, [signedIn]);
-
   const clearNativeSelection = useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -337,27 +257,6 @@ export function ReaderView(props: ReaderViewProps) {
       f.contentWindow?.getSelection?.()?.removeAllRanges();
     }
   }, []);
-
-  const persistAnnotation = useCallback(
-    async (payload: {
-      type: "highlight" | "note" | "bookmark";
-      locator: Locator;
-      color?: HighlightColor;
-      body?: string;
-      selectedText?: string;
-      // 'club' is the explicit share-to-club exposure; omitted lets the server resolve the default visibility.
-      visibility?: "club";
-    }) => {
-      const chapterTitle = currentLocatorRef.current?.title;
-      await createRun({
-        ...payload,
-        id: newId(),
-        bookId: book.id,
-        chapter: typeof chapterTitle === "string" ? chapterTitle : undefined,
-      });
-    },
-    [book.id, createRun],
-  );
 
   const highlightSelection = useCallback(
     async (color: HighlightColor, body?: string, shareToClub?: boolean) => {
@@ -391,20 +290,13 @@ export function ReaderView(props: ReaderViewProps) {
     await persistAnnotation({ type: "bookmark", locator: loc });
   }, [requireSignIn, persistAnnotation]);
 
-  const patchAnnotation = useCallback(
-    (id: string, patch: { color?: HighlightColor; body?: string | null }) => {
-      updateFire({ bookId: book.id, id, ...patch });
-    },
-    [book.id, updateFire],
-  );
-
   const deleteAnnotation = useCallback(
     (id: string) => {
-      deleteFire({ bookId: book.id, id });
+      removeAnnotation(id);
       setEditing(null);
       setEditAnchor(null);
     },
-    [book.id, deleteFire],
+    [removeAnnotation],
   );
 
   useEffect(() => {
@@ -420,55 +312,6 @@ export function ReaderView(props: ReaderViewProps) {
       rememberLayers(JSON.stringify(next));
     },
     [rememberLayers],
-  );
-
-  const reveal = useCallback((id: string) => {
-    setRevealed((prev) => {
-      const next = new Set(prev);
-      next.add(id);
-      return next;
-    });
-  }, []);
-
-  const toggleLike = useCallback(
-    (other: ReaderOther) => {
-      if (!requireSignIn()) return;
-      const on = !other.likedByMe;
-      setAttribution((cur) =>
-        cur && cur.id === other.id
-          ? { ...cur, likedByMe: on, likeCount: Math.max(0, cur.likeCount + (on ? 1 : -1)) }
-          : cur,
-      );
-      likeFire({ bookId: book.id, id: other.id, on });
-    },
-    [requireSignIn, likeFire, book.id],
-  );
-
-  // clubId is implicit when the viewer shares one club with the author; otherwise the popover offers a picker.
-  const postReply = useCallback(
-    async (other: ReaderOther, clubId: string, body: string) => {
-      if (!requireSignIn()) return false;
-      setAttribution((cur) =>
-        cur && cur.id === other.id ? { ...cur, replyCount: cur.replyCount + 1 } : cur,
-      );
-      const ok = await commentRun({
-        id: newId(),
-        clubId,
-        bookId: book.id,
-        body,
-        parentId: other.id,
-        locator: other.locator ?? undefined,
-        chapter: other.chapter,
-        you: { id: "me", username: null, displayName: "You", avatarUrl: null },
-      });
-      if (!ok) {
-        setAttribution((cur) =>
-          cur && cur.id === other.id ? { ...cur, replyCount: cur.replyCount - 1 } : cur,
-        );
-      }
-      return !!ok;
-    },
-    [requireSignIn, commentRun, book.id],
   );
 
   const canvas = READING_CANVAS[settings.theme];
@@ -532,28 +375,14 @@ export function ReaderView(props: ReaderViewProps) {
         />
       </div>
 
-      {/* Bottom progress scrubber */}
-      <footer className="py-2 fx-reader-view-foot" style={{ background: canvas.bg }}>
-        <label className="fx-reader-view-row">
-          <span className="cap-num" aria-hidden>
-            {pct.toFixed(0)}%
-          </span>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            step={0.5}
-            value={pct}
-            aria-label="Reading progress"
-            className="fx-reader-view-input"
-            onChange={(e) => {
-              const v = Number(e.target.value);
-              setPct(v);
-              engineRef.current?.goToTotalProgression(v / 100);
-            }}
-          />
-        </label>
-      </footer>
+      <ProgressScrubber
+        pct={pct}
+        background={canvas.bg}
+        onSeek={(v) => {
+          setPct(v);
+          engineRef.current?.goToTotalProgression(v / 100);
+        }}
+      />
 
       {/* Selection toolbar (bottom-center; robust across paginated/scroll) */}
       {selection && !noteDraft ? (
@@ -614,7 +443,7 @@ export function ReaderView(props: ReaderViewProps) {
           replies={comments.filter((c) => c.parentId === attribution.id)}
           revealed={revealed.has(attribution.id)}
           shareableClubs={shareableClubs}
-          onReveal={() => reveal(attribution.id)}
+          onReveal={() => setRevealed((prev) => new Set(prev).add(attribution.id))}
           onToggleLike={() => toggleLike(attribution)}
           onReply={(clubId, body) => postReply(attribution, clubId, body)}
           onClose={() => {

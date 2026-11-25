@@ -1,3 +1,5 @@
+import type { HighlightColor } from "@foxing/core";
+import type { DecorationRect } from "~/lib/reader/engine.client";
 import type { Locator } from "~/lib/reader/locator";
 import { DEFAULT_SETTINGS, type ReaderSettings } from "~/lib/reader/settings";
 
@@ -106,4 +108,56 @@ export function parseSettings(raw: string | null): ReaderSettings {
   } catch {
     return DEFAULT_SETTINGS;
   }
+}
+
+/** The mine/others decorations to draw: "My clubs" = club + friend, "Everyone" = public. */
+export function highlightSpecs(
+  mine: ReaderAnnotation[],
+  othersList: ReaderOther[],
+  layerState: LayerState,
+) {
+  const mineSpecs = layerState.mine
+    ? mine
+        .filter((a) => (a.type === "highlight" || a.type === "note") && a.locator)
+        .map((a) => ({
+          id: a.id,
+          locator: a.locator as Locator,
+          color: (a.color as HighlightColor) ?? "amber",
+          hasNote: !!a.body?.trim(),
+          ownership: "mine" as const,
+        }))
+    : [];
+  const otherSpecs = othersList
+    .filter((o) => o.locator && layerShown(o.layer, layerState))
+    .map((o) => ({
+      id: o.id,
+      locator: o.locator as Locator,
+      color: (o.color as HighlightColor) ?? "amber",
+      hasNote: !!o.body?.trim(),
+      ownership: "other" as const,
+    }));
+  return [...mineSpecs, ...otherSpecs];
+}
+
+/** The rect is in device pixels relative to the content frame's viewport: convert to CSS pixels and offset by the frame's position. */
+export function anchorFromRect(container: HTMLElement | null, rect: DecorationRect | null) {
+  // The engine pools frames, so pick the shown one, not the first in DOM order.
+  const fr = visibleFrame(container)?.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  return rect && fr
+    ? {
+        top: fr.top + rect.top / dpr,
+        left: fr.left + rect.left / dpr,
+        width: rect.width / dpr,
+        height: rect.height / dpr,
+      }
+    : null;
+}
+
+export function popularSpecs(popular: ReaderPopular[], layerState: LayerState) {
+  return layerState.everyone
+    ? popular
+        .filter((p) => p.locator)
+        .map((p, i) => ({ id: `popular-${i}`, locator: p.locator as Locator }))
+    : [];
 }

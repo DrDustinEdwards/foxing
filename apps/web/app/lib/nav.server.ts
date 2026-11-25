@@ -1,7 +1,7 @@
 // Nav identity for the signed-in shell, resolved in the root loader. Safe to SSR because the Worker bypasses the edge
 // cache whenever a better-auth cookie is present. Reads run in-process via core (loaders never self-fetch /api/v1).
 import { isAdminEmail } from "@dustinedwards/site-runtime/access";
-import { catalogRepo, createDb, libraryRepo, profilesRepo, views } from "@foxing/core";
+import { catalogRepo, createDb, goalsRepo, libraryRepo, profilesRepo, views } from "@foxing/core";
 import { sessionUserFromRequest } from "./auth.server";
 
 export interface NavUser {
@@ -30,7 +30,7 @@ export async function getNavUser(env: Env, request: Request): Promise<NavUser | 
   const year = new Date().getUTCFullYear();
   const [streak, booksThisYear, vocabularyToMaster] = await Promise.all([
     views.streak(db, user.id),
-    libraryRepo.countFinishedInPeriod(db, user.id, { periodType: "year", year }),
+    goalsRepo.countFinishedInPeriod(db, user.id, { periodType: "year", year }),
     libraryRepo.countVocabularyToMaster(db, user.id),
   ]);
 

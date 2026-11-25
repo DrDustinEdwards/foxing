@@ -27,14 +27,9 @@
       "apps/web/app/components/reader/reader-view.tsx": 660,
       "apps/web/app/components/settings/account-sections.tsx": 774,
       "apps/web/app/lib/carrel/journal-adapter.server.ts": 751,
-      "apps/web/app/styles/reader.css": 587,
-      "apps/web/app/styles/social.css": 649,
       "apps/web/workers/app.ts": 609,
-      "mcp/src/tools.ts": 942,
       "packages/api/src/routes/admin.ts": 509,
-      "packages/core/src/domain/clubs.ts": 570,
-      "packages/core/src/repositories/library.ts": 628,
-      "packages/types/src/index.ts": 700
+      "packages/core/src/domain/clubs.ts": 570
     },
     "tests": {
       "files": 70,

@@ -11,6 +11,7 @@ import { profileMw } from "./middleware/profile";
 import { sessionMw } from "./middleware/session";
 import { accountRoutes } from "./routes/account";
 import { adminRoutes } from "./routes/admin";
+import { adminRoleRoutes } from "./routes/admin-roles";
 import { annotationRoutes } from "./routes/annotations";
 import { billingRoutes } from "./routes/billing";
 import { catalogRoutes } from "./routes/catalog";
@@ -78,6 +79,7 @@ export function createApi(deps: ApiDeps) {
   app.route("/", syncRoutes);
   app.route("/", pushRoutes);
   app.route("/", adminRoutes);
+  app.route("/", adminRoleRoutes);
 
   return app;
 }

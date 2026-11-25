@@ -4,6 +4,7 @@ import { logEvent } from "@dustinedwards/site-runtime/log";
 import { Hono } from "hono";
 import {
   type LiveMessage,
+  clubPollsMeetingsDomain,
   clubsDomain,
   clubsRepo,
   banMemberInput,
@@ -231,21 +232,31 @@ clubRoutes.delete("/posts/:id", rateLimit("write"), async (c) => {
 clubRoutes.post("/clubs/:id/polls", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
   const input = await parseJson(c, createPollInput);
-  const poll = await clubsDomain.createPoll(c.get("db"), actor, c.req.param("id"), input);
+  const poll = await clubPollsMeetingsDomain.createPoll(
+    c.get("db"),
+    actor,
+    c.req.param("id"),
+    input,
+  );
   return c.json({ poll }, 201);
 });
 
 clubRoutes.post("/polls/:id/vote", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
   const { ranks } = await parseJson(c, votePollInput);
-  const { clubId, live } = await clubsDomain.votePoll(c.get("db"), actor, c.req.param("id"), ranks);
+  const { clubId, live } = await clubPollsMeetingsDomain.votePoll(
+    c.get("db"),
+    actor,
+    c.req.param("id"),
+    ranks,
+  );
   await notify(c, clubId, live);
   return c.json({ ok: true });
 });
 
 clubRoutes.post("/polls/:id/close", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
-  const { clubId, result, live } = await clubsDomain.closePoll(
+  const { clubId, result, live } = await clubPollsMeetingsDomain.closePoll(
     c.get("db"),
     actor,
     c.req.param("id"),
@@ -257,33 +268,47 @@ clubRoutes.post("/polls/:id/close", rateLimit("write"), async (c) => {
 clubRoutes.post("/clubs/:id/meetings", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
   const input = await parseJson(c, createMeetingInput);
-  const meeting = await clubsDomain.createMeeting(c.get("db"), actor, c.req.param("id"), input);
+  const meeting = await clubPollsMeetingsDomain.createMeeting(
+    c.get("db"),
+    actor,
+    c.req.param("id"),
+    input,
+  );
   return c.json({ meeting }, 201);
 });
 
 clubRoutes.post("/meetings/:id/cancel", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
-  const meeting = await clubsDomain.cancelMeeting(c.get("db"), actor, c.req.param("id"));
+  const meeting = await clubPollsMeetingsDomain.cancelMeeting(
+    c.get("db"),
+    actor,
+    c.req.param("id"),
+  );
   return c.json({ meeting });
 });
 
 clubRoutes.post("/meetings/:id/rsvp", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
   const { status } = await parseJson(c, rsvpInput);
-  await clubsDomain.rsvpMeeting(c.get("db"), actor, c.req.param("id"), status);
+  await clubPollsMeetingsDomain.rsvpMeeting(c.get("db"), actor, c.req.param("id"), status);
   return c.json({ ok: true });
 });
 
 clubRoutes.post("/clubs/:id/schedule", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
   const input = await parseJson(c, createScheduleInput);
-  const entry = await clubsDomain.addSchedule(c.get("db"), actor, c.req.param("id"), input);
+  const entry = await clubPollsMeetingsDomain.addSchedule(
+    c.get("db"),
+    actor,
+    c.req.param("id"),
+    input,
+  );
   return c.json({ entry }, 201);
 });
 
 clubRoutes.delete("/clubs/:id/schedule/:scheduleId", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
-  await clubsDomain.removeSchedule(
+  await clubPollsMeetingsDomain.removeSchedule(
     c.get("db"),
     actor,
     c.req.param("id"),

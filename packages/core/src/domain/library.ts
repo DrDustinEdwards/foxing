@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import type { Db } from "../db";
 import type { UserBookStatus } from "../enums";
 import { emit, type EventActor } from "../events";
+import * as goalsRepo from "../repositories/goals";
 import * as libraryRepo from "../repositories/library";
 import * as profilesRepo from "../repositories/profiles";
 import { books } from "../schema";
@@ -34,12 +35,12 @@ export async function changeBookStatus(
 
     // goal_met: a books-type goal whose finished count now equals its target, its period in the reader's days.
     const [goals, profile] = await Promise.all([
-      libraryRepo.listGoals(db, actor.userId),
+      goalsRepo.listGoals(db, actor.userId),
       profilesRepo.getProfileById(db, actor.userId),
     ]);
     for (const g of goals) {
       if (g.type !== "books") continue;
-      const progress = await libraryRepo.countFinishedInPeriod(
+      const progress = await goalsRepo.countFinishedInPeriod(
         db,
         actor.userId,
         g,
@@ -89,7 +90,7 @@ export async function recordReadingSession(
   pagesRead: number,
 ): Promise<void> {
   const [row, profile] = await Promise.all([
-    libraryRepo.getStreak(db, userId),
+    goalsRepo.getStreak(db, userId),
     profilesRepo.getProfileById(db, userId),
   ]);
   const tz = profile?.timezone ?? null;
@@ -98,7 +99,7 @@ export async function recordReadingSession(
     { current: row?.currentStreak ?? 0, longest: row?.longestStreak ?? 0, lastDay: last },
     localDay(startedAtMs, tz),
   );
-  await libraryRepo.saveStreak(db, userId, {
+  await goalsRepo.saveStreak(db, userId, {
     currentStreak: next.current,
     longestStreak: next.longest,
     lastReadDate: next.lastDay === last ? (row?.lastReadDate ?? null) : new Date(startedAtMs),
