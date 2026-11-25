@@ -57,8 +57,8 @@ const SECTIONS: LegalSection[] = [
     title: "Payments",
     body: (
       <p>
-        Foxing is free today. When paid plans launch, payments will be handled by Stripe. Foxing
-        never sees or stores your card number; Stripe processes it directly under its own terms.
+        Payments for paid plans are handled by Stripe. Foxing never sees or stores your card number;
+        Stripe processes it directly under its own terms.
       </p>
     ),
   },
@@ -67,8 +67,8 @@ const SECTIONS: LegalSection[] = [
     title: "AI features",
     body: (
       <p>
-        When the AI reading companion launches, the passage you select and the book's metadata are
-        sent to our AI provider to generate a response. The provider does not train its models on
+        When you use the AI reading companion, the passage you select and the book's metadata are
+        sent to our AI provider, Anthropic, to generate a response. The provider does not train its models on
         your data per its API terms, and nothing else is sent.
       </p>
     ),
@@ -91,9 +91,7 @@ const SECTIONS: LegalSection[] = [
     body: (
       <p>
         You can see, correct, export, and delete your data. From settings you can download a JSON
-        archive of everything tied to your account, and you can delete your account outright. If you
-        live somewhere with a privacy law such as the GDPR or the CCPA, those rights apply, and we
-        honor them for everyone regardless.
+        archive of everything tied to your account, and you can delete your account outright.
       </p>
     ),
   },

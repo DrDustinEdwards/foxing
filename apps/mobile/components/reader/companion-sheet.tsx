@@ -67,7 +67,7 @@ export function CompanionSheet({
             This is a Foxing Plus feature.
           </Text>
           <Pressable
-            onPress={() => void Linking.openURL("https://foxing.app/pricing")}
+            onPress={() => void Linking.openURL("https://foxing.app/settings")}
             accessibilityRole="link"
             style={{ marginTop: 10 }}
           >

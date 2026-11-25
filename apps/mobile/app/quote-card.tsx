@@ -79,7 +79,7 @@ export default function QuoteCardScreen() {
     cardType === "club_invite" && clubId
       ? `foxing.app/clubs/${clubId}`
       : bookId
-        ? `foxing.app/book/${bookId}`
+        ? `foxing.app/books/${bookId}`
         : "foxing.app";
 
   const shareText = useMemo(() => {
