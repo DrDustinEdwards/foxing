@@ -45,14 +45,18 @@ export function resolveFeed(input: FeedInputs): socialRepo.ActivityEvent[] {
   });
 }
 
-export async function followUser(db: Db, actor: EventActor, targetUserId: string): Promise<void> {
-  if (targetUserId === actor.userId) throw domainErrors.validation("You cannot follow yourself.");
+async function requireUser(db: Db, userId: string): Promise<void> {
   const [target] = await db
     .select({ id: authUser.id })
     .from(authUser)
-    .where(eq(authUser.id, targetUserId))
+    .where(eq(authUser.id, userId))
     .limit(1);
   if (!target) throw domainErrors.notFound("User not found.");
+}
+
+export async function followUser(db: Db, actor: EventActor, targetUserId: string): Promise<void> {
+  if (targetUserId === actor.userId) throw domainErrors.validation("You cannot follow yourself.");
+  await requireUser(db, targetUserId);
 
   const already = await socialRepo.isFollowing(db, actor.userId, targetUserId);
   await socialRepo.follow(db, actor.userId, targetUserId);
@@ -74,12 +78,7 @@ export async function addCloseFriend(
   if (targetUserId === actor.userId) {
     throw domainErrors.validation("You cannot add yourself as a close friend.");
   }
-  const [target] = await db
-    .select({ id: authUser.id })
-    .from(authUser)
-    .where(eq(authUser.id, targetUserId))
-    .limit(1);
-  if (!target) throw domainErrors.notFound("User not found.");
+  await requireUser(db, targetUserId);
   await socialRepo.addCloseFriend(db, actor.userId, targetUserId);
 }
 

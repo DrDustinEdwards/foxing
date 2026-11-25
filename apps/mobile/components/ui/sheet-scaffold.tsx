@@ -1,7 +1,9 @@
 import { type ReactNode } from "react";
-import { View, Modal, Pressable, type StyleProp, type ViewStyle } from "react-native";
+import { View, Text, Modal, Pressable, type StyleProp, type ViewStyle } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 import { KeyboardAwareScrollView, KeyboardStickyView } from "react-native-keyboard-controller";
 
 // Owns the keyboard handling (KeyboardAwareScrollView): do not pass a ScrollView in children or wrap in a KeyboardAvoidingView; use scroll={false} for short fixed content.
@@ -12,6 +14,8 @@ interface SheetScaffoldProps {
   onClose: () => void;
   children: ReactNode;
   header?: ReactNode;
+  /** Small uppercase heading for a bottom sheet; replaces `header`. */
+  title?: string;
   footer?: ReactNode;
   variant?: "page" | "bottom";
   scroll?: boolean;
@@ -27,6 +31,7 @@ export function SheetScaffold({
   onClose,
   children,
   header,
+  title,
   footer,
   variant = "page",
   scroll = true,
@@ -35,6 +40,7 @@ export function SheetScaffold({
   stickyFooter = false,
 }: SheetScaffoldProps) {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
 
   const body = scroll ? (
     <KeyboardAwareScrollView
@@ -79,7 +85,23 @@ export function SheetScaffold({
             className="rounded-t-3xl bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
             style={{ maxHeight, paddingTop: 12 }}
           >
-            {header}
+            {title ? (
+              <Text
+                style={{
+                  fontFamily: Fonts.uiMedium,
+                  fontSize: 12,
+                  color: colors.textTertiary,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.6,
+                  paddingHorizontal: 20,
+                  marginBottom: 8,
+                }}
+              >
+                {title}
+              </Text>
+            ) : (
+              header
+            )}
             {body}
             {footerNode ?? <View style={{ height: insets.bottom + 12 }} />}
           </Pressable>

@@ -1,6 +1,7 @@
 import type * as W from "@foxing/types";
-import { ChatCircleDots, Eye, EyeSlash } from "phosphor-react-native";
+import { ChatCircleDots } from "phosphor-react-native";
 import { Image, Pressable, Text, View } from "react-native";
+import { Byline, SpoilerGate } from "@/components/ui/spoiler-gate";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { relativeTime } from "@/lib/relative-time";
@@ -51,69 +52,21 @@ export function CommentCard({
         )}
       </View>
       <View style={{ flex: 1 }}>
-        <View className="flex-row items-center" style={{ marginBottom: 2 }}>
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 13,
-              color: colors.textPrimary,
-              marginRight: 6,
-            }}
-            numberOfLines={1}
-          >
-            {name}
-          </Text>
-          <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary }}>
-            {relativeTime(comment.createdAt)}
-          </Text>
-        </View>
+        <Byline name={name} meta={relativeTime(comment.createdAt)} />
 
-        {hidden ? (
-          <Pressable onPress={onToggleReveal} accessibilityRole="button">
-            <View
-              style={{
-                paddingVertical: 12,
-                paddingHorizontal: 10,
-                borderRadius: 8,
-                backgroundColor: colors.bgSelected,
-                borderColor: colors.borderBrand,
-                borderWidth: 1,
-                borderStyle: "dashed",
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <EyeSlash color={colors.brandText} size={14} weight="regular" />
-              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.brandText }}>
-                {comment.gate.spoiler
-                  ? "Spoiler, tap to reveal"
-                  : "Further on than you are, tap to reveal"}
-              </Text>
-            </View>
-          </Pressable>
-        ) : (
-          <>
-            <Text
-              style={{
-                fontFamily: Fonts.body,
-                fontSize: 14,
-                color: colors.textPrimary,
-                lineHeight: 21,
-              }}
-            >
-              {comment.body}
-            </Text>
-            {gated ? (
-              <Pressable onPress={onToggleReveal} className="flex-row items-center gap-1 mt-2">
-                <Eye color={colors.textTertiary} size={11} />
-                <Text style={{ fontFamily: Fonts.ui, fontSize: 10, color: colors.textTertiary }}>
-                  Shown, tap to hide
-                </Text>
-              </Pressable>
-            ) : null}
-          </>
-        )}
+        <SpoilerGate
+          hidden={hidden}
+          gated={gated}
+          body={comment.body}
+          hiddenLabel={
+            comment.gate.spoiler
+              ? "Spoiler, tap to reveal"
+              : "Further on than you are, tap to reveal"
+          }
+          shownLabel="Shown, tap to hide"
+          onToggle={onToggleReveal}
+          accessibilityRole="button"
+        />
 
         <View className="flex-row items-center mt-3">
           <Pressable

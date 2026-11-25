@@ -1,6 +1,5 @@
 // Foxing Admin tools for the catalog: inspect, edit and check books.
 import { z } from "zod";
-import { callAdmin } from "./api-client";
 import {
   READER_DATA,
   READ_ONLY,
@@ -11,13 +10,13 @@ import {
   confirmed,
   cursorSchema,
   guarded,
+  patchThenPost,
   idSchema,
   inputError,
   limitSchema,
   offsetOf,
   ok,
   querySchema,
-  refusal,
   type ToolDefinition,
 } from "./tool-kit";
 
@@ -118,26 +117,20 @@ export const catalogTools: ToolDefinition[] = [
         }
         const preview = { book_id: args.book_id, fields, staff_pick: pick ?? null };
         return confirmed(env, "foxing_edit_book", args, preview, async () => {
-          const applied: Record<string, unknown> = {};
-          if (Object.keys(fields).length > 0) {
-            const result = await callAdmin(env, "PATCH", `/books/${id}`, { signal, body: fields });
-            if (!result.ok) return refusal(result);
-            applied.fields = Object.keys(fields);
-          }
-          if (pick) {
-            const result = await callAdmin(env, "POST", `/books/${id}/staff-pick`, {
-              signal,
-              body: { on: pick.on, note: pick.note ?? null },
-            });
-            if (!result.ok) {
-              const out = refusal(result);
-              if (applied.fields) {
-                out.content[0].text = `The field changes were applied; the staff pick was refused.\n${out.content[0].text}`;
-              }
-              return out;
-            }
-            applied.staff_pick = pick.on;
-          }
+          const done = await patchThenPost(
+            env,
+            signal,
+            { path: `/books/${id}`, fields },
+            {
+              path: `/books/${id}/staff-pick`,
+              body: pick ? { on: pick.on, note: pick.note ?? null } : null,
+              key: "staff_pick",
+              value: pick?.on,
+              partial: "The field changes were applied; the staff pick was refused.",
+            },
+          );
+          if (!("applied" in done)) return done;
+          const { applied } = done;
           return ok({ book_id: args.book_id, applied });
         });
       }),

@@ -68,7 +68,7 @@ export const SETTINGS_KEY = "foxing.reader.settings";
 
 export const PROGRESS_DEBOUNCE = 1500;
 
-export function layerShown(layer: ReaderOther["layer"], state: LayerState): boolean {
+function layerShown(layer: ReaderOther["layer"], state: LayerState): boolean {
   if (layer === "public") return state.everyone;
   return state.clubs; // club | friend
 }
@@ -92,7 +92,7 @@ function progressionOf(loc: Locator): number {
   return typeof v === "number" ? v : 0;
 }
 
-export function visibleFrame(container: HTMLElement | null): HTMLIFrameElement | null {
+function visibleFrame(container: HTMLElement | null): HTMLIFrameElement | null {
   if (!container) return null;
   const frames = Array.from(container.querySelectorAll("iframe"));
   return (

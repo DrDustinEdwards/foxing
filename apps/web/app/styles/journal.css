@@ -85,14 +85,7 @@
 }
 
 .fx-journal-tag-grid {
-  display: grid;
-  gap: var(--space-6);
-  @media (min-width: 40rem) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  @media (min-width: 64rem) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+  --grid-gap: var(--space-6);
 }
 .fx-journal-tag-grid > li {
   display: grid;
@@ -116,14 +109,7 @@
 }
 
 .fx-journal-grid {
-  display: grid;
-  gap: var(--space-7);
-  @media (min-width: 40rem) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  @media (min-width: 64rem) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+  --grid-gap: var(--space-7);
 }
 .fx-journal-card {
   gap: var(--space-6);

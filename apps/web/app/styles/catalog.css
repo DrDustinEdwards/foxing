@@ -443,9 +443,13 @@ a:hover > .fx-book > :is(h2, h3) {
 }
 
 .fx-picks-grid,
-.fx-awards-grid {
+.fx-awards-grid,
+.fx-pick-club-grid,
+.fx-u-profile-grid,
+.fx-journal-tag-grid,
+.fx-journal-grid {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--grid-gap, var(--space-5));
   @media (min-width: 40rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

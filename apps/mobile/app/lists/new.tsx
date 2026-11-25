@@ -1,12 +1,12 @@
 import { useCreateList } from "@foxing/client";
 import { useState } from "react";
-import { Text, Pressable, TextInput, ActivityIndicator, Alert, ScrollView } from "react-native";
+import { Text, Pressable, ActivityIndicator, Alert, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import { Eye, EyeSlash } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { BackHeader } from "@/components/ui/back-header";
 import { Screen } from "@/components/ui/screen";
+import { ListFormFields } from "@/components/lists/list-form-fields";
 
 export default function NewListScreen() {
   const colors = useColors();
@@ -61,64 +61,15 @@ export default function NewListScreen() {
       </BackHeader>
 
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-        <TextInput
-          value={title}
-          onChangeText={setTitle}
-          placeholder="Title"
-          placeholderTextColor={colors.textTertiary}
-          maxLength={80}
-          style={{
-            fontFamily: Fonts.uiMedium,
-            fontSize: 16,
-            color: colors.textPrimary,
-            backgroundColor: colors.bgSurface,
-            borderColor: colors.borderSubtle,
-            borderWidth: 1,
-            borderRadius: 10,
-            paddingHorizontal: 12,
-            paddingVertical: 12,
-          }}
+        <ListFormFields
+          title={title}
+          onTitleChange={setTitle}
+          description={description}
+          onDescriptionChange={setDescription}
+          descriptionPlaceholder="Description (optional)"
+          isPublic={isPublic}
+          onTogglePublic={() => setIsPublic((v) => !v)}
         />
-        <TextInput
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Description (optional)"
-          placeholderTextColor={colors.textTertiary}
-          multiline
-          maxLength={500}
-          style={{
-            fontFamily: Fonts.body,
-            fontSize: 14,
-            color: colors.textPrimary,
-            backgroundColor: colors.bgSurface,
-            borderColor: colors.borderSubtle,
-            borderWidth: 1,
-            borderRadius: 10,
-            paddingHorizontal: 12,
-            paddingVertical: 10,
-            minHeight: 80,
-            textAlignVertical: "top",
-          }}
-        />
-        <Pressable
-          onPress={() => setIsPublic((v) => !v)}
-          className="flex-row items-center gap-3 p-3 rounded-xl border border-border-subtle-light dark:border-border-subtle-dark"
-        >
-          {isPublic ? (
-            <Eye color={colors.info} size={18} />
-          ) : (
-            <EyeSlash color={colors.textTertiary} size={18} />
-          )}
-          <Text
-            style={{
-              fontFamily: Fonts.body,
-              fontSize: 14,
-              color: colors.textPrimary,
-            }}
-          >
-            {isPublic ? "Public list" : "Private to you"}
-          </Text>
-        </Pressable>
       </ScrollView>
     </Screen>
   );

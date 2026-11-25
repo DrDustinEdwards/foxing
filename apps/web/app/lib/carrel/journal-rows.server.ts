@@ -74,11 +74,11 @@ export async function versionOf(row: { updatedAt: Date }, pending: Pending): Pro
   return `${updated}.${(await contentVersion([pending.publishAt, pending.changeId])).slice(0, 16)}`;
 }
 
-export function iso(at: Date | null | undefined): string | null {
+function iso(at: Date | null | undefined): string | null {
   return at ? at.toISOString() : null;
 }
 
-export function statusOf(row: { isPublished: boolean }, pending: Pending): ContentStatus {
+function statusOf(row: { isPublished: boolean }, pending: Pending): ContentStatus {
   if (row.isPublished) return "published";
   return pending ? "scheduled" : "draft";
 }

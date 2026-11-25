@@ -1,4 +1,4 @@
-import { adminRepo, createDb } from "@foxing/core";
+import { adminRepo } from "@foxing/core";
 import { useState } from "react";
 import { useRevalidator } from "react-router";
 import { ButtonLink } from "capsomer/react/link";
@@ -10,15 +10,12 @@ import {
   useAdminAction,
   AdminRow,
 } from "~/components/admin/admin-form";
-import { cloudflareContext } from "~/context";
-import { requireAdmin } from "~/lib/admin.server";
+import { adminLoaderBase } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-clubs";
 import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { env } = context.get(cloudflareContext);
-  await requireAdmin(env, request);
-  const db = createDb(env.DB);
+  const { db } = await adminLoaderBase(context, request);
   const q = new URL(request.url).searchParams.get("q")?.trim() || undefined;
   const clubs = await adminRepo.listClubsAdmin(db, { q });
   return { q: q ?? "", clubs };

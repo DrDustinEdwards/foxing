@@ -172,6 +172,37 @@ export async function confirmed(
   );
 }
 
+/** Applies field edits with a PATCH, then a second POST (publish or staff pick); a refused second step is prefixed with `partial` when the edits stood. */
+export async function patchThenPost(
+  env: ToolEnv,
+  signal: AbortSignal | undefined,
+  patch: { path: string; fields: Record<string, unknown> },
+  post: {
+    path: string;
+    body: Record<string, unknown> | null;
+    key: string;
+    value: unknown;
+    partial: string;
+  },
+): Promise<{ applied: Record<string, unknown> } | ToolOutput> {
+  const applied: Record<string, unknown> = {};
+  if (Object.keys(patch.fields).length > 0) {
+    const result = await callAdmin(env, "PATCH", patch.path, { signal, body: patch.fields });
+    if (!result.ok) return refusal(result);
+    applied.fields = Object.keys(patch.fields);
+  }
+  if (post.body) {
+    const result = await callAdmin(env, "POST", post.path, { signal, body: post.body });
+    if (!result.ok) {
+      const out = refusal(result);
+      if (applied.fields) out.content[0].text = `${post.partial}\n${out.content[0].text}`;
+      return out;
+    }
+    applied[post.key] = post.value;
+  }
+  return { applied };
+}
+
 export type Annotations = {
   readOnlyHint: boolean;
   destructiveHint: boolean;

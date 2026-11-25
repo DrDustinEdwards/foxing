@@ -1,11 +1,11 @@
 import { useClubPage, useJoinClub, useLeaveClub } from "@foxing/client";
 import type * as W from "@foxing/types";
 import { useCallback, useMemo, useState } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import { View, Pressable, ScrollView, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ChatCircle, BookOpen, UsersThree, Info, ShareNetwork } from "phosphor-react-native";
+import { IconTabButton } from "@/components/ui/underline-tabs";
 import { useColors } from "@/constants/colors";
-import { Fonts } from "@/constants/fonts";
 import { authClient } from "@/lib/api";
 import { DiscussionStarterSheet } from "@/components/clubs/discussion-starter-sheet";
 import { ClubJoinCta } from "@/components/clubs/club-join-cta";
@@ -114,16 +114,28 @@ export default function ClubDetailScreen() {
       </BackHeader>
 
       <View className="flex-row px-2 mb-2">
-        <TabButton
+        <IconTabButton
           tab="discussions"
           current={tab}
           setTab={setTab}
           icon={ChatCircle}
           label="Discussions"
         />
-        <TabButton tab="reading" current={tab} setTab={setTab} icon={BookOpen} label="Reading" />
-        <TabButton tab="members" current={tab} setTab={setTab} icon={UsersThree} label="Members" />
-        <TabButton tab="about" current={tab} setTab={setTab} icon={Info} label="About" />
+        <IconTabButton
+          tab="reading"
+          current={tab}
+          setTab={setTab}
+          icon={BookOpen}
+          label="Reading"
+        />
+        <IconTabButton
+          tab="members"
+          current={tab}
+          setTab={setTab}
+          icon={UsersThree}
+          label="Members"
+        />
+        <IconTabButton tab="about" current={tab} setTab={setTab} icon={Info} label="About" />
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 48 }}>
@@ -182,45 +194,5 @@ export default function ClubDetailScreen() {
         }}
       />
     </Screen>
-  );
-}
-
-function TabButton({
-  tab,
-  current,
-  setTab,
-  icon: Icon,
-  label,
-}: {
-  tab: Tab;
-  current: Tab;
-  setTab: (t: Tab) => void;
-  icon: React.ComponentType<{ color: string; size: number; weight?: "regular" | "bold" }>;
-  label: string;
-}) {
-  const colors = useColors();
-  const active = tab === current;
-  return (
-    <Pressable
-      onPress={() => setTab(tab)}
-      className="flex-1 items-center py-2"
-      style={{
-        borderBottomWidth: 2,
-        borderBottomColor: active ? colors.borderInteractive : colors.borderSubtle,
-      }}
-    >
-      <View className="flex-row items-center gap-1">
-        <Icon color={active ? colors.brandText : colors.textTertiary} size={14} weight="regular" />
-        <Text
-          style={{
-            fontFamily: Fonts.uiMedium,
-            fontSize: 12,
-            color: active ? colors.brandText : colors.textTertiary,
-          }}
-        >
-          {label}
-        </Text>
-      </View>
-    </Pressable>
   );
 }

@@ -1,3 +1,4 @@
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { useColors } from "@/constants/colors";
 import { SectionBlock } from "@/components/ui/section-label";
 import { Pressable, Text, TextInput, View } from "react-native";
@@ -90,22 +91,7 @@ export function PeriodGoalCard({
         </View>
         {row ? (
           <View style={{ marginTop: 14 }}>
-            <View
-              style={{
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: colors.bgSunken,
-                overflow: "hidden",
-              }}
-            >
-              <View
-                style={{
-                  height: 6,
-                  width: `${Math.round(ratio * 100)}%`,
-                  backgroundColor: colors.brandUi,
-                }}
-              />
-            </View>
+            <ProgressBar ratio={ratio} />
             <View className="flex-row items-center justify-between" style={{ marginTop: 6 }}>
               <Text
                 style={{

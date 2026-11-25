@@ -20,6 +20,7 @@ import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { relativeTime } from "@/lib/relative-time";
 import { BackHeader } from "@/components/ui/back-header";
+import { VisibilityToggle } from "@/components/ui/visibility-toggle";
 
 type Filter = "all" | "public" | "private";
 
@@ -343,25 +344,11 @@ export default function CommonplaceScreen() {
             textAlignVertical: "top",
           }}
         />
-        <Pressable
-          onPress={() => setIsPublic((v) => !v)}
-          className="flex-row items-center gap-3 p-3 rounded-xl border border-border-subtle-light dark:border-border-subtle-dark"
-        >
-          {isPublic ? (
-            <Eye color={colors.info} size={18} />
-          ) : (
-            <EyeSlash color={colors.textTertiary} size={18} />
-          )}
-          <Text
-            style={{
-              fontFamily: Fonts.body,
-              fontSize: 14,
-              color: colors.textPrimary,
-            }}
-          >
-            {isPublic ? "Public on profile" : "Private to you"}
-          </Text>
-        </Pressable>
+        <VisibilityToggle
+          isPublic={isPublic}
+          onToggle={() => setIsPublic((v) => !v)}
+          publicLabel="Public on profile"
+        />
       </SheetScaffold>
     </Screen>
   );

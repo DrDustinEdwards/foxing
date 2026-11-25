@@ -8,6 +8,14 @@ import { recomputeBookRating } from "./diary";
 import { annotations, diaryEntries, readingSessions, userBooks, vocabulary } from "../schema";
 import type { SyncOp } from "../validators/sync";
 
+/** The listed keys the op's payload carries, plus the op's timestamp as `updatedAt`. */
+function changedFields(op: SyncOp, keys: string[]): Record<string, unknown> {
+  const p = (op.payload ?? {}) as Record<string, unknown>;
+  const set: Record<string, unknown> = { updatedAt: new Date(op.clientTs) };
+  for (const k of keys) if (k in p) set[k] = p[k];
+  return set;
+}
+
 export type Existing = { updatedAt: number } | null;
 
 export type SyncAdapter = {
@@ -51,8 +59,7 @@ const annotationAdapter: SyncAdapter = {
   },
   async update(db, userId, op) {
     const p = (op.payload ?? {}) as Record<string, unknown>;
-    const set: Record<string, unknown> = { updatedAt: new Date(op.clientTs) };
-    for (const k of [
+    const set = changedFields(op, [
       "bookId",
       "type",
       "locator",
@@ -63,9 +70,7 @@ const annotationAdapter: SyncAdapter = {
       "visibility",
       "containsSpoilers",
       "isPinned",
-    ]) {
-      if (k in p) set[k] = p[k];
-    }
+    ]);
     if ("selectedText" in p) {
       set.normalizedText = p.selectedText ? normalizeText(p.selectedText as string) : null;
     }
@@ -214,11 +219,14 @@ const vocabularyAdapter: SyncAdapter = {
     });
   },
   async update(db, userId, op) {
-    const p = (op.payload ?? {}) as Record<string, unknown>;
-    const set: Record<string, unknown> = { updatedAt: new Date(op.clientTs) };
-    for (const k of ["bookId", "word", "definition", "contextSentence", "aiContext", "mastered"]) {
-      if (k in p) set[k] = p[k];
-    }
+    const set = changedFields(op, [
+      "bookId",
+      "word",
+      "definition",
+      "contextSentence",
+      "aiContext",
+      "mastered",
+    ]);
     await db
       .update(vocabulary)
       .set(set)
@@ -276,11 +284,8 @@ const diaryAdapter: SyncAdapter = {
   },
   async update(db, userId, op) {
     const p = (op.payload ?? {}) as Record<string, unknown>;
-    const set: Record<string, unknown> = { updatedAt: new Date(op.clientTs) };
+    const set = changedFields(op, ["ratingHalf", "review", "containsSpoilers", "visibility"]);
     if ("logDate" in p) set.logDate = toDate(p.logDate as number | null);
-    for (const k of ["ratingHalf", "review", "containsSpoilers", "visibility"]) {
-      if (k in p) set[k] = p[k];
-    }
     await db
       .update(diaryEntries)
       .set(set)

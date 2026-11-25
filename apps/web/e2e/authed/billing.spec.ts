@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectNoSeriousViolations } from "../helpers";
 
 // The Plus offer on /settings, driven through the visible UI with the real login fixture. The
 // e2e account is free tier. Plus is offered only once it can be bought (the Stripe settings are
@@ -19,12 +19,6 @@ test.describe("Plus offer (signed in, free tier)", () => {
     }
     await upgrade.click();
     await expect(page.getByRole("dialog", { name: /foxing plus/i })).toBeVisible();
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      .analyze();
-    const serious = results.violations.filter(
-      (v) => v.impact === "serious" || v.impact === "critical",
-    );
-    expect(serious, JSON.stringify(serious.map((v) => v.id))).toEqual([]);
+    await expectNoSeriousViolations(page);
   });
 });

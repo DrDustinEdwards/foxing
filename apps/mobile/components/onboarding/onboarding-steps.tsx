@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { View, Text, Pressable, TextInput, Image, ActivityIndicator } from "react-native";
 import { Screen } from "@/components/ui/screen";
+import { StepHint } from "@/components/ui/form-field";
 import { Check, BookOpen } from "phosphor-react-native";
 import type { BookCard } from "@foxing/types";
 import { Colors, useColors } from "@/constants/colors";
@@ -77,7 +78,7 @@ export function TasteStep({
   return (
     <View>
       <Heading>What do you love to read?</Heading>
-      <Sub>Pick at least two so we can tailor your feed.</Sub>
+      <StepHint>Pick at least two so we can tailor your feed.</StepHint>
       <View className="flex-row flex-wrap" style={{ gap: 10 }}>
         {options.map((g) => {
           const active = genres.has(g);
@@ -120,7 +121,7 @@ export function TasteStep({
 
       <View style={{ marginTop: 24 }}>
         <Heading>How many books do you want to read this year?</Heading>
-        <Sub>Pick a number between 1 and 200. You can change it later.</Sub>
+        <StepHint>Pick a number between 1 and 200. You can change it later.</StepHint>
         <View className="flex-row items-center" style={{ gap: 8 }}>
           <Text style={{ fontFamily: Fonts.body, fontSize: 15, color: colors.textSecondary }}>
             I want to read
@@ -241,7 +242,7 @@ export function FirstBookStep({
   return (
     <View>
       <Heading>Start with a great book</Heading>
-      <Sub>Pick any that catch your eye, we'll add them to your Want to Read shelf.</Sub>
+      <StepHint>Pick any that catch your eye, we'll add them to your Want to Read shelf.</StepHint>
       {loading ? (
         <ActivityIndicator color={colors.brandUi} />
       ) : books.length === 0 ? (
@@ -343,23 +344,6 @@ function Heading({ children }: { children: React.ReactNode }) {
         fontSize: 24,
         color: colors.textPrimary,
         marginBottom: 6,
-      }}
-    >
-      {children}
-    </Text>
-  );
-}
-
-function Sub({ children }: { children: React.ReactNode }) {
-  const colors = useColors();
-  return (
-    <Text
-      style={{
-        fontFamily: Fonts.body,
-        fontSize: 14,
-        color: colors.textSecondary,
-        marginBottom: 20,
-        lineHeight: 20,
       }}
     >
       {children}

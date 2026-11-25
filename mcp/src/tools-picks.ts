@@ -9,6 +9,7 @@ import {
   confirmed,
   cursorSchema,
   guarded,
+  patchThenPost,
   idSchema,
   inputError,
   limitSchema,
@@ -259,26 +260,20 @@ export const picksTools: ToolDefinition[] = [
         }
         const preview = { pick_id: args.pick_id, fields: edits, publish: args.publish ?? null };
         return confirmed(env, "foxing_publish_club_pick", args, preview, async () => {
-          const applied: Record<string, unknown> = {};
-          if (Object.keys(edits).length > 0) {
-            const result = await callAdmin(env, "PATCH", `/picks/${id}`, { signal, body: edits });
-            if (!result.ok) return refusal(result);
-            applied.fields = Object.keys(edits);
-          }
-          if (args.publish !== undefined) {
-            const result = await callAdmin(env, "POST", `/picks/${id}/publish`, {
-              signal,
-              body: { on: args.publish },
-            });
-            if (!result.ok) {
-              const out = refusal(result);
-              if (applied.fields) {
-                out.content[0].text = `The edits were applied; the publish change was refused.\n${out.content[0].text}`;
-              }
-              return out;
-            }
-            applied.published = args.publish;
-          }
+          const done = await patchThenPost(
+            env,
+            signal,
+            { path: `/picks/${id}`, fields: edits },
+            {
+              path: `/picks/${id}/publish`,
+              body: args.publish === undefined ? null : { on: args.publish },
+              key: "published",
+              value: args.publish,
+              partial: "The edits were applied; the publish change was refused.",
+            },
+          );
+          if (!("applied" in done)) return done;
+          const { applied } = done;
           return ok({ pick_id: args.pick_id, applied });
         });
       }),

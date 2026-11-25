@@ -17,6 +17,7 @@ import {
   NavigationArrow,
   MapPin,
 } from "phosphor-react-native";
+import { IconTabButton } from "@/components/ui/underline-tabs";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { type BookmarkRow, useBookmarks, useReaderWrites } from "@/lib/reader-data";
@@ -124,21 +125,27 @@ export function GoToSheet({
             <View style={{ width: 36 }} />
           </View>
           <View className="flex-row px-2 mb-2">
-            <TabButton
+            <IconTabButton
               tab="contents"
               current={tab}
               setTab={setTab}
               icon={ListBullets}
               label="Contents"
             />
-            <TabButton
+            <IconTabButton
               tab="location"
               current={tab}
               setTab={setTab}
               icon={NavigationArrow}
               label="Location"
             />
-            <TabButton tab="places" current={tab} setTab={setTab} icon={MapPin} label="My Places" />
+            <IconTabButton
+              tab="places"
+              current={tab}
+              setTab={setTab}
+              icon={MapPin}
+              label="My Places"
+            />
           </View>
         </>
       }
@@ -419,46 +426,6 @@ function timeAgoShort(ts: number): string {
   if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
   if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
   return `${Math.floor(diff / 86_400_000)}d ago`;
-}
-
-function TabButton({
-  tab,
-  current,
-  setTab,
-  icon: Icon,
-  label,
-}: {
-  tab: Tab;
-  current: Tab;
-  setTab: (t: Tab) => void;
-  icon: React.ComponentType<{ color: string; size: number }>;
-  label: string;
-}) {
-  const colors = useColors();
-  const active = tab === current;
-  return (
-    <Pressable
-      onPress={() => setTab(tab)}
-      className="flex-1 items-center py-2"
-      style={{
-        borderBottomWidth: 2,
-        borderBottomColor: active ? colors.borderInteractive : colors.borderSubtle,
-      }}
-    >
-      <View className="flex-row items-center gap-1">
-        <Icon color={active ? colors.brandText : colors.textTertiary} size={14} />
-        <Text
-          style={{
-            fontFamily: Fonts.uiMedium,
-            fontSize: 12,
-            color: active ? colors.brandText : colors.textTertiary,
-          }}
-        >
-          {label}
-        </Text>
-      </View>
-    </Pressable>
-  );
 }
 
 function EmptyText({ children }: { children: React.ReactNode }) {

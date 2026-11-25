@@ -5,9 +5,9 @@ import { View, Text, TextInput, Pressable, Image, ActivityIndicator, Switch } fr
 import { X as XIcon, Check, BookOpen } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
-import { inputStyle } from "@/components/ui/form-field";
+import { FieldLabel, StepHint, inputStyle } from "@/components/ui/form-field";
 
-export type ClubPace = "chill" | "steady" | "fast";
+type ClubPace = "chill" | "steady" | "fast";
 
 const PACE_OPTIONS: Array<{ id: ClubPace; label: string; subtitle: string }> = [
   { id: "chill", label: "Chill", subtitle: "1 chapter/week" },
@@ -42,7 +42,7 @@ export function BasicsStep({
     <View>
       <StepTitle>The basics</StepTitle>
 
-      <Label>Name</Label>
+      <FieldLabel marginTop={16}>Name</FieldLabel>
       <TextInput
         value={draft.name}
         onChangeText={(t) => setDraft({ ...draft, name: t })}
@@ -52,7 +52,7 @@ export function BasicsStep({
         style={inputStyle(colors)}
       />
 
-      <Label>Description (optional)</Label>
+      <FieldLabel marginTop={16}>Description (optional)</FieldLabel>
       <TextInput
         value={draft.description}
         onChangeText={(t) => setDraft({ ...draft, description: t })}
@@ -299,42 +299,6 @@ function StepTitle({ children }: { children: React.ReactNode }) {
         fontSize: 22,
         color: colors.textPrimary,
         marginBottom: 4,
-      }}
-    >
-      {children}
-    </Text>
-  );
-}
-
-function StepHint({ children }: { children: React.ReactNode }) {
-  const colors = useColors();
-  return (
-    <Text
-      style={{
-        fontFamily: Fonts.body,
-        fontSize: 14,
-        color: colors.textSecondary,
-        marginBottom: 20,
-        lineHeight: 20,
-      }}
-    >
-      {children}
-    </Text>
-  );
-}
-
-function Label({ children }: { children: React.ReactNode }) {
-  const colors = useColors();
-  return (
-    <Text
-      style={{
-        fontFamily: Fonts.uiMedium,
-        fontSize: 12,
-        color: colors.textTertiary,
-        marginTop: 16,
-        marginBottom: 6,
-        textTransform: "uppercase",
-        letterSpacing: 0.6,
       }}
     >
       {children}

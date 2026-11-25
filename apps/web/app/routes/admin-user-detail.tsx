@@ -1,4 +1,4 @@
-import { adminRepo, createDb } from "@foxing/core";
+import { adminRepo } from "@foxing/core";
 import { useState } from "react";
 import { useNavigate, useRevalidator } from "react-router";
 import { Link } from "capsomer/react/link";
@@ -11,15 +11,12 @@ import {
   useAdminAction,
 } from "~/components/admin/admin-form";
 import { SuspendButton, useRoleChange } from "~/components/admin/confirm-change";
-import { cloudflareContext } from "~/context";
-import { requireAdmin } from "~/lib/admin.server";
+import { adminLoaderBase } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-user-detail";
 import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
-  const { env } = context.get(cloudflareContext);
-  await requireAdmin(env, request);
-  const db = createDb(env.DB);
+  const { env, db } = await adminLoaderBase(context, request);
   const user = await adminRepo.getUserDetail(db, params.id, env);
   if (!user) throw new Response("Not found", { status: 404 });
   const stats = await adminRepo.getUserActivityStats(db, params.id);

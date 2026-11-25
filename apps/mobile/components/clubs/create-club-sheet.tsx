@@ -2,6 +2,7 @@ import { useCreateClub } from "@foxing/client";
 import { useCallback, useEffect, useState } from "react";
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { X as XIcon, CaretLeft, CaretRight } from "phosphor-react-native";
+import { SheetError } from "@/components/ui/form-field";
 import { SheetScaffold } from "@/components/ui/sheet-scaffold";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
@@ -153,18 +154,7 @@ export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheet
       ) : (
         <InviteStep club={created} />
       )}
-      {error ? (
-        <View
-          style={{
-            marginTop: 16,
-            padding: 12,
-            borderRadius: 12,
-            backgroundColor: colors.errorBg,
-          }}
-        >
-          <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.error }}>{error}</Text>
-        </View>
-      ) : null}
+      {error ? <SheetError message={error} /> : null}
     </SheetScaffold>
   );
 }

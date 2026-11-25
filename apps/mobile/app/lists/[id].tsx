@@ -27,6 +27,7 @@ import { Fonts } from "@/constants/fonts";
 import { ListLikeButton } from "@/components/lists/list-like-button";
 import { BackHeader } from "@/components/ui/back-header";
 import { Screen } from "@/components/ui/screen";
+import { ListFormFields } from "@/components/lists/list-form-fields";
 
 export default function ListDetailScreen() {
   const colors = useColors();
@@ -399,64 +400,15 @@ export default function ListDetailScreen() {
             </Pressable>
           </BackHeader>
           <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-            <TextInput
-              value={editTitle}
-              onChangeText={setEditTitle}
-              placeholder="Title"
-              placeholderTextColor={colors.textTertiary}
-              maxLength={80}
-              style={{
-                fontFamily: Fonts.uiMedium,
-                fontSize: 16,
-                color: colors.textPrimary,
-                backgroundColor: colors.bgSurface,
-                borderColor: colors.borderSubtle,
-                borderWidth: 1,
-                borderRadius: 10,
-                paddingHorizontal: 12,
-                paddingVertical: 12,
-              }}
+            <ListFormFields
+              title={editTitle}
+              onTitleChange={setEditTitle}
+              description={editDescription}
+              onDescriptionChange={setEditDescription}
+              descriptionPlaceholder="Description"
+              isPublic={editPublic}
+              onTogglePublic={() => setEditPublic((v) => !v)}
             />
-            <TextInput
-              value={editDescription}
-              onChangeText={setEditDescription}
-              placeholder="Description"
-              placeholderTextColor={colors.textTertiary}
-              multiline
-              maxLength={500}
-              style={{
-                fontFamily: Fonts.body,
-                fontSize: 14,
-                color: colors.textPrimary,
-                backgroundColor: colors.bgSurface,
-                borderColor: colors.borderSubtle,
-                borderWidth: 1,
-                borderRadius: 10,
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-                minHeight: 80,
-                textAlignVertical: "top",
-              }}
-            />
-            <Pressable
-              onPress={() => setEditPublic((v) => !v)}
-              className="flex-row items-center gap-3 p-3 rounded-xl border border-border-subtle-light dark:border-border-subtle-dark"
-            >
-              {editPublic ? (
-                <Eye color={colors.info} size={18} />
-              ) : (
-                <EyeSlash color={colors.textTertiary} size={18} />
-              )}
-              <Text
-                style={{
-                  fontFamily: Fonts.body,
-                  fontSize: 14,
-                  color: colors.textPrimary,
-                }}
-              >
-                {editPublic ? "Public list" : "Private to you"}
-              </Text>
-            </Pressable>
           </ScrollView>
         </Screen>
       </Modal>

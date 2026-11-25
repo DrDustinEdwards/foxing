@@ -11,13 +11,7 @@ export async function createPoll(
   db: Db,
   actor: EventActor,
   clubId: string,
-  input: {
-    title: string;
-    description?: string;
-    pollType?: string;
-    options: { id: string; label: string; bookId?: string }[];
-    closesAt?: number;
-  },
+  input: clubsRepo.NewClubPoll,
 ): Promise<clubsRepo.ClubPoll> {
   await requireActive(db, clubId, actor.userId);
   const club = await requireClub(db, clubId);

@@ -28,21 +28,7 @@ export function SleepTimerSheet({ visible, active, onPick, onClose }: Props) {
       onClose={onClose}
       variant="bottom"
       scroll={false}
-      header={
-        <Text
-          style={{
-            fontFamily: Fonts.uiMedium,
-            fontSize: 12,
-            color: colors.textTertiary,
-            textTransform: "uppercase",
-            letterSpacing: 0.6,
-            paddingHorizontal: 20,
-            marginBottom: 8,
-          }}
-        >
-          Sleep timer
-        </Text>
-      }
+      title="Sleep timer"
     >
       <View style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
         <View className="flex-row flex-wrap" style={{ gap: 8 }}>

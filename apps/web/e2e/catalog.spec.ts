@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectNoSeriousViolations } from "./helpers";
 
 test.describe("public catalog flows", () => {
   test("browse -> filter -> open a book page", async ({ page }) => {
@@ -43,24 +43,12 @@ test.describe("public catalog flows", () => {
     await firstBook.click();
     await expect(page.locator("h1")).toBeVisible();
 
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      .analyze();
-    const serious = results.violations.filter(
-      (v) => v.impact === "serious" || v.impact === "critical",
-    );
-    expect(serious, JSON.stringify(serious.map((v) => v.id))).toEqual([]);
+    await expectNoSeriousViolations(page);
   });
 
   test("browse page has no serious accessibility violations (WCAG AA)", async ({ page }) => {
     await page.goto("/books");
     await expect(page.getByRole("heading", { name: /browse the books/i })).toBeVisible();
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      .analyze();
-    const serious = results.violations.filter(
-      (v) => v.impact === "serious" || v.impact === "critical",
-    );
-    expect(serious, JSON.stringify(serious.map((v) => v.id))).toEqual([]);
+    await expectNoSeriousViolations(page);
   });
 });

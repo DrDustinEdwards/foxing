@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { failApiWrite } from "../helpers";
 
 // Signed-in library writes, driven through ONLY the visible controls with a REAL
 // session (auth.setup.ts signed in through the form). This is the coverage the
@@ -36,15 +37,7 @@ test.describe("library writes (signed in)", () => {
   });
 
   test("a failed status write is surfaced, not silently swallowed", async ({ page }) => {
-    await page.route(/\/api\/v1\/library\//, (route) =>
-      route.request().method() === "PUT"
-        ? route.fulfill({
-            status: 500,
-            contentType: "application/json",
-            body: JSON.stringify({ status: 500, code: "server_error", detail: "boom" }),
-          })
-        : route.continue(),
-    );
+    await failApiWrite(page, /\/api\/v1\/library\//, "PUT");
 
     await page.goto(`/books/${slug}`, { waitUntil: "networkidle" });
     const control = page.getByRole("combobox", { name: /reading status/i });
