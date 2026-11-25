@@ -4,13 +4,6 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { seedUser, testApi } from "./test-api";
 
-// Companion route: API-contract layer only (status codes, SSE stream shape), tested
-// through a forged x-test-user session -- the same accepted pattern as
-// api.integration.test.ts. This proves the ROUTE's gating and wiring, not that the
-// product works end to end; it never asserts D1 rows through the forged session.
-// Repository behavior (actual D1 read/write) is tested separately below by calling
-// companionRepo functions directly, which is not a forged session.
-
 function stubCaller(text = "Hello, reader."): companion.CompanionCaller {
   return async function* stub() {
     yield { type: "text", delta: text };
@@ -136,7 +129,7 @@ describe("companion route (forged x-test-user session, API-contract layer)", () 
     expect(text).toContain("event: done");
   });
 
-  it("reserves quota before the model call: parallel requests cannot all pass the cap, and a failed reply still counts", async () => {
+  it("reserves quota before the model call: parallel requests cannot all pass the cap, and a failed reply still counts and surfaces as an SSE error event", async () => {
     const bookId = await seedBook();
     await seedUser("u_over", "plus");
     const usage = () =>
@@ -152,7 +145,8 @@ describe("companion route (forged x-test-user session, API-contract layer)", () 
       bookId,
       message: "hi",
     });
-    await failed.text();
+    expect(failed.status).toBe(200);
+    expect(await failed.text()).toContain("event: error");
     const afterFailure = await usage();
     expect(afterFailure.requests).toBe(1);
     expect(afterFailure.costCents).toBeGreaterThan(0);
@@ -179,24 +173,11 @@ describe("companion route (forged x-test-user session, API-contract layer)", () 
     expect((await usage()).requests).toBe(2);
   });
 
-  it("surfaces a stream failure as a visible SSE error event, not a silent drop", async () => {
-    const bookId = await seedBook();
-    await seedUser("u_err", "plus");
-    const res = await call(apiWith(throwingCaller()), "u_err", {
-      action: "chat",
-      bookId,
-      message: "hi",
-    });
-    expect(res.status).toBe(200); // headers already sent before the model call failed
-    const text = await res.text();
-    expect(text).toContain("event: error");
-  });
-
-  it("rejects an unknown or cached-only action name at the validation boundary", async () => {
+  it("rejects a cached-only action name at the validation boundary", async () => {
     const bookId = await seedBook();
     await seedUser("u_val", "plus");
     const res = await call(apiWith(stubCaller()), "u_val", {
-      action: "book_description", // a free-cached action, never accepted here
+      action: "book_description",
       bookId,
     });
     expect(res.status).toBe(422);

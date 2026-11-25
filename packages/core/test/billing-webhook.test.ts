@@ -8,12 +8,9 @@ import {
 } from "../src/billing/webhook";
 
 describe("tierForStatus", () => {
-  it("is plus while the subscription is active or in its trial", () => {
+  it("is plus while active or in trial, free for every lapsed or dunning status", () => {
     expect(tierForStatus("active")).toBe("plus");
     expect(tierForStatus("trialing")).toBe("plus");
-  });
-
-  it("is free for every lapsed / dunning status", () => {
     for (const status of ["canceled", "unpaid", "incomplete_expired", "past_due", "paused"]) {
       expect(tierForStatus(status)).toBe("free");
     }
@@ -21,13 +18,16 @@ describe("tierForStatus", () => {
 });
 
 describe("interpretStripeEvent", () => {
-  it("ignores checkout.session.completed missing the user reference", () => {
-    const intent = interpretStripeEvent({
+  it("ignores a checkout missing the user reference and unrelated events", () => {
+    const checkout = interpretStripeEvent({
       id: "evt_2",
       type: "checkout.session.completed",
       object: { customer: "cus_1" },
     });
-    expect(intent.op).toBe("ignore");
+    expect(checkout.op).toBe("ignore");
+    expect(interpretStripeEvent({ id: "evt_7", type: "customer.created", object: {} }).op).toBe(
+      "ignore",
+    );
   });
 
   it("syncs plus from an active subscription and free from a lapsed one", () => {
@@ -73,12 +73,6 @@ describe("interpretStripeEvent", () => {
       object: { customer: "cus_1" },
     });
     expect(intent).toEqual({ op: "status", customerId: "cus_1", status: "past_due" });
-  });
-
-  it("ignores unrelated events", () => {
-    expect(interpretStripeEvent({ id: "evt_7", type: "customer.created", object: {} }).op).toBe(
-      "ignore",
-    );
   });
 });
 

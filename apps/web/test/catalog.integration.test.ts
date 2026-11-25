@@ -3,9 +3,6 @@ import { catalogRepo, createDb, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
-// Catalog reads against a real local D1 (miniflare), so the FTS5 triggers and the
-// trigram-OR fuzzy fallback are exercised for real, not mocked.
-
 const db = () => createDb(env.DB);
 
 async function seed() {
@@ -39,7 +36,6 @@ async function seed() {
       wordCount: 122000,
     },
     {
-      // Community book: must never surface in browse or search.
       slug: "a-modern-community-title",
       title: "A Modern Community Title",
       author: "Some Author",
@@ -50,7 +46,6 @@ async function seed() {
       subjects: ["fiction"],
     },
   ]);
-  // Award only the (cover-bearing) Karamazov, so the starter set has one true row.
   const [karamazov] = await d
     .select({ id: schema.books.id })
     .from(schema.books)
@@ -88,15 +83,12 @@ describe("catalog search", () => {
     expect(res.books).toHaveLength(0);
   });
 
-  it("narrows results by the era filter without losing the FTS match", async () => {
+  it("narrows results by the era and genre filters without losing the FTS match", async () => {
     const inEra = await catalogRepo.searchCatalog(db(), "pride", { era: "1800-1849" });
     expect(inEra.books.map((b) => b.slug)).toEqual(["pride-and-prejudice-austen"]);
     const outOfEra = await catalogRepo.searchCatalog(db(), "pride", { era: "pre-1800" });
     expect(outOfEra.books).toHaveLength(0);
     expect(outOfEra.total).toBe(0);
-  });
-
-  it("narrows results by the genre (subject) filter", async () => {
     const romance = await catalogRepo.searchCatalog(db(), "pride", { subject: "romance" });
     expect(romance.books.map((b) => b.slug)).toEqual(["pride-and-prejudice-austen"]);
     const philosophy = await catalogRepo.searchCatalog(db(), "pride", { subject: "philosophy" });
@@ -122,7 +114,6 @@ describe("author search + starter set", () => {
 
   it("returns award-winning, cover-bearing catalog books as the starter set", async () => {
     const starters = await catalogRepo.listStarterBooks(db(), 6);
-    // Only Karamazov has both a cover and an award in the seed; Pride has neither.
     expect(starters.map((b) => b.slug)).toEqual(["the-brothers-karamazov-dostoyevsky"]);
   });
 });
@@ -157,7 +148,7 @@ describe("today's pick (botm -> staff pick fallback)", () => {
     await seed();
   });
 
-  it("returns null when neither an published BOTM nor a staff pick exists", async () => {
+  it("returns null when neither a published BOTM nor a staff pick exists", async () => {
     expect(await catalogRepo.getTodaysPick(db())).toBeNull();
   });
 

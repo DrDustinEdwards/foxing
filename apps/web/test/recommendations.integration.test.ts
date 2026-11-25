@@ -5,14 +5,8 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { seedUser } from "./test-api";
 
-// getRecommendations end to end against local D1 (real migrations) + the real miniflare
-// KV. The AI tier is exercised with a stubbed caller (no network): one that returns a
-// valid selection (personalised) and one that fails, as the real caller does on a reply
-// that did not finish or did not parse (silent fallback to the data ranking). Free/zero-history and with-history both return a full data page.
-
 const db = () => createDb(env.DB);
 
-// A caller that answers `value` as the parsed structured reply. No network.
 function stubCaller(value: unknown): StructuredCaller {
   const none = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cacheWrite1h: 0 };
   return async () => ({ value, usage: { ...none, input: 20, output: 40, long: { ...none } } });
@@ -63,7 +57,6 @@ async function clearAll() {
 describe("getRecommendations - data tiers (no AI)", () => {
   beforeEach(async () => {
     await clearAll();
-    // A small catalog: a spread of ratings, one Mary Shelley extra, one non-readable book.
     for (let i = 0; i < 12; i++) {
       await seedBook({ id: `b${i}`, rating: 2 + (i % 4), ratingCount: 5 + i });
     }
@@ -73,8 +66,8 @@ describe("getRecommendations - data tiers (no AI)", () => {
       subjects: ["Gothic"],
       rating: 3,
     });
-    await seedBook({ id: "no-epub", epub: false }); // must never be a candidate
-    await seedBook({ id: "community", sourceType: "community" }); // must never be a candidate
+    await seedBook({ id: "no-epub", epub: false });
+    await seedBook({ id: "community", sourceType: "community" });
   });
 
   it("returns a full data page for a zero-history free reader (no AI, no crash)", async () => {
@@ -84,11 +77,9 @@ describe("getRecommendations - data tiers (no AI)", () => {
     expect(set.isPlus).toBe(false);
     expect(set.aiPersonalized).toBe(false);
     expect(set.recommendations.length).toBeGreaterThan(0);
-    // Non-readable rows are excluded from the candidate pool entirely.
     const ids = set.recommendations.map((r) => r.bookId);
     expect(ids).not.toContain("no-epub");
     expect(ids).not.toContain("community");
-    // Every rec carries a reason string.
     expect(set.recommendations.every((r) => r.reason.length > 0)).toBe(true);
   });
 
@@ -108,8 +99,6 @@ describe("getRecommendations - data tiers (no AI)", () => {
 
   it("boosts a returning author from reading history with a 'More from' reason", async () => {
     await seedUser("hist", "free", { favoriteGenres: null });
-    // Finished a Mary Shelley book -> she becomes a favorite author. That finished book
-    // is owned (excluded); her *other* catalog book should surface with an author reason.
     await db().insert(schema.userBooks).values({
       id: "ub-fin",
       userId: "hist",
@@ -127,21 +116,15 @@ describe("getRecommendations - data tiers (no AI)", () => {
     const shelley = set.recommendations.find((r) => r.bookId === "shelley-extra");
     expect(shelley).toBeDefined();
     expect(shelley?.reason).toContain("Mary Shelley");
-    // The owned finished book never appears.
     expect(set.recommendations.map((r) => r.bookId)).not.toContain("b0");
   });
 });
 
 describe("getRecommendations - null genres + large pool (D1 param-cap regression)", () => {
-  // The live 500 was listAwardWinnerIds sending a 400-id inArray, which D1 rejects at 100
-  // bound vars ("too many SQL variables"). A zero-history reader's pool is exactly the
-  // top-rated books, so it always hit the cap. listAwardWinnerIds now chunks the IN list.
-  // NOTE: miniflare's local D1 (better-sqlite3) does NOT enforce the 100-var cap, so this
-  // does not reproduce the original throw; it seeds enough books + awards to drive the
-  // multi-chunk path and prove chunk results dedupe correctly for a NULL-genres user.
+  // Local D1 does not enforce the 100-bound-variable cap, so this cannot reproduce the original
+  // "too many SQL variables" throw; it drives the multi-chunk award lookup and checks the chunks dedupe.
   beforeEach(async () => {
     await clearAll();
-    // 250 readable catalog books -> the 400-cap pool spans several 90-id chunks.
     for (let i = 0; i < 250; i++) {
       await seedBook({
         id: `p${String(i).padStart(3, "0")}`,
@@ -149,7 +132,6 @@ describe("getRecommendations - null genres + large pool (D1 param-cap regression
         ratingCount: 1 + i,
       });
     }
-    // Awards scattered across the id range so hits land in more than one chunk.
     for (const i of [5, 95, 140, 205, 245]) {
       await db()
         .insert(schema.bookAwards)
@@ -166,16 +148,13 @@ describe("getRecommendations - null genres + large pool (D1 param-cap regression
   });
 
   it("returns the full starter set for a NULL favorite_genres user and never throws", async () => {
-    // favorite_genres is explicitly NULL (not []), matching a brand-new profile.
     await seedUser("newbie", "free", { favoriteGenres: null });
     const set = await getRecommendations(db(), "newbie", { caller: null, kv: env.APP_KV });
 
     expect(set.isPlus).toBe(false);
     expect(set.aiPersonalized).toBe(false);
-    // A full page of starter recommendations, each with a reason.
     expect(set.recommendations.length).toBe(16);
     expect(set.recommendations.every((r) => r.reason.length > 0)).toBe(true);
-    // Award winners were resolved across chunk boundaries (dedupe + multi-chunk path).
     expect(set.recommendations.some((r) => r.reason.startsWith("Award winner"))).toBe(true);
   });
 });
@@ -186,7 +165,6 @@ describe("getRecommendations - AI tier (Plus, stubbed)", () => {
     for (let i = 0; i < 10; i++) {
       await seedBook({ id: `b${i}`, rating: 3 + (i % 2), ratingCount: 10 + i });
     }
-    // Clear any cache from a previous run so the stub actually gets called.
     await env.APP_KV.delete("recs:plus-ok");
     await env.APP_KV.delete("recs:plus-bad");
     await env.APP_KV.delete("recs-refresh:plus-ok");
@@ -209,7 +187,7 @@ describe("getRecommendations - AI tier (Plus, stubbed)", () => {
     expect(set.isPlus).toBe(true);
     expect(set.aiPersonalized).toBe(true);
     expect(set.recommendations[0].reason).toBe("AI reason 0");
-    // W1: the flagged reason never reaches the reader; the book keeps the data ranking's own reason.
+    // A reason that fails the prose check never reaches the reader.
     const second = set.recommendations.find((r) => r.bookId === "b1");
     expect(second?.reason).toBeTruthy();
     expect(second?.reason).not.toContain("language model");

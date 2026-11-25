@@ -21,10 +21,8 @@ function mailEnv(secret: string) {
   return { sent, testEnv };
 }
 
-// REGRESSION (2026-10-30): the app's code request answered 404, since the family sign-in turns
-// the email OTP send endpoint off unless the site asks for `appCode`. This is the app's flow as
-// apps/mobile/app/(auth)/login.tsx makes it (emailOtp.sendVerificationOtp with type sign-in,
-// then signIn.emailOtp), through the auth handler, with the mail caught instead of sent.
+// The family sign-in turns the email OTP send endpoint off unless the site asks for `appCode`, which
+// once made the app's code request answer 404.
 describe("the app's sign-in code", () => {
   it("is mailed on request and signs in", async () => {
     const { sent, testEnv } = mailEnv("test-secret-value-for-app-code-only");
@@ -57,10 +55,7 @@ describe("the app's sign-in code", () => {
   });
 });
 
-// REGRESSION (2026-11-11): signed-in pages sent a signed-out reader to /login?redirect=..., which
-// /login never read, so a reader who signed in from a shelf, club or book landed on /me. This walks
-// the way back: the protected page, /login, the emailed code, the passkey offer's "Not now", and
-// on to the page they asked for.
+// /login once ignored the redirect a protected page sent, landing readers on /me after sign-in.
 const ORIGIN = "https://foxing.app";
 
 async function thrown(run: () => unknown): Promise<Response> {
@@ -88,16 +83,13 @@ describe("signing in from a protected page", () => {
     const args = (request: Request) => ({ request, context, params: {} }) as never;
     const asked = "/library?shelf=read";
 
-    // The signed-out reader opens their library and is sent to sign in.
     const gate = await thrown(() => library.loader(args(new Request(`${ORIGIN}${asked}`))));
     const signInPage = gate.headers.get("Location") ?? "";
     expect(new URL(signInPage, ORIGIN).pathname).toBe("/login");
 
-    // /login carries the page.
     const { next } = login.loader(args(new Request(new URL(signInPage, ORIGIN))));
     expect(next).toBe(asked);
 
-    // The reader signs in with an emailed code.
     const auth = await getAuth(testEnv);
     const call = (path: string, body: object, cookie = "") =>
       auth.handler(
@@ -116,7 +108,6 @@ describe("signing in from a protected page", () => {
     expect(signedIn.status).toBe(200);
     const cookie = cookiesFrom(signedIn);
 
-    // The passkey offer's "Not now" goes on to the page they asked for.
     const offer = new Request(`${ORIGIN}/passkey?next=${encodeURIComponent(next ?? "")}`, {
       method: "POST",
       headers: { Origin: ORIGIN, Cookie: cookie, "cf-connecting-ip": "203.0.113.7" },

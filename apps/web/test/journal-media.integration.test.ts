@@ -1,8 +1,6 @@
-// The Journal's media library through the real Worker entry (workers/app.ts): Carrel's site API
-// with the key, and the /media/journal/* route that serves what it stores. Real D1 with the real
-// migrations and real local R2. Cloudflare Images has no local emulation and Anthropic is not called from a test, so both
-// are stand-ins of their recorded shape: the image stand-in measures by the size it is given and
-// appends what it was asked to do, so its output differs from its input.
+// The Journal's media library through the real Worker entry: Carrel's site API and the /media route that serves
+// what it stores. Images has no local emulation, so its stand-in measures by the size given and appends the steps
+// asked, so its output differs from its input.
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
 import type { ErrorBody, MediaDetail, MediaItem, WriteResult } from "@dustinedwards/site-api";
 import { adminRepo, createDb, schema } from "@foxing/core";
@@ -99,7 +97,6 @@ function png(seed: string): Uint8Array<ArrayBuffer> {
 }
 
 async function upload(seed: string, overrides: Record<string, unknown> = {}, extra = "") {
-  // site-api 0.19+ refuses an upload with neither alt nor decorative.
   const query = new URLSearchParams({
     filename: `${seed}.png`,
     changeId: `chg-${seed}`,
@@ -136,7 +133,7 @@ describe("Journal media: upload, serve, use and delete", () => {
     const served = await fetchWorker(`/media/${item.id}`);
     expect(served.status).toBe(200);
     expect(served.headers.get("content-type")).toBe("image/png");
-    // Carrel shows the library's thumbnails from another origin.
+    // Carrel shows thumbnails from another origin.
     expect(served.headers.get("cross-origin-resource-policy")).toBe("cross-origin");
     expect(new Uint8Array(await served.arrayBuffer())).toEqual(png("reading-room"));
     const again = await fetchWorker(`/media/${item.id}`, {
@@ -144,7 +141,6 @@ describe("Journal media: upload, serve, use and delete", () => {
     });
     expect(again.status).toBe(304);
 
-    // The cover from the library, through the same save the admin rules check.
     const source = `---\ntitle: "On reading rooms"\nexcerpt: null\ncover_image_url: ${JSON.stringify(item.url)}\ncover_image_alt: "A reading room"\ntags: []\nfeatured: false\n---\n\nBody.`;
     const saved = await carrel("PUT", "/content/reading-rooms/draft", {
       source,
@@ -168,7 +164,6 @@ describe("Journal media: upload, serve, use and delete", () => {
     expect(deleted.status, await deleted.clone().text()).toBe(200);
     expect(await objectBytes(env.MEDIA, item.id)).toBeNull();
     expect((await fetchWorker(`/media/${item.id}`)).status).toBe(404);
-    // The last bytes are kept, so a delete can be undone by hand.
     const kept = (await env.BACKUPS.list({ prefix: `journal-media/replaced/${item.id}/` })).objects;
     expect(await objectBytes(env.BACKUPS, kept[0]?.key ?? "")).toEqual(png("reading-room"));
   });
@@ -239,7 +234,6 @@ describe("Journal media: bytes and their history", () => {
     });
     expect(turned.status, await turned.clone().text()).toBe(200);
     const after = await read<MediaItem & { asNewFile: boolean }>(turned);
-    // The point moved with the picture: a quarter turn clockwise.
     expect(after).toMatchObject({
       id: item.id,
       asNewFile: false,
@@ -262,7 +256,6 @@ describe("Journal media: bytes and their history", () => {
     });
     expect(reverted.status, await reverted.clone().text()).toBe(200);
     expect(await objectBytes(env.MEDIA, item.id)).toEqual(png("turn-case"));
-    // Other bytes, so the point is cleared.
     expect((await read<MediaItem>(reverted)).focus).toBeNull();
   });
 

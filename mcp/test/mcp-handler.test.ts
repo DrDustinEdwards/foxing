@@ -1,8 +1,3 @@
-/**
- * The MCP request layer end to end: JSON-RPC into handleMcp, through the real
- * server and tool registration, out to the fake foxing Worker, and back. Driven
- * at the 2025-11-25 era, the one measured clients open at today.
- */
 import assert from "node:assert/strict";
 import { beforeEach, describe, test } from "node:test";
 
@@ -27,7 +22,7 @@ import {
 
 const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
 const ERA = "2025-11-25";
-/** The read grant's tools/list hash; the daily check pins the same (live/areas.json, --tools-hash). Update after reviewing a tool change. */
+/** The read grant's tools/list hash; the daily check pins the same. Update after reviewing a tool change. */
 const READ_LIST_HASH = "4494b19d0efbadb2e2eb6c6929b487ba40ce662f0bc8753f73108631ebbbd0d3";
 
 let foxing: FakeFoxing;
@@ -108,7 +103,6 @@ describe("handleMcp", () => {
     const message = await rpc("tools/call", { name: "foxing_get_health", arguments: {} });
     assert.equal(foxing.calls.length, 2);
     assert.equal(foxing.calls[0].url.pathname, "/api/v1/admin/stats");
-    // The stats carry readers' text (recent sign-ups), so the shared data notice rides beside them (S2).
     assert.deepEqual(message.result.structuredContent, {
       notice: OUTSIDE_DATA_NOTICE,
       ...stats,
@@ -127,7 +121,6 @@ describe("handleMcp", () => {
     assert.ok(listed.includes("foxing_get_health"));
     assert.ok(!listed.includes("foxing_edit_book") && !listed.includes("foxing_moderate_user"));
     assert.ok(listed.includes("foxing_check_catalog"));
-    // Every tool's scope is fixed, so the read grant's list is read-only throughout (the live check's T7).
     assert.ok(
       listed.includes("foxing_read_book_of_month") && !listed.includes("foxing_set_book_of_month"),
       listed.join(),
@@ -144,33 +137,18 @@ describe("handleMcp", () => {
     assert.equal(foxing.calls.length, 0);
   });
 
-  test("a schema violation fails before any request", async () => {
-    const message = await rpc("tools/call", {
-      name: "foxing_find_user",
-      arguments: { limit: 500 },
+  for (const [label, name, args, caller] of [
+    ["a schema violation", "foxing_find_user", { limit: 500 }, WRITER],
+    ["a dropped tool", "create_journal_post", {}, WRITER],
+    ["no caller", "foxing_get_health", {}, null],
+  ] as const) {
+    test(`${label} runs nothing and sends no request`, async () => {
+      const message = await rpc("tools/call", { name, arguments: args }, caller);
+      assert.ok(
+        message.error !== undefined || message.result?.isError === true,
+        JSON.stringify(message),
+      );
+      assert.equal(foxing.calls.length, 0);
     });
-    assert.equal(foxing.calls.length, 0);
-    assert.ok(
-      message.error !== undefined || message.result?.isError === true,
-      JSON.stringify(message),
-    );
-  });
-
-  test("a dropped tool does not exist", async () => {
-    const message = await rpc("tools/call", { name: "create_journal_post", arguments: {} });
-    assert.equal(foxing.calls.length, 0);
-    assert.ok(
-      message.error !== undefined || message.result?.isError === true,
-      JSON.stringify(message),
-    );
-  });
-
-  test("a request with no caller runs no tool", async () => {
-    const message = await rpc("tools/call", { name: "foxing_get_health", arguments: {} }, null);
-    assert.ok(
-      message.error !== undefined || message.result?.isError === true,
-      JSON.stringify(message),
-    );
-    assert.equal(foxing.calls.length, 0);
-  });
+  }
 });

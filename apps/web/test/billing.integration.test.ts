@@ -4,9 +4,6 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { testApi } from "./test-api";
 
-// Stub Stripe: no network, no keys. verifyWebhook returns whatever event the test
-// supplies; getSubscription reports an active trial so a checkout.completed link flips
-// the user to plus. This is the seam the Worker fills with the real client in prod.
 type BillingEventLite = Awaited<ReturnType<BillingClient["verifyWebhook"]>>;
 
 /** Customer ids the webhook asked for the current subscription of. */
@@ -50,6 +47,16 @@ function apiWith(billing: ReturnType<typeof stubBilling>) {
     resolveBilling: () => billing,
   });
 }
+
+const postWebhook = (api: ReturnType<typeof apiWith>) =>
+  api.fetch(
+    new Request("https://test.local/webhooks/stripe", {
+      method: "POST",
+      headers: { "stripe-signature": "test" },
+      body: "{}",
+    }),
+    env as never,
+  );
 
 async function seedProfile(id: string, values: Partial<typeof schema.profiles.$inferInsert> = {}) {
   const db = createDb(env.DB);
@@ -132,14 +139,7 @@ describe("billing API (web -> api -> core -> D1)", () => {
       object: { client_reference_id: "u_web", customer: "cus_1", subscription: "sub_1" },
     };
     const api = apiWith(stubBilling(event));
-    const res = await api.fetch(
-      new Request("https://test.local/webhooks/stripe", {
-        method: "POST",
-        headers: { "stripe-signature": "test" },
-        body: "{}",
-      }),
-      env as never,
-    );
+    const res = await postWebhook(api);
     expect(res.status).toBe(200);
     expect(await tierOf("u_web")).toBe("plus");
   });
@@ -152,21 +152,13 @@ describe("billing API (web -> api -> core -> D1)", () => {
       object: { client_reference_id: "u_idem", customer: "cus_2", subscription: "sub_2" },
     };
     const api = apiWith(stubBilling(event));
-    const post = () =>
-      api.fetch(
-        new Request("https://test.local/webhooks/stripe", {
-          method: "POST",
-          headers: { "stripe-signature": "test" },
-          body: "{}",
-        }),
-        env as never,
-      );
+    const post = () => postWebhook(api);
 
     const first = await post();
     expect(first.status).toBe(200);
     expect(await tierOf("u_idem")).toBe("plus");
 
-    // Simulate a state the duplicate must NOT re-apply: flip back to free, then replay.
+    // Flip back to free, so a re-applied replay would show.
     const db = createDb(env.DB);
     await db
       .update(schema.profiles)
@@ -176,7 +168,7 @@ describe("billing API (web -> api -> core -> D1)", () => {
     const second = await post();
     const body = (await second.json()) as { duplicate?: boolean };
     expect(body.duplicate).toBe(true);
-    expect(await tierOf("u_idem")).toBe("free"); // the replay was a no-op
+    expect(await tierOf("u_idem")).toBe("free");
   });
 
   it("a subscription.deleted webhook drops the tier to free", async () => {
@@ -186,16 +178,9 @@ describe("billing API (web -> api -> core -> D1)", () => {
       type: "customer.subscription.deleted",
       object: { customer: "cus_9", status: "active" },
     };
-    // The event says active (a late one); the customer's current state is no subscription.
+    // The event is a late one saying active; the customer's current state is no subscription.
     const api = apiWith(stubBilling(event, null));
-    const res = await api.fetch(
-      new Request("https://test.local/webhooks/stripe", {
-        method: "POST",
-        headers: { "stripe-signature": "test" },
-        body: "{}",
-      }),
-      env as never,
-    );
+    const res = await postWebhook(api);
     expect(res.status).toBe(200);
     expect(await tierOf("u_cancel")).toBe("free");
     expect(asked).toContain("cus_9");

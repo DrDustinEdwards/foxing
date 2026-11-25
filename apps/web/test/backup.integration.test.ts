@@ -7,14 +7,10 @@ import { CRON_TRIGGERS } from "../app/lib/cron-jobs";
 import { operatorTools } from "../app/lib/operator.server";
 import { healthResponse } from "@dustinedwards/site-runtime/health";
 
-// Real D1 (with the real migrations, FTS5 tables and triggers included) and real R2, in
-// Miniflare. One test per behavior: a good run, an emptied database and a stale run. The
-// credential-column check against the schema is d1-dump's own, on in every run here.
 const workerEnv = env as unknown as Env;
 const now = Date.now();
 
-// The cron's jobs marked backup, with the work the Worker gives them (workers/app.ts CRON_RUNS):
-// what Capsid Admin's back up now, run_job { backup: true }, runs.
+// The cron jobs marked backup, as run_job { backup: true } runs them.
 const BACKUP_RUNS: Record<string, (env: Env) => Promise<unknown>> = {
   backup: runBackup,
   "media-backup": runMediaBackup,
@@ -92,7 +88,6 @@ async function health(at?: Date) {
     ping: () => workerEnv.DB.prepare("SELECT 1").first(),
     backup: () => backupStatus(workerEnv, at),
     now: at,
-    // Each case reads the bucket afresh; the route holds a read for five minutes per isolate.
     backupTtlMs: 0,
   });
   return {
@@ -120,7 +115,6 @@ describe("nightly backup", () => {
       "earlier bytes",
     );
     await env.MEDIA.put("reader/sample-book/chapter.xhtml", "re-derivable from the EPUB");
-    // Through the operator API's run_job, the path the cron runs, recorded in cron_runs.
     const ran = (await operatorTools(workerEnv, backupJobs).run_job.run({ backup: true })) as {
       runs: { job: string; status: string }[];
     };
@@ -139,7 +133,6 @@ describe("nightly backup", () => {
       expect(written.some((k) => k.endsWith(`/${t}.json`))).toBe(false);
     }
 
-    // No credential value appears in any object, and the scan read every object written.
     let read = 0;
     for (const k of written) {
       const text = (await (await env.BACKUPS.get(k))?.text()) ?? "";
@@ -168,10 +161,8 @@ describe("nightly backup", () => {
         )
       )?.text(),
     ).toBe("earlier bytes");
-    // The EPUBs and their reader files are fetched again, never backed up.
     expect(written.some((k) => k.includes("reader/"))).toBe(false);
 
-    // Capsid's backup_status (the operator API) answers every files pass by its name.
     const answer = (await operatorTools(workerEnv, backupJobs).backup_status.run({})) as {
       files: Record<string, { age_hours: number }>;
     };
@@ -184,7 +175,7 @@ describe("nightly backup", () => {
       /left incomplete: .*every counted table dumped empty/,
     );
     const written = await keys();
-    expect(written.length).toBeGreaterThan(0); // the run's objects stay as evidence
+    expect(written.length).toBeGreaterThan(0);
     expect(written.some((k) => k.endsWith("/_complete.json"))).toBe(false);
     const { body } = await health();
     expect(body.backup.last_ok).toBeNull();

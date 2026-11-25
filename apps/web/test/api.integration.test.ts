@@ -4,12 +4,9 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { seedAuthUser, testApi } from "./test-api";
 
-// A stub session resolver: the Worker normally injects a Better Auth-backed one.
-// Here the test sets an x-test-user header to act as that user.
+// The test session resolver acts as the user named in the x-test-user header.
 const api = testApi();
 
-// The bare api app serves routes at the root (/me, /u/:username); the Worker mounts
-// it under /api/v1. Tests call it directly, so no prefix here.
 const call = (pathname: string, init?: RequestInit) =>
   api.fetch(new Request(`https://test.local${pathname}`, init), env as never);
 
@@ -44,7 +41,7 @@ describe("profiles API (web -> api -> core -> D1)", () => {
     expect(body.profile.username).toBe("roundtrip");
   });
 
-  it("onboards a user through the API contract (201)", async () => {
+  it("onboards a user (201) and rejects a duplicate username (409)", async () => {
     await seedAuthUser("u_ob");
     const res = await call("/me/onboard", {
       method: "POST",
@@ -52,27 +49,14 @@ describe("profiles API (web -> api -> core -> D1)", () => {
       body: JSON.stringify({ username: "onboarded" }),
     });
     expect(res.status).toBe(201);
-    // The profile.onboarded emission is a D1 side effect; it is verified at the core
-    // layer and by Fable's independent D1 check, not by asserting rows here.
-  });
 
-  it("rejects a duplicate username with 409", async () => {
-    await seedAuthUser("u_a");
-    await seedAuthUser("u_b");
-    const db = createDb(env.DB);
-    await db.insert(schema.profiles).values({
-      id: "u_a",
-      username: "taken",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    const res = await call("/me/onboard", {
+    await seedAuthUser("u_dup");
+    const dup = await call("/me/onboard", {
       method: "POST",
-      headers: { "x-test-user": "u_b", "content-type": "application/json" },
-      body: JSON.stringify({ username: "taken" }),
+      headers: { "x-test-user": "u_dup", "content-type": "application/json" },
+      body: JSON.stringify({ username: "onboarded" }),
     });
-    expect(res.status).toBe(409);
+    expect(dup.status).toBe(409);
   });
 
   it("persists visibility prefs through PATCH /me/visibility", async () => {
