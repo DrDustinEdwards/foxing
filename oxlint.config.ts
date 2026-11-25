@@ -4,7 +4,7 @@ import { base, react, node, ignorePatterns } from "@dustinedwards/devkit/oxlint"
 export default defineConfig({
   extends: [base, react],
   // devkit's ignore patterns (Oxlint does not carry ignorePatterns through extends), and apps/discord,
-  // which waits on Dustin (CLAUDE.md hard rule 9).
+  // which waits on Dustin (CLAUDE.md, Discord).
   ignorePatterns: [...ignorePatterns, "apps/discord/"],
   // Capsomer's NativeSelect renders a native <select>, so a label around it labels a control.
   settings: { "jsx-a11y": { components: { NativeSelect: "select" } } },

@@ -7,7 +7,7 @@ export default defineConfig({
     ...(format.ignorePatterns ?? []),
     // Generated SQL migrations and their drizzle-kit metadata, kept byte for byte.
     "packages/core/migrations/",
-    // Waits on Dustin (CLAUDE.md hard rule 9).
+    // Waits on Dustin (CLAUDE.md, Discord).
     "apps/discord/",
   ],
 });
