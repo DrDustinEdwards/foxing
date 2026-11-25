@@ -2,7 +2,7 @@ import { env } from "cloudflare:test";
 import { createDb, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { seedUser, testApi } from "./test-api";
+import { callApi, seedUser, testApi } from "./test-api";
 
 // The restoration pass: admin user-detail operator mutations and the
 // settings username change/availability endpoints. The
@@ -14,18 +14,8 @@ const api = testApi({
   checkAdminAccess: async (req) => req.headers.get("x-test-no-access") === null,
 });
 
-const call = (pathname: string, user: string | null, init?: RequestInit) =>
-  api.fetch(
-    new Request(`https://test.local${pathname}`, {
-      ...init,
-      headers: {
-        ...(init?.body ? { "Content-Type": "application/json" } : {}),
-        ...(user ? { "x-test-user": user } : {}),
-        ...Object.fromEntries(new Headers(init?.headers)),
-      },
-    }),
-    env as never,
-  );
+const call = (path: string, user: string, req?: Omit<NonNullable<Parameters<typeof callApi>[2]>, "user">) =>
+  callApi(api, path, { ...req, user });
 
 describe("admin user-detail operator mutations", () => {
   beforeEach(async () => {
@@ -42,7 +32,7 @@ describe("admin user-detail operator mutations", () => {
   it("sends a single-user notification", async () => {
     const res = await call("/admin/users/reader/notify", "admin", {
       method: "POST",
-      body: JSON.stringify({ title: "Heads up", body: "A note." }),
+      body: { title: "Heads up", body: "A note." },
     });
     expect(res.status).toBe(200);
     const db = createDb(env.DB);
@@ -67,7 +57,7 @@ describe("admin user-detail operator mutations", () => {
   it("refuses operator mutations from a non-admin", async () => {
     const res = await call("/admin/users/admin/tier", "reader", {
       method: "POST",
-      body: JSON.stringify({ tier: "plus" }),
+      body: { tier: "plus" },
     });
     expect(res.status).toBe(403);
   });
@@ -94,12 +84,12 @@ describe("settings username change", () => {
   it("changes the username, rejecting one already taken", async () => {
     const conflict = await call("/me/username", "mover", {
       method: "PATCH",
-      body: JSON.stringify({ username: "taken" }),
+      body: { username: "taken" },
     });
     expect(conflict.status).toBe(409);
     const ok = await call("/me/username", "mover", {
       method: "PATCH",
-      body: JSON.stringify({ username: "moved" }),
+      body: { username: "moved" },
     });
     expect(ok.status).toBe(200);
     const db = createDb(env.DB);

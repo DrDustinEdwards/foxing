@@ -2,7 +2,7 @@ import { env } from "cloudflare:test";
 import { createDb, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { seedUser, testApi } from "./test-api";
+import { callApi, seedUser, testApi } from "./test-api";
 
 // Personal surfaces. The goal-edit contract drives the API directly (x-test-user stands
 // in for the Better Auth session the Worker injects). The visible /diary, /goals, and
@@ -10,18 +10,8 @@ import { seedUser, testApi } from "./test-api";
 
 const api = testApi();
 
-const call = (pathname: string, user: string | null, init?: RequestInit) =>
-  api.fetch(
-    new Request(`https://test.local${pathname}`, {
-      ...init,
-      headers: {
-        ...(init?.body ? { "Content-Type": "application/json" } : {}),
-        ...(user ? { "x-test-user": user } : {}),
-        ...Object.fromEntries(new Headers(init?.headers)),
-      },
-    }),
-    env as never,
-  );
+const call = (path: string, user: string, req?: Omit<NonNullable<Parameters<typeof callApi>[2]>, "user">) =>
+  callApi(api, path, { ...req, user });
 
 describe("reading goal edit", () => {
   beforeEach(async () => {
@@ -35,14 +25,14 @@ describe("reading goal edit", () => {
   it("retargets a goal the caller owns and reflects it", async () => {
     const created = await call("/goals", "reader", {
       method: "POST",
-      body: JSON.stringify({ type: "books", target: 12, periodType: "year", year: 2026 }),
+      body: { type: "books", target: 12, periodType: "year", year: 2026 },
     });
     expect(created.status).toBe(201);
     const { goal } = (await created.json()) as { goal: { id: string } };
 
     const patched = await call(`/goals/${goal.id}`, "reader", {
       method: "PATCH",
-      body: JSON.stringify({ target: 24 }),
+      body: { target: 24 },
     });
     expect(patched.status).toBe(200);
 
@@ -58,13 +48,13 @@ describe("reading goal edit", () => {
     await seedUser("other");
     const created = await call("/goals", "other", {
       method: "POST",
-      body: JSON.stringify({ type: "books", target: 5, periodType: "year", year: 2026 }),
+      body: { type: "books", target: 5, periodType: "year", year: 2026 },
     });
     const { goal } = (await created.json()) as { goal: { id: string } };
 
     const res = await call(`/goals/${goal.id}`, "reader", {
       method: "PATCH",
-      body: JSON.stringify({ target: 99 }),
+      body: { target: 99 },
     });
     expect(res.status).toBe(404);
   });
