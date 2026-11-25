@@ -20,5 +20,11 @@
     "@vitejs/plugin-react": "4.7.0",
     "typescript": "7.0.2",
     "vite": "6.4.6"
+  },
+  "overrides": {
+    "@discord/embedded-app-sdk": {
+      "uuid": "^11.1.1",
+      "zod": "^4.6.6"
+    }
   }
 }

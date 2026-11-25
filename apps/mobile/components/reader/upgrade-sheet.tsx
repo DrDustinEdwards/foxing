@@ -4,7 +4,7 @@ import { SheetScaffold } from "@/components/ui/sheet-scaffold";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
-const PLUS_URL = "https://foxing.app/pricing";
+const PLUS_URL = "https://foxing.app/settings";
 
 interface UpgradeSheetProps {
   visible: boolean;

@@ -135,7 +135,7 @@ export function CompanionChat({
           ) : null}
           {companion.planRequired ? (
             <Pressable
-              onPress={() => void Linking.openURL("https://foxing.app/pricing")}
+              onPress={() => void Linking.openURL("https://foxing.app/settings")}
               accessibilityRole="link"
             >
               <Text
