@@ -355,8 +355,8 @@ describe("admin operator bearer", () => {
       .set({ isSuspended: true })
       .where(eq(schema.profiles.id, "admin"));
     await seedUser("admin3");
-    const read = (path: string, opts: Parameters<typeof operatorCall>[1]) =>
-      operatorCall(path, opts).then((r) => r.status);
+    const read = async (path: string, opts: Parameters<typeof operatorCall>[1]) =>
+      (await operatorCall(path, opts)).status;
     const t = OPERATOR_TOKEN;
     expect(await read("/admin/users", { token: "not-the-token", actor: "admin3" })).toBe(401);
     expect(await read("/admin/users", { token: t })).toBe(401);
