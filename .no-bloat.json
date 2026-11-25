@@ -4,14 +4,14 @@
     "jscpd": "jscpd@5.3.2"
   },
   "baseline": {
-    "measured_at": "5932837",
+    "measured_at": "6956e07",
     "knip": {
       "files": 2
     },
     "jscpd": {
-      "clones": 100,
-      "lines": 1032,
-      "percentage": 1.24,
+      "clones": 101,
+      "lines": 1036,
+      "percentage": 1.3,
       "unread": 0
     },
     "shared copies": {
@@ -20,32 +20,30 @@
     },
     "legacy": {},
     "size": {
-      "apps/mobile/app/book/[id].tsx": 1030,
-      "apps/mobile/app/onboarding/index.tsx": 610,
-      "apps/mobile/app/reader/[id].tsx": 1424,
-      "apps/mobile/components/clubs/create-club-sheet.tsx": 534,
-      "apps/mobile/components/reader/readium-reader.tsx": 600,
-      "apps/web/app/components/reader/reader-panels.tsx": 504,
-      "apps/web/app/components/reader/reader-view.tsx": 708,
-      "apps/web/app/components/settings/account-sections.tsx": 807,
-      "apps/web/app/lib/carrel/journal-adapter.server.ts": 831,
-      "apps/web/app/styles/reader.css": 589,
-      "apps/web/app/styles/social.css": 652,
-      "apps/web/workers/app.ts": 694,
-      "mcp/src/tools.ts": 990,
-      "packages/api/src/routes/admin.ts": 516,
-      "packages/core/src/domain/clubs.ts": 585,
-      "packages/core/src/repositories/library.ts": 661,
-      "packages/types/src/index.ts": 735
+      "apps/mobile/app/book/[id].tsx": 1014,
+      "apps/mobile/app/onboarding/index.tsx": 596,
+      "apps/mobile/app/reader/[id].tsx": 1307,
+      "apps/mobile/components/clubs/create-club-sheet.tsx": 518,
+      "apps/web/app/components/reader/reader-view.tsx": 660,
+      "apps/web/app/components/settings/account-sections.tsx": 774,
+      "apps/web/app/lib/carrel/journal-adapter.server.ts": 751,
+      "apps/web/app/styles/reader.css": 587,
+      "apps/web/app/styles/social.css": 649,
+      "apps/web/workers/app.ts": 609,
+      "mcp/src/tools.ts": 942,
+      "packages/api/src/routes/admin.ts": 509,
+      "packages/core/src/domain/clubs.ts": 570,
+      "packages/core/src/repositories/library.ts": 628,
+      "packages/types/src/index.ts": 700
     },
     "tests": {
       "files": 70,
       "cases": 336
     },
     "comments": {
-      "lines": 5698,
-      "code": 72402,
-      "percentage": 7.3
+      "lines": 2134,
+      "code": 72386,
+      "percentage": 2.86
     }
   }
 }
