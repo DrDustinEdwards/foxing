@@ -78,7 +78,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CF_DEPLOY == 'true'
     permissions:
       contents: read
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@5ced133321446a944c4e0cc98291eaa54d446a56 # v0.60.0
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@1f148951b94eb9c495dc94c1f7d5bb79fd5db7b1 # v0.61.0
     with:
       worker-name: foxing-admin-mcp
       # site-runtime audit-log's signing key (0.85), minted once by the deploy and never shown (devkit "generated-secrets").

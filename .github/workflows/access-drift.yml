@@ -15,11 +15,11 @@ permissions:
 
 jobs:
   drift:
-    uses: DrDustinEdwards/devkit/.github/workflows/access-drift.yml@5ced133321446a944c4e0cc98291eaa54d446a56 # v0.60.0
+    uses: DrDustinEdwards/devkit/.github/workflows/access-drift.yml@1f148951b94eb9c495dc94c1f7d5bb79fd5db7b1 # v0.61.0
     with:
       app: foxing-login
       admins-url: https://foxing.app/admin/access-drift
-      site-runtime-ref: v0.182.0
+      site-runtime-ref: v0.182.2
     secrets:
       ACCESS_READ_TOKEN: ${{ secrets.ACCESS_READ_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
