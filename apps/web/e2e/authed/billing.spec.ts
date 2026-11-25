@@ -3,7 +3,7 @@ import { expectNoSeriousViolations } from "../helpers";
 
 // The Plus offer on /settings, driven through the visible UI with the real login fixture. The
 // e2e account is free tier. Plus is offered only once it can be bought (the Stripe settings are
-// set, CLAUDE.md rule 6), so this spec reads which state the target is in from what the page
+// set), so this spec reads which state the target is in from what the page
 // shows and checks that state. It never starts a checkout: this suite runs against the live site
 // after every deploy, and a checkout is the keyed Dustin gate (billing.integration.test.ts covers
 // the route's answers).
