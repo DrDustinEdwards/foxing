@@ -1,4 +1,3 @@
-// The signed-in reader's own account in its /api/v1 wire shape (@foxing/types).
 import type * as W from "@foxing/types";
 import type { Db } from "../db";
 import * as catalogRepo from "../repositories/catalog";
@@ -17,8 +16,6 @@ function visibility(v: Profile["visibility"]): W.MyProfile["visibility"] {
   };
 }
 
-/** Every push category with its effective switch (the stored override, or its quiet
- *  default), so each settings screen shows what the server will actually send. */
 function notificationPrefs(prefs: Profile["notificationPrefs"]): W.MyProfile["notificationPrefs"] {
   return {
     categories: Object.fromEntries(PUSH_CATEGORIES.map((c) => [c, categoryEnabled(c, prefs)])),

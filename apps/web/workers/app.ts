@@ -1,11 +1,5 @@
-// The Worker is site-runtime's shared one (./worker). Its steps, in order:
-//   any path but /api/carrel/v1 presenting the Carrel key -> refused (app/lib/carrel/site-api.server.ts)
-//   /api/carrel/v1/* -> Carrel's site API over the Journal (site-api's siteApiStep), and its /preview/<token> links
-// then Foxing's Hono app, which answers:
-//   /api/auth/*  -> Better Auth
-//   /api/v1/*    -> mounted @foxing/api (thin routes -> core -> D1)
-//   /reader-assets/*, /media/* -> the reader's book files and every picture
-// Anything it has no route for passes on to the page (React Router, through the Renderer when public).
+// Steps in order: refuse the Carrel key off its prefix, Carrel's site API (/api/carrel/v1), then Foxing's Hono app
+// (/api/auth, /api/v1, reader assets, pictures); anything it has no route for passes to the page (React Router).
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
 import { exports as workerExports, WorkerEntrypoint } from "cloudflare:workers";
 import { kvPageRecord, trackPageDates } from "@drdustinedwards/site-helpers/lastmod";
@@ -79,9 +73,8 @@ import { problemResponse } from "@dustinedwards/site-runtime/http-errors";
 import { clubRoomHub } from "./club-room";
 import { withSecurityHeaders } from "./security-headers";
 
-// The public catalog surfaces: an anonymous GET of one goes to the Renderer, whose responses the
-// Workers cache stores when the route marks them shared (publicPageHeaders). Segment prefixes match
-// the path or any child (/books, /books/x), not lookalikes (/booksy).
+// Public catalog surfaces: an anonymous GET goes to the Renderer, whose shared responses the Workers cache stores.
+// Prefixes match the path or a child (/books/x), not lookalikes (/booksy).
 const PUBLIC_EXACT = new Set([
   "/",
   "/sitemap.xml",
@@ -109,13 +102,7 @@ function isPublicPath(pathname: string): boolean {
   return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
-/**
- * Hover prefetch (site-runtime ./prefetch): the paths beyond the package's own exclusions (/admin, /api, /auth,
- * sign-out and /cdn-cgi; links to files and links with a query). The signed-in app only sends a signed-out reader on
- * to /login, and the reader is a heavy app of its own; /sign-in/confirm spends a one-time sign-in link; /join/:code and
- * /find-next-book act on a GET (a club join; KV and an AI call). /lists covers the signed-in index and /lists/new as
- * well as a public list.
- */
+/** Hover-prefetch exclusions beyond the package's own: routes that redirect, spend a one-time link, or act on GET. */
 const PREFETCH_EXCLUDE = [
   "/home",
   "/me",
@@ -143,10 +130,9 @@ const PREFETCH_EXCLUDE = [
   "/og",
 ];
 
-// Injected at build time (vite define). Namespaces the search suggestions' cache per deploy.
+// Injected at build time (vite define): namespaces the search suggestions' cache per deploy.
 declare const __CACHE_VERSION__: string;
 
-/** The search suggestions' cache key: the request URL plus the build id, so a new deploy starts fresh. */
 function suggestKeyFor(url: URL): Request {
   const keyUrl = new URL(url.toString());
   keyUrl.searchParams.set("__v", __CACHE_VERSION__);
@@ -157,16 +143,12 @@ const serverBuild = () => import("virtual:react-router/server-build") as Promise
 
 const api = createApi({
   resolveSession: (req, env) => sessionUserFromRequest(req, env as unknown as Env),
-  // The reader's own deletion is Better Auth's deleteUser (app/lib/auth.server.ts).
   isFresh: (req, env) => isFreshSession(req, env as unknown as Env),
   deleteUser: (req, env, { successors }) =>
     deleteUserAccount(req, env as unknown as Env, successors),
-  // Cloudflare Access must have signed the request for this admin's own email (site-runtime ./access).
   checkAdminAccess: async (req, env, email) =>
     (await accessAdmin(req, env as unknown as Env, { admins: [email] })) !== null,
-  // ANTHROPIC_API_KEY is not set as a Worker secret yet (Phase 4a precheck). Every
-  // other route works normally; only an actual companion call fails, cleanly, until
-  // `wrangler secret put ANTHROPIC_API_KEY` runs.
+  // Without ANTHROPIC_API_KEY only companion calls fail, cleanly.
   resolveStructuredCaller: (env) => anthropicStructured(env as unknown as Env),
   resolveCompanionCaller: (env) => {
     const caller = anthropicCaller(env as unknown as Env);
@@ -178,9 +160,7 @@ const api = createApi({
       );
     };
   },
-  // Stripe secrets + price ids are not set yet (Phase 4b gate). When all four are
-  // present the real client is used; otherwise the not-configured stub makes billing
-  // routes answer 503 cleanly, the pages offer no upgrade, and everything else works.
+  // Without all four Stripe secrets the stub makes billing routes 503 and the pages offer no upgrade.
   resolveBilling: (env) => {
     const stripe = billing.stripeSettings(env as unknown as Env);
     if (!stripe)
@@ -193,32 +173,24 @@ const api = createApi({
       prices: stripe.prices,
     };
   },
-  // The live layer: one ClubRoom Durable Object per club (clubRoomHub). The DO never writes D1.
   resolveHub: (env) => clubRoomHub((env as unknown as Env).CLUB_ROOM),
 });
 
 const app = new Hono<{ Bindings: Env }>();
 
-// Anything the app has no route for passes on to the page (the step below maps this answer to undefined). Its own
-// "not found" answers (a missing reader asset or picture) are plainNotFound, a real 404.
+// Not-found answers (a missing reader asset or picture) are plainNotFound, a real 404.
 const PASS = "x-foxing-pass";
 app.notFound(() => new Response(null, { status: 404, headers: { [PASS]: "1" } }));
 const plainNotFound = () => new Response("Not found", { status: 404 });
 
-// Better Auth: sign-in, sessions, passkeys. Its own limiter holds sign-in to a few tries a
-// minute per address, counted in D1 (site-runtime ./sign-in). Its answers carry sessions and
-// passkey challenges, so no browser or proxy keeps one (checklist D10): site-runtime authHandler.
+// Better Auth answers carry sessions and passkey challenges, so no browser or proxy keeps one.
 app.on(["GET", "POST"], "/api/auth/*", async (c) => authHandler(await getAuth(c.env), c.req.raw));
 
-// Every write is an /api/v1 route (the admin API included), none reached through React Router's
-// own Origin check, so a browser write from another origin is refused here. An absent Origin
-// passes: the mobile app's fetch, the admin MCP's bearer calls and Stripe's webhook send none.
-// Better Auth (/api/auth) checks origins against its trustedOrigins itself, and Carrel's site
-// API is a bearer-key server call (its own step, before this app), so neither comes through this.
+// Every write is an /api/v1 route that skips React Router's Origin check, so a cross-origin browser write is refused
+// here. An absent Origin passes (mobile app, admin MCP bearer calls, Stripe's webhook).
 app.use("/api/v1/*", async (c, next) => refuseCrossSite(c.req.raw) ?? next());
 
-// Search-as-you-type answers do not depend on the viewer (public books, profiles and
-// clubs only), so they come from the edge cache for everyone, signed in or not.
+// Search-as-you-type answers do not depend on the viewer, so the edge cache serves everyone.
 app.get("/api/v1/search/suggest", async (c, next) => {
   const cache = edgeCache();
   const key = suggestKeyFor(new URL(c.req.url));
@@ -230,8 +202,8 @@ app.get("/api/v1/search/suggest", async (c, next) => {
 
 app.route("/api/v1", api);
 
-// Exploded Readium reader assets, served same-origin (no CORS for the HttpFetcher) from the MEDIA R2 bucket under
-// reader/<slug>/... noindex keeps the duplicate book text out of search; immutable edge cache, so a hit never reads R2.
+// Readium reader assets are served same-origin (no CORS for the HttpFetcher) from MEDIA under reader/<slug>/...;
+// noindex keeps duplicate book text out of search.
 app.get("/reader-assets/*", async (c) => {
   const url = new URL(c.req.url);
   let rest: string;
@@ -240,12 +212,10 @@ app.get("/reader-assets/*", async (c) => {
   } catch {
     return plainNotFound(); // a malformed escape
   }
-  // Guard against traversal; keys are always reader/<slug>/<path>.
   if (!rest || rest.includes("..")) return plainNotFound();
 
   const cache = edgeCache();
-  // The cache key carries the version of the stored pages: stored=2 leaves behind the copies cached while the stored
-  // pages had lost the XML declaration's closing "?" (immutable, so they would otherwise live a year).
+  // stored=2 abandons copies cached while stored pages lacked the XML declaration's closing "?" (immutable, so they would live a year).
   const mediaRequest = new Request(`${url.toString()}${url.search ? "&" : "?"}stored=2`, {
     method: "GET",
   });
@@ -253,7 +223,6 @@ app.get("/reader-assets/*", async (c) => {
     const cached = await cache.match(mediaRequest);
     if (cached) return cached;
   }
-  // site-runtime's r2ObjectResponse answers HEAD, ranges, 304 and the ETag; the reader's bucket view types each file.
   const res = await r2ObjectResponse(c.req.raw, readerAssets(c.env.MEDIA, rest), `reader/${rest}`, {
     cacheControl: IMMUTABLE_CACHE,
     noindex: true,
@@ -264,10 +233,8 @@ app.get("/reader-assets/*", async (c) => {
 });
 
 /**
- * The MEDIA bucket as the reader's files: each object's Content-Type is its stored one, else the type its extension
- * names. A book's own scripts never run: Readium's frames are same-origin, so the reader's CSP ('self') would let an
- * EPUB's external <script src> load from here; served as text/plain, nosniff makes the browser refuse to run it. (Its
- * inline scripts are refused by the CSP, which they carry no nonce for.)
+ * The MEDIA bucket as the reader's files. A book's own scripts never run: Readium's frames are same-origin, so the
+ * CSP ('self') would let an EPUB's external <script src> load; text/plain plus nosniff makes the browser refuse it.
  */
 function readerAssets(bucket: R2Bucket, path: string) {
   const typed = <T extends R2Object | null>(object: T): T => {
@@ -295,10 +262,8 @@ function readerAssets(bucket: R2Bucket, path: string) {
   };
 }
 
-// Every picture a page shows (app/lib/images.ts): covers from the COVERS bucket under covers/, and the
-// Journal's media library (app/lib/carrel/journal-media-adapter.server.ts) from MEDIA under journal/
-// only, so no other key (a reader asset, say) is ever served from here. A size is a year-long
-// immutable copy; a Journal address without its `v` (a replace or a turn keeps the key) an hour.
+// Covers from COVERS under covers/ and the Journal's media from MEDIA under journal/ only, so no other key is served
+// here. A size is a year-long immutable copy; a Journal address without its `v` (a replace keeps the key) an hour.
 app.get("/media/*", (c) =>
   images.serve(c.req.raw, {
     read: (key) =>
@@ -316,12 +281,10 @@ app.get("/media/*", (c) =>
   }),
 );
 
-// The writes that can change a stored page beside Carrel's (siteApiStep purges after those): the admin API's (catalog,
-// picks, awards, book of the month), the admin MCP's included, and a reader's visibility (a profile that goes private
-// must drop its cached recap card). Each accepted one purges every stored page; a failed purge is a log line.
+// Writes that can change a stored page beside Carrel's (the admin API, MCP included, and a reader's visibility: a
+// profile going private must drop its cached recap card). Each accepted one purges every stored page.
 const PAGE_WRITERS = ["/api/v1/admin", "/api/v1/me/visibility"];
 
-/** The Hono app as the Worker's step: its answer, or undefined for a path it has no route for. */
 const hono: GatewayStep<Env> = async (request, env, ctx, kit) => {
   const answer = await app.fetch(request, env, ctx);
   if (answer.headers.has(PASS)) return undefined;
@@ -331,17 +294,9 @@ const hono: GatewayStep<Env> = async (request, env, ctx, kit) => {
   return answer;
 };
 
-// The companion cache pipeline. Cron finds catalog books missing a cached action
-// and enqueues one message per book; the queue consumer generates the 4 free-cached
-// actions for that book and writes book_ai_cache. Both reuse the same core functions
-// the manual proof script and the admin ops route call (one generation code path).
 type CacheJobMessage = { bookId: string; factCheck?: true };
 
-// The push delivery sweep. Runs on a frequent cron: it push-delivers notifications
-// created since the last sweep (deduped in KV), gated per user by category prefs + quiet
-// hours (domain/push). Kept off the notification write path so core stays binding-free;
-// the cadence trades a little latency for that decoupling. In-app notifications are
-// unaffected.
+// Push sweep: kept off the notification write path so core stays binding-free.
 const PUSH_SWEEP_LOOKBACK_MS = 10 * 60 * 1000;
 
 async function runPushSweep(env: Env): Promise<void> {
@@ -351,17 +306,14 @@ async function runPushSweep(env: Env): Promise<void> {
   const lastRaw = await kv.get("push:last_sweep");
   const since = lastRaw ? Number(lastRaw) : now - PUSH_SWEEP_LOOKBACK_MS;
   await push.sweepPushDeliveries(db, { fetchImpl: fetch, nowUtcMs: now, kv }, since);
-  // Only a sweep that finished moves the cursor: a thrown one is retried from the same
-  // point on the next tick instead of skipping its window.
+  // Only a finished sweep moves the cursor: a thrown one retries from the same point.
   await kv.put("push:last_sweep", String(now));
 }
 
 const CACHE_LAST_BATCH_KEY = "companion-cache:last-batch";
 
-// Enqueues the next books that need their cached actions. The generation runs in the queue consumer, so a
-// consumer whose model calls all fail would leave this job "ok" and /health green (the cache sat at 560 rows from
-// 2026-11-02 while every call failed). The books come back oldest-updated first, so a batch whose books are
-// ALL still uncached when the next run finds them means nothing was written: the job fails, and /health says so.
+// A consumer whose model calls all fail would leave this job "ok" and /health green, so books come back
+// oldest-updated first: a batch still uncached on the next run means nothing was written, and the job fails.
 async function enqueueCompanionCache(env: Env): Promise<void> {
   const db = createDb(env.DB);
   const limit = Number(env.COMPANION_CACHE_BATCH_SIZE) || 200;
@@ -381,11 +333,8 @@ async function enqueueCompanionCache(env: Env): Promise<void> {
     );
 }
 
-// Daily: enqueue catalog books whose cached texts have no fact-check yet, FACT_CHECK_BATCH at a time (new books after
-// the first sweep). While the KV key `companion-fact-check:only` holds a JSON array of book ids, only those are checked
-// (a trial run before the sweep); delete the key to sweep.
-// The queue takes hours to check a batch, and a book is only recorded once it is checked, so a second run inside the
-// FACT_CHECK_HOLD_SECONDS after one would queue (and pay for) the same books again: it does nothing instead.
+// Daily; while KV `companion-fact-check:only` holds a JSON array of book ids only those are checked (delete it to sweep).
+// A run inside FACT_CHECK_HOLD_SECONDS of the last does nothing: the queue is slow and would double-bill the same books.
 const FACT_CHECK_BATCH = 1500;
 const FACT_CHECK_ONLY_KEY = "companion-fact-check:only";
 const FACT_CHECK_HOLD_KEY = "companion-fact-check:enqueued";
@@ -413,7 +362,6 @@ async function enqueueFactCheck(env: Env): Promise<void> {
     });
 }
 
-// Each job's work, by name; app/lib/cron-jobs.ts has their intervals, which /health reads too.
 const CRON_RUNS: Record<CronJobName, (env: Env) => Promise<unknown>> = {
   backup: runBackup,
   "media-backup": runMediaBackup,
@@ -429,7 +377,6 @@ const CRON_RUNS: Record<CronJobName, (env: Env) => Promise<unknown>> = {
   "page-dates": runPageDates,
 };
 
-/** A job from app/lib/cron-jobs.ts with its work. */
 const withRun =
   (env: Env) =>
   (job: (typeof CRON_TRIGGERS)[keyof typeof CRON_TRIGGERS][number]): CronJob => ({
@@ -437,19 +384,16 @@ const withRun =
     run: () => CRON_RUNS[job.name](env),
   });
 
-/** Every job on every trigger with its work: what the operator API's run_job runs now. */
 function cronJobs(env: Env): CronJob[] {
   return Object.values(CRON_TRIGGERS).flat().map(withRun(env));
 }
 
-/** Each trigger's job list (app/lib/cron-jobs.ts) with its work, for the shared Worker's cron. */
 function cronLists(env: Env): Record<string, CronJob[]> {
   return Object.fromEntries(
     Object.entries(CRON_TRIGGERS).map(([cron, jobs]) => [cron, jobs.map(withRun(env))]),
   );
 }
 
-/** One fact-check job: check the book's cached texts, retrying later when the call fails or the key is missing. */
 async function factCheckMessage(
   db: ReturnType<typeof createDb>,
   checker: companion.FactChecker | null,
@@ -472,8 +416,7 @@ async function factCheckMessage(
       },
       { level: limited ? "warn" : "error" },
     );
-    // Every attempt is billed, so a book that keeps failing is given up on after three instead of six. A reply cut off
-    // at max_tokens is cut off again by the same book, so it is not tried a second time.
+    // Every attempt is billed, so a failing book is given up after three; a reply cut off at max_tokens recurs.
     const cutOff = err instanceof Error && err.message.includes("(truncated)");
     if (cutOff || message.attempts >= 3) return message.ack();
     message.retry({ delaySeconds: 60 * message.attempts });
@@ -495,7 +438,6 @@ async function queue(
       continue;
     }
     if (!caller) {
-      // No key yet: retry later rather than dropping the job or generating nothing.
       message.retry();
       continue;
     }
@@ -518,16 +460,14 @@ async function queue(
       });
       message.ack();
     } catch (err) {
-      // A rate limit is the queue running ahead of the model's quota, not a fault: warn, and retry later
-      // (a minute longer each attempt) instead of at once. Anything else is an error.
+      // A rate limit is the queue outrunning the quota, not a fault: warn and retry later (a minute longer each attempt).
       const limited = err instanceof Error && err.message.includes("(rate_limited)");
       logEvent(
         "companion_cache_failed",
         { book_id: message.body.bookId, error: err },
         { level: limited ? "warn" : "error" },
       );
-      // A failed reply that came back was billed, and a book that fails the prose check fails again, so it is given up
-      // after three attempts, as the fact check is, not six at four calls each. The next daily run picks it up again.
+      // A billed failed reply or prose-check failure recurs, so give up after three; the next daily run picks it up.
       if (limited) message.retry({ delaySeconds: 60 * message.attempts });
       else if (message.attempts >= 3) message.ack();
       else message.retry();
@@ -535,16 +475,12 @@ async function queue(
   }
 }
 
-// The ClubRoom Durable Object class must be a named export of the Worker's entry module
-// so the runtime can instantiate it for the CLUB_ROOM binding.
+// Must be a named export of the entry module so the runtime can instantiate it for CLUB_ROOM.
 export { ClubRoom } from "./club-room";
-// The rate limiter behind @foxing/api's rateLimit (the RATE_LIMITER binding).
 export { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-object";
 
-// Prelum's markdownCopies: each public page has a Markdown copy at its path plus .md and answers Accept: text/markdown,
-// and /llms-full.txt lists the prose pages. Only pages a signed-out reader can read are listed; the catalog's book and
-// author pages have their copies but stay out of llms-full.txt.
-/** Keeps the day each hub and code-written page last changed, from what its Markdown copy says: /sitemap.xml's lastmod. */
+// Prelum's markdownCopies: public pages answer Accept: text/markdown and at path + .md; only signed-out-readable
+// pages are in llms-full.txt.
 async function runPageDates(env: Env) {
   // A cron has no request context; the gateway reads the Renderer from ctx.exports, so the Worker's own loopback goes there.
   const ctx = {
@@ -597,18 +533,14 @@ const withMarkdownCopies = (handler: FetchHandler<Env>) =>
       !(COPIED.has(path) || COPIED_UNDER.some((prefix) => path.startsWith(prefix))),
   });
 
-// The admin pages and the browser admin APIs behind the same Access application.
 const ADMIN_PAGES = "/admin";
 const ADMIN_APIS = ["/api/v1/admin", "/api/v1/ops"];
 
 const under = (pathname: string, prefix: string) =>
   pathname === prefix || pathname.startsWith(`${prefix}/`);
 
-// An admin idle for an hour is signed out of Access (site-runtime ./access), on the pages and
-// the APIs alike. On a page the idle answer is the redirect to Access's logout. A fetch() would
-// follow that redirect to the logout page and read its 200 as success, so on an API the answer
-// is a 401 the admin screens show as their error instead; the next page load signs out. The
-// admin MCP's service-binding calls carry no Access token, so the idle check never sees them.
+// An idle admin is signed out of Access. A fetch() would follow the logout redirect and read its 200 as success, so
+// an API answers 401 instead. The admin MCP's service-binding calls carry no Access token and skip the check.
 async function withAdminIdleSignOut(request: Request, env: Env, handle: () => Promise<Response>) {
   const res = await withAdminIdle(request, handle, {
     prefixes: [ADMIN_PAGES, ...ADMIN_APIS],
@@ -627,31 +559,18 @@ async function withAdminIdleSignOut(request: Request, env: Env, handle: () => Pr
   return withSecurityHeaders(idle, request);
 }
 
-// The admin list, hashed with a fresh salt, for the daily Access drift check (I2, devkit's
-// access-drift workflow): only a GET Access let through with a service token gets it, anything
-// else is 404 (site-runtime ./access-drift). It sits under /admin, inside the Access application,
-// and outside the idle sign-out, which is for people.
+// Hashed admin list for the daily Access drift check: only a service-token GET gets it, else 404. Outside the idle sign-out.
 async function adminList(request: Request, env: Env): Promise<Response> {
   const res = await adminListResponse(request, env, { admins: adminEmails(env) });
   return withSecurityHeaders(res, request);
 }
 
-/**
- * The site's Worker (site-runtime ./worker). What is Foxing's own: its machine files, the Carrel key's off-prefix
- * refusal, Carrel's site API and the Hono app as its steps (the APIs, the reader's files and the pictures), the public
- * catalog paths the Renderer stores, its prefetch exclusions, Carrel's tombstones on a page 404, the Markdown copies,
- * the admin list and the API-aware idle sign-out (inside `wrap`, so it runs before the copies, as before), and the
- * cron's job lists.
- */
 const site = defineSite<Env>({
   name: "Foxing",
   serverBuild,
   mode: import.meta.env.MODE,
   withSecurityHeaders,
-  // One hop to the canonical address: https, the bare host, no trailing slash (/books/ to /books).
   canonical: { host: "foxing.app" },
-  // Prelum's standardFiles: robots.txt and ai.txt (the family's bot and AI usage policies; a workers.dev preview is told
-  // `Disallow: /`), site.webmanifest and the IndexNow key file. /.well-known/security.txt is the gateway's own.
   files: standardFiles({
     origin: SITE_ORIGIN,
     disallow: ROBOTS_DISALLOW,
@@ -664,8 +583,7 @@ const site = defineSite<Env>({
   steps: [carrelKeyOffPrefix, carrelStep, hono],
   cacheable: (_request, url) => isPublicPath(url.pathname),
   preloads: [...FONT_PRELOADS],
-  // A Journal post Carrel deleted or trashed answers 410, not 404 (site-api tombstones, gone_paths); an API's 404 is
-  // an answer about a record and stays one.
+  // A Journal post Carrel deleted or trashed answers 410 (gone_paths); an API's 404 stays one.
   onNotFound: (response, request, env) => {
     const { pathname } = new URL(request.url);
     return pathname.startsWith("/api/")
@@ -682,10 +600,7 @@ const site = defineSite<Env>({
   cron: (env) => cronLists(env),
 });
 
-/**
- * The cacheable entrypoint (wrangler.jsonc.example, `exports`): the public pages, rendered and then stored by the
- * Workers cache under the key the gateway names. Only the gateway calls it, for an anonymous read of a public path.
- */
+/** The cacheable entrypoint (`exports`): public pages the Workers cache stores, called only by the gateway. */
 export class Renderer extends siteRenderer(WorkerEntrypoint<Env>, site) {}
 
 // The queue consumer goes in beside the shared fetch and cron, so Sentry (site-runtime ./sentry) wraps it too.

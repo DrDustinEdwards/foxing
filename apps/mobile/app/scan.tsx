@@ -41,7 +41,6 @@ export default function ScanScreen() {
   const [loading, setLoading] = useState(false);
   const setStatus = useSetBookStatus();
   const busy = setStatus.pending;
-  // Clubs the reader belongs to that are reading the scanned book right now.
   const readingClubs = (useClubsIndex().data?.mine ?? []).filter(
     (c) => book && c.currentBook?.id === book.id,
   );

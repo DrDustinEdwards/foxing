@@ -25,14 +25,12 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
   return [
     ...buildMeta({
       title: author.name,
-      // Built from the catalog alone: a count, the publication years and a few titles.
       description: `${author.name}: ${author.bookCount} public-domain ${author.bookCount === 1 ? "book" : "books"} on Foxing${
         first ? ` (${first === last ? first : `${first} to ${last}`})` : ""
       }${author.bookCount === 1 ? ":" : ", including"} ${new Intl.ListFormat("en").format(titles)}.`,
       pathname: location.pathname,
       type: "profile",
       pageType: "CollectionPage",
-      // /authors is no page; an author sits under the catalog.
       breadcrumbs: [
         { name: SITE_NAME, path: "/" },
         { name: "Books", path: "/books" },

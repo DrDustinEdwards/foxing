@@ -2,8 +2,6 @@ import { llmsResponse } from "@drdustinedwards/site-helpers/llms";
 import { SITE_ORIGIN } from "~/lib/origins";
 import type { Route } from "./+types/llms";
 
-// llms.txt (llmstxt.org) from Prelum: Foxing's public hubs for answer engines. Each book, author and
-// award page is in /sitemap.xml; this names the places they hang from.
 const HUBS = [
   {
     path: "/books",

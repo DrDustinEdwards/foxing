@@ -1,7 +1,4 @@
-// Year in Reading recap. Aggregates a user's finishes for a calendar year
-// into a shareable payload: counts, top books (by the user's own rating), and stats.
-// The public variant is visibility-gated at the route (profile must be public). The OG
-// image renders from this same payload.
+// Year in Reading recap payload; the public variant is visibility-gated at the route and the OG image renders from the same payload.
 import type { Db } from "../db";
 import * as diaryRepo from "../repositories/diary";
 import * as recapRepo from "../repositories/recap";

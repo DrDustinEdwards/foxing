@@ -1,6 +1,3 @@
-// Admin dashboard: at-a-glance counts, recent signups, and the recent operator audit
-// log. Read-only, gated on ADMIN_EMAIL and CO_OWNER_EMAILS. This is the template every other admin
-// page follows: requireAdmin in the loader, adminRepo reads in-process, AdminShell chrome.
 import { adminRepo, createDb } from "@foxing/core";
 import { Link } from "capsomer/react/link";
 import { mediumDateTime } from "~/lib/dates";
@@ -95,5 +92,4 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

@@ -1,6 +1,4 @@
-// Diary / reviews endpoints. diary_entries is the rating + review home.
-// Create respects visibility for feed emission (private -> no event); the book rating
-// aggregate is recomputed in core on every write. Handlers stay thin.
+// Create respects visibility for feed emission (private -> no event); the book rating aggregate is recomputed in core on every write.
 import { createDiaryInput, diaryDomain, updateDiaryInput, views } from "@foxing/core";
 import { Hono } from "hono";
 import { errors } from "../error";
@@ -10,7 +8,6 @@ import type { Env } from "../types";
 
 export const diaryRoutes = new Hono<Env>();
 
-// The signed-in user's own diary (all visibilities: it is theirs).
 diaryRoutes.get("/diary", async (c) => {
   const session = requireSession(c);
   return c.json({ entries: await views.diary(c.get("db"), session.id) });
@@ -23,7 +20,6 @@ diaryRoutes.post("/diary", rateLimit("write"), async (c) => {
   return c.json({ entry }, 201);
 });
 
-// The same audience as the profile page.
 diaryRoutes.get("/diary/:id", async (c) => {
   const entry = await views.diaryEntry(
     c.get("db"),

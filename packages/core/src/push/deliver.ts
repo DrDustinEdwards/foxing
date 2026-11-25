@@ -1,9 +1,5 @@
-// Push delivery orchestrator. Ties the pieces together for one notification:
-// load context -> gate on prefs + quiet hours (domain/push) -> build + send Expo
-// messages -> prune tokens Expo reports DeviceNotRegistered. Dependencies (fetch, clock,
-// KV) are injected so the whole pipeline is integration-testable against local D1 with a
-// stub fetch -- no device required. In-app notifications are unaffected; this governs
-// only the push.
+// Push delivery for one notification: gate on prefs + quiet hours (domain/push), send Expo messages, prune tokens Expo reports
+// DeviceNotRegistered. fetch, clock and KV are injected so the pipeline is integration-testable with a stub fetch. In-app notifications are unaffected.
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import type { Db } from "../db";
 import { shouldDeliverPush } from "../domain/push";
@@ -62,13 +58,7 @@ export async function deliverPush(
 
 export type SweepResult = { scanned: number; delivered: number };
 
-/**
- * Sweep notifications created since a cutoff and push-deliver each one exactly once,
- * deduped via KV (key pushed:<id>). This is the producer seam: it keeps the core
- * binding-free (KV/fetch injected) and the notification write path unchanged, at the
- * cost of sweep-cadence latency rather than per-insert delivery. Upgradeable to a true
- * insert-time queue later without changing deliverPush.
- */
+/** Sweeps notifications since a cutoff and delivers each exactly once, deduped via KV (pushed:<id>); keeps core binding-free at the cost of sweep-cadence latency. */
 export async function sweepPushDeliveries(
   db: Db,
   deps: PushDeps,

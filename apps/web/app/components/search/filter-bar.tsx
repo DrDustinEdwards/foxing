@@ -1,6 +1,3 @@
-// Search filters: Capsomer's FilterBar, a GET form on /search that applies as a reader picks (genre from subjects, era,
-// length: the facets backed by real catalog data). Each change submits the form, which drops `page`, so the loader
-// re-runs and results are server-rendered. The query rides along as a hidden field.
 import { FilterBar as CapFilterBar } from "capsomer/react/filter-bar";
 import { Link } from "capsomer/react/link";
 import { NativeSelect } from "capsomer/react/select-native";

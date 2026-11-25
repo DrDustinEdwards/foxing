@@ -1,7 +1,5 @@
-// The companion's model calls, as types only. The API route and the domain code depend on
-// these function types (dependency-injected, same pattern as ApiDeps.resolveSession), so
-// tests substitute a stub with no network call and no key. The Worker builds the real ones
-// on site-runtime's Anthropic caller (apps/web/app/lib/anthropic.server.ts).
+// The companion's model calls as function types only (dependency-injected), so tests substitute a stub with no network or key.
+// The Worker builds the real ones on site-runtime's Anthropic caller.
 import type { Usage } from "@dustinedwards/site-runtime/anthropic";
 
 export type CompanionMessage = { role: "user" | "assistant"; content: string };
@@ -13,32 +11,19 @@ export type CompanionCallArgs = {
   system: string;
   messages: CompanionMessage[];
   maxTokens: number;
-  /** What is calling, for the call's log line ("companion:chat", "catalog-cache"). */
   feature?: string;
-  /**
-   * Prompt caching (site-runtime's `cache`): true caches the prompt up to its last message, for a
-   * conversation whose next turn repeats it; unset caches only a system prompt long enough alone.
-   */
+  /** Prompt caching: true caches the prompt up to its last message for a conversation whose next turn repeats it; unset caches only a system prompt long enough alone. */
   cache?: boolean;
 };
 
-/**
- * A streamed reply: text deltas, then one `done`. Throws when the reply did not finish
- * (cut off, refused, failed), after any deltas already sent, so nothing that catches the
- * throw stores or caches the text as complete.
- */
+/** A streamed reply: text deltas, then one `done`. Throws when the reply did not finish, so nothing stores or caches cut-off text as complete. */
 export type CompanionCaller = (args: CompanionCallArgs) => AsyncIterable<CompanionStreamEvent>;
 
-/** A reply that is JSON matching `schema`, parsed. Throws when the call fails or the JSON does not parse. */
 export type StructuredCaller = (
   args: CompanionCallArgs,
   schema: Record<string, unknown>,
 ) => Promise<{ value: unknown; usage: Usage }>;
 
-/**
- * One web-searching call that answers with text (the fact-check): the reply, what it spent and how many searches it
- * ran. Throws when the call did not finish.
- */
 export type FactChecker = (args: { model: string; system: string; user: string }) => Promise<{
   text: string;
   usage: Usage;

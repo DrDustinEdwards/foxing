@@ -1,6 +1,5 @@
-// The one file that talks to Stripe, with fetch and SubtleCrypto: the SDK's resource classes were 238 KB of the
-// Worker for four calls. API routes depend on the BillingClient interface (dependency-injected, same pattern as
-// CompanionCaller): the Worker builds the real client from its secrets; tests inject a stub with no network call.
+// The one file that talks to Stripe, with fetch and SubtleCrypto (the SDK was 238 KB of the Worker for four calls).
+// Routes depend on the BillingClient interface; tests inject a stub.
 import { hmacSha256Hex } from "@dustinedwards/site-runtime/encoding";
 import { safeEqual } from "@dustinedwards/site-runtime/compare";
 import { TRIAL_DAYS } from "./config";
@@ -9,7 +8,6 @@ import { pickCurrentSubscription } from "./webhook";
 export type BillingCheckoutArgs = {
   priceId: string;
   customerEmail: string;
-  /** The Foxing user id; surfaces on checkout.session.completed to link user<->customer. */
   clientReferenceId: string;
   existingCustomerId: string | null;
   /** The free trial applies only to a reader who has never subscribed. */
@@ -20,7 +18,6 @@ export type BillingCheckoutArgs = {
 
 export type BillingPortalArgs = { customerId: string; returnUrl: string };
 
-/** A verified Stripe event, narrowed to the plain fields the pure interpreter reads. */
 export type BillingEventLite = { id: string; type: string; object: Record<string, unknown> };
 
 export type BillingSubscriptionLite = {
@@ -34,21 +31,15 @@ export interface BillingClient {
   createPortalSession(args: BillingPortalArgs): Promise<{ url: string }>;
   verifyWebhook(payload: string, signature: string): Promise<BillingEventLite>;
   getSubscription(subscriptionId: string): Promise<BillingSubscriptionLite>;
-  /** The customer's current subscription (newest live one, else newest), or null when none. */
   getCurrentSubscription(customerId: string): Promise<BillingSubscriptionLite | null>;
 }
 
-/** The Stripe API version every request is made with. Pinned, so Stripe never changes
- *  it silently (https://docs.stripe.com/sdks/set-version). Foxhound pins the same version.
- *  The webhook endpoint in the Stripe Dashboard must use this version too, since an
- *  endpoint's version decides the shape of the events it receives
- *  (https://docs.stripe.com/webhooks/versioning). */
+/** The Stripe API version every request uses, pinned so it never changes silently; the webhook endpoint in the Stripe Dashboard must use it too, since an endpoint's version decides event shape. Foxhound pins the same. */
 export const STRIPE_API_VERSION = "2026-10-28.endive";
 
 export type StripeBillingConfig = { secretKey: string; webhookSecret: string };
 
-/** Thrown by the not-configured stub so the API can answer 503 rather than a raw 500,
- *  until the Stripe secrets/price ids are set as Worker secrets. */
+/** Thrown by the not-configured stub so the API answers 503 rather than a raw 500. */
 export class BillingNotConfiguredError extends Error {
   constructor() {
     super("Billing is not configured (Stripe secrets / price ids are unset).");
@@ -56,8 +47,7 @@ export class BillingNotConfiguredError extends Error {
   }
 }
 
-/** Stand-in client used when Stripe secrets are absent: every method throws. Mirrors the
- *  companion's missing-key path so the whole app still builds, tests, and deploys. */
+/** Stand-in used when Stripe secrets are absent: every method throws. */
 export function notConfiguredBilling(): BillingClient {
   const fail = (): never => {
     throw new BillingNotConfiguredError();

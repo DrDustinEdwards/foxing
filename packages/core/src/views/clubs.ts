@@ -1,6 +1,4 @@
-// Club views: the clubs index, the club page and a thread page in their /api/v1 wire
-// shape (@foxing/types). Each returns null when the viewer may not see it: a private
-// club is "not found" to anyone but its active members.
+// Each view returns null when the viewer may not see it: a private club is "not found" to anyone but its active members.
 import type * as W from "@foxing/types";
 import type { Db } from "../db";
 import { canModerateRole } from "../domain/clubs";
@@ -45,19 +43,16 @@ export async function publicClubs(db: Db, limit = 50): Promise<W.ClubCard[]> {
   return cards(db, await clubsRepo.listPublicClubs(db, limit));
 }
 
-/** Public clubs reading the book right now, for its page. */
 export async function clubsReading(db: Db, bookId: string): Promise<W.ClubCard[]> {
   return cards(db, await clubsRepo.listPublicClubsReading(db, bookId));
 }
 
-/** The viewer's clubs, and public clubs they are not in yet. */
 export async function clubsIndex(db: Db, userId: string): Promise<W.ClubsIndex> {
   const [mine, discover] = await Promise.all([myClubs(db, userId), publicClubs(db)]);
   const mineIds = new Set(mine.map((c) => c.id));
   return { mine, discover: discover.filter((c) => !mineIds.has(c.id)) };
 }
 
-/** A club the viewer may read, found by id or slug, with their membership. */
 export async function readableClub(db: Db, idOrSlug: string, viewerId: string | null) {
   const club =
     (await clubsRepo.getClubById(db, idOrSlug)) ?? (await clubsRepo.getClubBySlug(db, idOrSlug));
@@ -100,8 +95,7 @@ export async function clubPage(
     clubsRepo.listPolls(db, club.id),
     bookRefs(db, [club.currentBookId]),
   ]);
-  // Moderators see the whole roster with ban and mute details; everyone else sees
-  // active members without them (FX-8).
+  // Moderators see the whole roster with ban and mute details; everyone else sees active members without them.
   const roster = isModerator ? members : members.filter((m) => m.status === "active");
   const people = await getProfileSummaries(db, [
     ...threads.map((t) => t.authorId),
@@ -191,7 +185,6 @@ export async function clubPage(
   };
 }
 
-/** A thread and its posts. clubIdOrSlug, when given, must be the thread's club. */
 export async function threadPage(
   db: Db,
   threadId: string,

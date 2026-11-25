@@ -1,6 +1,3 @@
-// Barcode scanner lookup. The Foxing catalog is public-domain editions without ISBNs, so
-// a scanned EAN-13 is resolved to a title and author through Google Books, then matched
-// against the catalog the same way a Goodreads import is.
 import type * as W from "@foxing/types";
 import { findCatalogBook } from "./import";
 
@@ -15,7 +12,6 @@ function cleanIsbn(raw: string): string {
   return raw.replace(/[^0-9Xx]/g, "").toUpperCase();
 }
 
-// The public endpoint resolves ISBNs without an API key.
 async function googleBooksMeta(isbn: string): Promise<ResolvedMeta | null> {
   try {
     const res = await fetch(`${GOOGLE_BOOKS}?q=isbn:${isbn}&maxResults=1`);

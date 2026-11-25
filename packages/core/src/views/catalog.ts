@@ -1,6 +1,4 @@
-// Catalog views: public reads of books, authors and search in their /api/v1 wire
-// shape (@foxing/types). Nothing here depends on the viewer, so every one of them is
-// safe to cache at the edge. The reader's own state on a book is views.myBook.
+// Public catalog reads in their /api/v1 wire shape (@foxing/types). Nothing depends on the viewer, so all are safe to cache at the edge.
 import type * as W from "@foxing/types";
 import { type AffiliateConfig, buyLinks } from "../config/affiliate";
 import { isTemplateDescription } from "../domain/catalog-health";
@@ -15,7 +13,6 @@ import * as readerSocial from "../repositories/reader-social";
 import { clubsReading, publicClubs } from "./clubs";
 import { ms } from "./wire";
 
-/** Only public profiles and public clubs are returned. */
 export async function suggest(db: Db, q: string): Promise<W.SearchSuggest> {
   if (q.trim().length < 2) return { books: [], authors: [], people: [], clubs: [] };
   const [books, authors, people, clubs] = await Promise.all([
@@ -38,8 +35,6 @@ export async function suggest(db: Db, q: string): Promise<W.SearchSuggest> {
   };
 }
 
-/** The catalog's front shelf: today's pick, curated and trending rows, active clubs,
- *  and the facets to browse by. */
 export async function discover(db: Db, now = Date.now()): Promise<W.DiscoverPage> {
   const [todaysPick, staffPicks, awardWinners, trending, newest, clubs, genres] = await Promise.all(
     [
@@ -76,7 +71,6 @@ export interface CatalogQuery {
   page?: number;
 }
 
-/** One page of the catalog, filtered, with the genre facets the filter bar offers. */
 export async function browse(db: Db, query: CatalogQuery): Promise<W.BrowsePage> {
   const [result, genres] = await Promise.all([
     catalogRepo.listBooks(db, {
@@ -99,7 +93,6 @@ export async function browse(db: Db, query: CatalogQuery): Promise<W.BrowsePage>
   };
 }
 
-/** Full search: books (typo-tolerant), matching authors, and the genre facets. */
 export async function search(db: Db, q: string, query: CatalogQuery): Promise<W.SearchPage> {
   const term = q.trim();
   if (!term) {
@@ -149,8 +142,6 @@ export async function author(db: Db, slug: string): Promise<W.AuthorPage | null>
   return { ...found, bio: cachedText(bio ?? undefined) };
 }
 
-/** The book page, found by id or slug: detail, awards, neighbors, the generated
- *  catalog text, public reviews, clubs reading it and its popular passages. */
 export async function bookPage(
   db: Db,
   idOrSlug: string,
@@ -234,8 +225,7 @@ export async function bookPage(
   };
 }
 
-/** The reader's opening state: the readable book, the saved position and the clubs a
- *  passage comment can go to. Null when the book is missing or has no file. */
+/** Null when the book is missing or has no file. */
 export async function readerPage(
   db: Db,
   userId: string | null,

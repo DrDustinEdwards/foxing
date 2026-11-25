@@ -19,8 +19,6 @@ import type { Route } from "./+types/marketing";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { db, env } = loaderBase(context, request);
-  // Signed-in visitors get their dashboard; "/" stays the marketing page for
-  // anonymous visitors (whose response is the one that gets edge-cached).
   const user = await sessionUserFromRequest(request, env);
   if (user) throw redirect("/home");
   const [pick, browse, journal] = await Promise.all([

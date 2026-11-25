@@ -17,16 +17,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
-// Half-height bottom-anchored panel that slides up over the bottom of
-// the reader. Unlike the rest of the reader sheets this is NOT a Modal,
-// so the canvas above keeps receiving taps and swipes while the panel
-// is open -- per spec, "reading continues" while it sits on top.
-//
-// Two tabs:
-//   - Discussion: this club's passage comments on the book, from the book's
-//     annotation layers. Tap one to open its PassageCommentSheet.
-//   - Members: the club's members, marked when they are in the club right now
-//     (the club's live socket).
+// Not a Modal, so the reader canvas keeps receiving taps and swipes while the panel is open.
 
 interface ClubPanelSheetProps {
   visible: boolean;
@@ -61,7 +52,6 @@ export function ClubPanelSheet({
   const members = (page.data?.members ?? []).filter((m) => m.status === "active");
   const loading = tab === "discussion" ? layers.isPending : page.isPending;
 
-  // Slide up from the bottom each time the panel opens. It unmounts at once on close.
   const slide = useMemo(() => new Animated.Value(panelHeight), [panelHeight]);
   useEffect(() => {
     if (!visible) return;

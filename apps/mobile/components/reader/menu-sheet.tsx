@@ -23,7 +23,6 @@ import { Fonts } from "@/constants/fonts";
 import { SectionLabel } from "@/components/ui/section-label";
 import { LockBadge } from "./floating-pill-parts";
 
-/** Companion tools that open as one answer sheet (the server's action names). */
 export type CompanionTool =
   | "character_map"
   | "book_insight"
@@ -42,7 +41,6 @@ export type MenuAction =
   | "listen"
   | "sleep-timer";
 
-/** What each companion tool's sheet is called. */
 export const COMPANION_TOOL_TITLES: Record<CompanionTool, string> = {
   character_map: "Characters so far",
   book_insight: "An insight",
@@ -52,8 +50,6 @@ export const COMPANION_TOOL_TITLES: Record<CompanionTool, string> = {
   discussion_starter: "Discussion questions",
 };
 
-// The primary reading actions (Listen, Go To, Search) moved to the top chrome bar.
-// This sheet surfaces the secondary menu OR the companion hub, depending on initialView.
 export type MenuInitialView = "secondary" | "companion";
 
 interface MenuSheetProps {
@@ -61,23 +57,14 @@ interface MenuSheetProps {
   bookTitle: string;
   bookAuthor: string;
   currentChapterTitle?: string;
-  // Which content to render when the sheet opens. The top bar's Sparkle
-  // icon opens it directly to the companion hub; the bottom
-  // bar's chevron-up opens it to the secondary menu list.
   initialView?: MenuInitialView;
-  // Clubs the viewer is in that are reading this book. Appends a "My
-  // Clubs Reading This" tile to the secondary list when non-empty.
   clubsReadingThis?: Array<{ id: string; name: string }>;
   onAction: (action: MenuAction) => void;
-  // Plus gating. When `locked` (free tier), the AI hub entries show a lock
-  // badge and route to `onUpgrade` instead of opening the gated sheet.
   locked?: boolean;
   onUpgrade?: (feature: string) => void;
   onClose: () => void;
 }
 
-// Companion hub entries that are Plus-gated AI actions. The overflow utility
-// items (Listen, Sleep Timer, Vocabulary, Quote Card, Share) are not gated.
 const GATED_AI = new Set<MenuAction>([
   "ask-chat",
   ...(Object.keys(COMPANION_TOOL_TITLES) as CompanionTool[]),
@@ -89,7 +76,6 @@ interface MenuItem {
   label: string;
 }
 
-// Overflow: lean utility set.
 const SECONDARY: MenuItem[] = [
   { key: "listen", Icon: SpeakerHigh, label: "Listen" },
   { key: "sleep-timer", Icon: Moon, label: "Sleep Timer" },
@@ -99,7 +85,6 @@ const SECONDARY: MenuItem[] = [
   { key: "share", Icon: ShareIcon, label: "Share" },
 ];
 
-// The Companion hub tools, shown below the prominent Ask/Chat button.
 const BOOK_TOOLS: MenuItem[] = [
   { key: "character_map", Icon: Users, label: "Characters" },
   { key: "book_insight", Icon: Lightbulb, label: "Insight" },
@@ -125,9 +110,7 @@ export function MenuSheet({
 }: MenuSheetProps) {
   const colors = useColors();
   const [showCompanion, setShowCompanion] = useState(initialView === "companion");
-  // Sync the sub-view with the initialView prop each time the sheet
-  // opens; otherwise re-opening via a different entry point would show
-  // the previous view's state.
+  // Resync on open so a different entry point does not show the previous view.
   useEffect(() => {
     if (visible) {
       // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
@@ -152,7 +135,6 @@ export function MenuSheet({
       onClose();
       return;
     }
-    // Intercept gated AI entries for free users with the upgrade prompt.
     if (locked && GATED_AI.has(key)) {
       onUpgrade?.(label ?? "This feature");
       return;

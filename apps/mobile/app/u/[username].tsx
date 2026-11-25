@@ -13,8 +13,6 @@ import { FollowButton } from "@/components/profile/follow-button";
 import { Divider, StatTile } from "@/components/profile/stat-tile";
 import { SectionLabel } from "@/components/ui/section-label";
 
-// A reader's profile: the shared GET /u/:username page. A private profile shows only
-// who it is; following and close-friend toggles patch this page in place.
 export default function ProfileScreen() {
   const colors = useColors();
   const { username } = useLocalSearchParams<{ username: string }>();

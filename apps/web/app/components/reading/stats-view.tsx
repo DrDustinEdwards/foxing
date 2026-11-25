@@ -1,7 +1,3 @@
-// The reading stats page's body (app/routes/stats.tsx), drawn the same for a reader's own numbers and
-// for the sample numbers of /demos/stats: stat tiles, a books-per-month chart and a genre breakdown
-// for the current year (Enarratio, in Capsomer's frame), and year progress against any books-per-year
-// goal as a meter. Charts render only when their data exists.
 import type { ReadingStats } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";
 import { Meter } from "capsomer/react/meter";

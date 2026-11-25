@@ -1,9 +1,4 @@
-// Preview then perform for admin role and permission changes (change tier, suspend or
-// unsuspend). The first request to a role route changes
-// nothing: the server answers with who gains or loses what and a single-use token. This
-// dialog shows that preview and sends the token only when the operator confirms. It is
-// Capsomer's ConfirmDialog: focus starts on Cancel, Escape cancels except while the change
-// runs, a failure stays inside it, and focus returns to the button that opened it.
+// Preview then perform for admin role changes: the first request changes nothing and returns who gains or loses what plus a single-use token, which is sent only when the operator confirms.
 import { useState } from "react";
 import { ConfirmDialog } from "capsomer/react/confirm-dialog";
 import confirmDialogCss from "capsomer/confirm-dialog.css?url";
@@ -38,12 +33,6 @@ const VALUE_LABELS: Record<RolePreview["kind"], (v: RoleValue) => string> = {
 
 const fmtTime = new Intl.DateTimeFormat("en-US", { timeStyle: "short" });
 
-/**
- * Drives one role change: `request` fetches the preview and opens the dialog; the
- * dialog's confirm button performs it with the token. Errors from the preview step
- * come back in `error` for the page to show beside the button; errors from the
- * perform step stay in the dialog.
- */
 export function useRoleChange(opts: { onDone: () => void }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);

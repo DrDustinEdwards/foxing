@@ -1,6 +1,4 @@
-// Library repository: shelf state (user_books), custom shelves, reading goals,
-// and streak reads. All queries are user-scoped. Status writes go through
-// domain/library.changeBookStatus (which also emits); this module is data access.
+// Shelf state, custom shelves, reading goals and streaks, all user-scoped. Status writes go through domain/library.changeBookStatus, which also emits.
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import type { Db } from "../db";
 import type { UserBookStatus } from "../enums";
@@ -17,7 +15,6 @@ import {
 import type { SaveProgressInput } from "../validators/annotation";
 import type { CreateGoalInput, CreateShelfInput, UpdateGoalInput } from "../validators/library";
 
-/** The book columns every library listing selects beside the user_books ones. */
 const bookRef = {
   title: books.title,
   author: books.author,
@@ -54,10 +51,7 @@ export async function getUserBook(
   return rows[0] ?? null;
 }
 
-/** Save reading position. First write starts the book (status 'reading',
- *  started_at now); later writes update progress and never downgrade status
- *  (a want-to-read row becomes reading once the reader opens it). Keyed on the
- *  unique (user_id, book_id). */
+/** First write starts the book ('reading'); later writes update progress and never downgrade status. */
 export async function upsertProgress(
   db: Db,
   userId: string,
@@ -94,7 +88,6 @@ export async function upsertProgress(
   return row;
 }
 
-/** Timestamp to set for a status transition (others are left untouched). */
 function statusTimestamp(status: UserBookStatus, now: Date): Partial<UserBook> {
   switch (status) {
     case "finished":
@@ -108,9 +101,6 @@ function statusTimestamp(status: UserBookStatus, now: Date): Partial<UserBook> {
   }
 }
 
-/** Upsert the shelf status, keyed on (user, book). Sets started_at on the first
- *  reading/finished transition and the status-specific timestamp. Data only; the
- *  domain layer emits events. */
 export async function upsertStatus(
   db: Db,
   userId: string,
@@ -183,7 +173,6 @@ export interface ProfileBook {
   coverUrl: string | null;
 }
 
-/** Count of finished books. Powers the profile "Books read" stat tile. */
 export async function countFinishedBooks(db: Db, userId: string): Promise<number> {
   const [row] = await db
     .select({ n: sql<number>`count(*)` })
@@ -192,7 +181,6 @@ export async function countFinishedBooks(db: Db, userId: string): Promise<number
   return Number(row?.n ?? 0);
 }
 
-/** How many readers have the book in their library, on any shelf. */
 export async function countReaders(db: Db, bookId: string): Promise<number> {
   const [row] = await db
     .select({ n: sql<number>`COUNT(*)` })
@@ -201,7 +189,6 @@ export async function countReaders(db: Db, bookId: string): Promise<number> {
   return Number(row?.n ?? 0);
 }
 
-/** Recently finished books, newest first, for the public profile library preview. */
 export async function listFinishedBooks(db: Db, userId: string, limit = 8): Promise<ProfileBook[]> {
   return db
     .select({
@@ -221,7 +208,6 @@ export interface PublicShelf {
   bookCount: number;
 }
 
-/** Public custom shelves with book counts, for the profile shelves grid. */
 export async function listPublicShelves(db: Db, userId: string): Promise<PublicShelf[]> {
   const rows = await db
     .select({
@@ -236,8 +222,6 @@ export async function listPublicShelves(db: Db, userId: string): Promise<PublicS
   return rows.map((r) => ({ id: r.id, name: r.name, bookCount: Number(r.bookCount) }));
 }
 
-/** Currently-reading books for a user, newest activity first. Powers the profile
- *  "currently reading" strip; the caller decides whether progress visibility allows it. */
 export async function listCurrentlyReading(
   db: Db,
   userId: string,
@@ -258,8 +242,6 @@ export async function listCurrentlyReading(
     .limit(limit);
 }
 
-/** Every book id in the user's library (any status). The exclusion set for
- *  recommendations: never recommend a book they already track. */
 export async function listOwnedBookIds(db: Db, userId: string): Promise<string[]> {
   const rows = await db
     .select({ bookId: userBooks.bookId })
@@ -275,7 +257,6 @@ export interface ReadSignalBook {
   subjects: string[] | null;
 }
 
-/** Finished books with the fields the recommender scores on (author + subjects). */
 export async function listFinishedForSignals(db: Db, userId: string): Promise<ReadSignalBook[]> {
   return db
     .select({
@@ -294,8 +275,6 @@ export interface FinishedStatBook {
   subjects: string[] | null;
 }
 
-/** Finished books in a half-open time window, carrying the two fields the stats charts
- *  need: the finish date (monthly-books view) and subjects (genre breakdown). */
 export async function listFinishedInRangeForStats(
   db: Db,
   userId: string,
@@ -317,7 +296,6 @@ export async function listFinishedInRangeForStats(
 
 export type VocabularyEntry = typeof vocabulary.$inferSelect;
 
-/** Count of words not yet mastered. Powers the account menu "N words to master" line. */
 export async function countVocabularyToMaster(db: Db, userId: string): Promise<number> {
   const [row] = await db
     .select({ n: sql<number>`count(*)` })
@@ -326,7 +304,6 @@ export async function countVocabularyToMaster(db: Db, userId: string): Promise<n
   return Number(row?.n ?? 0);
 }
 
-/** Count of all the words a user has saved. */
 export async function countVocabulary(db: Db, userId: string): Promise<number> {
   const [row] = await db
     .select({ n: sql<number>`count(*)` })
@@ -335,7 +312,6 @@ export async function countVocabulary(db: Db, userId: string): Promise<number> {
   return Number(row?.n ?? 0);
 }
 
-/** A user's saved words, newest first. Backs the /vocabulary page. */
 export async function listVocabulary(db: Db, userId: string): Promise<VocabularyEntry[]> {
   return db
     .select()
@@ -345,7 +321,6 @@ export async function listVocabulary(db: Db, userId: string): Promise<Vocabulary
     .limit(500);
 }
 
-/** Toggle a saved word mastered / not (scoped to the owner). Null when it is not theirs. */
 export async function setVocabularyMastered(
   db: Db,
   userId: string,
@@ -385,7 +360,6 @@ export async function createShelf(
   return row;
 }
 
-/** Delete a shelf the caller owns. Returns false if it is not theirs. */
 export async function deleteShelf(db: Db, userId: string, shelfId: string): Promise<boolean> {
   const rows = await db
     .delete(customShelves)
@@ -450,7 +424,6 @@ export async function listShelfBooks(
     .orderBy(desc(customShelfBooks.addedAt));
 }
 
-/** Shelf ids (owned by the user) that contain the given book. For the book-page picker. */
 export async function shelfIdsForBook(db: Db, userId: string, bookId: string): Promise<string[]> {
   const rows = await db
     .select({ shelfId: customShelfBooks.shelfId })
@@ -480,7 +453,6 @@ export async function createGoal(
   return row;
 }
 
-/** Retarget a goal the caller owns. Returns the updated row, or null if not theirs. */
 export async function updateGoal(
   db: Db,
   userId: string,
@@ -511,8 +483,7 @@ export async function listGoals(db: Db, userId: string): Promise<ReadingGoal[]> 
     .orderBy(desc(readingGoals.year));
 }
 
-/** The instant a calendar day starts in the reader's timezone, from that day's UTC midnight (`dayStartUtc`); the
- *  UTC midnight itself when they have no zone or Intl does not know it. Inverse of localDay. */
+/** The instant a local calendar day starts, from its UTC midnight; the UTC midnight itself when there is no zone or Intl does not know it. */
 export function localMidnight(dayStartUtc: number, timezone: string | null): number {
   if (!timezone) return dayStartUtc;
   const offset = (at: number): number => {
@@ -541,8 +512,7 @@ export function localMidnight(dayStartUtc: number, timezone: string | null): num
   return dayStartUtc - offset(first);
 }
 
-/** Half-open [start, end) date range for a goal period, its days in the reader's timezone (UTC without one), so
- *  goal progress counts the same days as the streak and the stats page. */
+/** Half-open [start, end) range for a goal period in the reader's timezone, so goal progress counts the same days as streak and stats. */
 export function periodRange(
   periodType: string,
   year: number,
@@ -583,7 +553,6 @@ function utcPeriodRange(
   return { start: new Date(Date.UTC(year, 0, 1)), end: new Date(Date.UTC(year + 1, 0, 1)) };
 }
 
-/** Books the user finished within a goal's period (books-type goal progress). */
 export async function countFinishedInPeriod(
   db: Db,
   userId: string,
@@ -613,7 +582,6 @@ export async function getStreak(db: Db, userId: string): Promise<ReadingStreak |
   return rows[0] ?? null;
 }
 
-/** Write the day streak and add a session's pages, upserting the streak row. */
 export async function saveStreak(
   db: Db,
   userId: string,
@@ -647,7 +615,6 @@ export async function saveStreak(
     });
 }
 
-/** The reader's sessions that started at or after a moment, oldest first. */
 export async function listSessionsSince(db: Db, userId: string, sinceMs: number) {
   return db
     .select({

@@ -90,7 +90,6 @@
   }
 }
 .fx-reader-panels-label-5 {
-  /* Level with the first line of the passage beside it. */
   margin-block-start: var(--space-2);
   height: 0.75rem;
   width: 0.75rem;
@@ -541,7 +540,6 @@
   resize: none;
 }
 
-/* The annotation popovers: at the selection when anchored, otherwise docked above the bottom bar. */
 .fx-reader-pop {
   position: fixed;
   z-index: var(--z-tabbar);

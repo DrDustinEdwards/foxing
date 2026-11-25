@@ -17,8 +17,6 @@ import { Divider, StatTile } from "@/components/profile/stat-tile";
 import { StatBlock, StatLine } from "@/components/profile/stat-block";
 import { CompanionSheet } from "@/components/reader/companion-sheet";
 
-// The reader's own profile: GET /me, their public profile page (the same one others
-// see), reading stats and recent highlights. Edits patch the cached profile in place.
 export default function ProfileScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -31,7 +29,6 @@ export default function ProfileScreen() {
   const [editing, setEditing] = useState(false);
   const [personalityOpen, setPersonalityOpen] = useState(false);
   const reading = publicPage?.currentlyReading[0] ?? null;
-  // The companion needs a book to anchor on: what they're reading, or last finished.
   const anchorBookId = reading?.bookId ?? publicPage?.finishedBooks[0]?.bookId ?? null;
 
   const signOut = async () => {

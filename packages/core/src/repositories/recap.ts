@@ -1,6 +1,5 @@
-// Year in Reading data access. Reads the books a user finished within a
-// calendar year in the reader's own timezone (UTC without one), with the detail the recap + OG image need. Rating overlays come
-// from diaryRepo. Pure DB reads; the domain assembles the recap payload.
+// Year in Reading reads: the books finished in a calendar year in the reader's own timezone (UTC without one). Ratings come from diaryRepo;
+// the domain assembles the payload.
 import { and, asc, eq, gte, lt } from "drizzle-orm";
 import type { Db } from "../db";
 import { books, userBooks } from "../schema";

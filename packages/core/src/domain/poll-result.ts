@@ -1,15 +1,7 @@
-// Pure poll-counting functions. No DB, no I/O: given the option ids and the
-// cast ballots (each an ordered list of option ids), compute tallies and a winner.
-// Unit-tested in isolation (poll-result.test.ts). The API layer calls these; the live
-// layer broadcasts firstPreferenceTallies as votes arrive, and the close event
-// persists computePollResult in its data json.
-//
-// Single-choice polls store a one-element ranks array and resolve by plurality.
-// IRV polls resolve by instant-runoff elimination.
+// Pure poll counting: no DB or I/O. Single-choice polls store a one-element ranks array and resolve by plurality; IRV polls by instant-runoff elimination.
 
 export type Ballot = string[]; // ordered option ids, most-preferred first
 
-/** First-preference counts per option: the live tally shown while voting is open. */
 export function firstPreferenceTallies(
   optionIds: readonly string[],
   ballots: readonly Ballot[],
@@ -65,7 +57,6 @@ function loserByOrder(
   return worst as string;
 }
 
-/** Plurality winner (single-choice). Ties broken by original option order. */
 export function computePlurality(
   optionIds: readonly string[],
   ballots: readonly Ballot[],
@@ -87,8 +78,6 @@ export function computePlurality(
   };
 }
 
-/** Instant-runoff winner. Eliminates the fewest-first-choice option each round and
- *  redistributes its ballots until one option holds a majority of active ballots. */
 export function computeIrv(optionIds: readonly string[], ballots: readonly Ballot[]): PollResult {
   const remaining = new Set(optionIds);
   const rounds: PollResult["rounds"] = [];
@@ -129,7 +118,6 @@ export function computeIrv(optionIds: readonly string[], ballots: readonly Ballo
   return { winnerId: null, isTie: false, finalCounts: {}, rounds };
 }
 
-/** Resolve a poll by its type. Single = plurality, irv = instant-runoff. */
 export function computePollResult(
   pollType: "single" | "irv",
   optionIds: readonly string[],

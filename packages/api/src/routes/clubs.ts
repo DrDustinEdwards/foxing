@@ -1,8 +1,5 @@
-// Club endpoints: CRUD, membership, threads/posts, polls, meetings,
-// schedule, and the live WebSocket. Handlers stay thin: guard the session, validate,
-// call the core clubs domain (which authorizes, commits to D1, and emits events), then
-// injected hub. That ordering is the invariant: D1 commits first, then the DO fans out.
-// The DO never writes D1.
+// Thin handlers: guard the session, validate, call the core clubs domain (authorizes, commits to D1, emits), then the injected hub.
+// D1 commits first, then the DO fans out; the DO never writes D1.
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { Hono } from "hono";
 import {
@@ -52,9 +49,7 @@ clubRoutes.get("/clubs/mine", async (c) => {
   return c.json({ clubs: await views.myClubs(c.get("db"), session.id) });
 });
 
-// A club by id or slug, with everything its page shows. Private clubs are visible only
-// to their active members; anyone else gets the same "not found" as a club that does
-// not exist.
+// Private clubs are visible only to active members; anyone else gets the same "not found" as a missing club.
 clubRoutes.get("/clubs/:id", async (c) => {
   const page = await views.clubPage(c.get("db"), c.req.param("id"), c.get("session")?.id ?? null);
   if (!page) throw errors.notFound("Club not found.");
@@ -67,7 +62,6 @@ clubRoutes.get("/threads/:id", async (c) => {
   return c.json(page);
 });
 
-// Public invite preview: club summary for the join page + OG image.
 clubRoutes.get("/join/:code", async (c) => {
   const club = await clubsRepo.getClubByJoinCode(c.get("db"), c.req.param("code"));
   if (!club) throw errors.notFound("This invite link is no longer valid.");

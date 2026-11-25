@@ -1,9 +1,3 @@
-// The search palette: Capsomer's command menu, opened by Ctrl K, Cmd K, "/" or the header's
-// search button (which dispatches "foxing:search-open"). Recent searches and quick links are
-// its commands; typing federates catalog books, authors, people and clubs from
-// /api/v1/search/suggest through the menu's live search.
-// On a page that does not hydrate the search-palette island (islands/search-palette.ts) is the same
-// menu, from the same commands (lib/search-commands.ts).
 import { CommandMenu } from "capsomer/react/command-menu";
 import { useRemembered } from "capsomer/react/hooks";
 import { useEffect, useState } from "react";
@@ -23,7 +17,6 @@ export function CommandPalette() {
   const root = useRouteLoaderData<typeof RootLoader>("root");
   const signedIn = !!root?.navUser;
   const [open, setOpen] = useState(false);
-  // Recent searches follow the stored value, so a search run from the palette shows next time.
   const recent = parseRecent(useRemembered(RECENT_KEY)[0]);
 
   useEffect(() => {

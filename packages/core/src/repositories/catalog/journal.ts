@@ -1,5 +1,4 @@
-// The Journal (editorial posts): /journal, /journal/:slug, /journal/rss.xml.
-// Public reads are published-only.
+// Public Journal reads are published-only.
 import { toDate } from "@dustinedwards/site-runtime/time";
 import { pageEnvelope } from "capsomer/behavior/pagination";
 import { and, asc, desc, eq, getTableColumns, isNotNull, lte, sql } from "drizzle-orm";
@@ -9,10 +8,7 @@ import { journalPosts, journalSlugRedirects, profiles } from "../../schema";
 
 export type JournalPost = typeof journalPosts.$inferSelect;
 
-/**
- * The focal point Carrel set on the cover's file in the Journal's media library ("XxY"), or null
- * for a cover from elsewhere or with none: a cropped cover keeps that point in view.
- */
+/** The focal point Carrel set on the cover's media file ("XxY"), or null, so a cropped cover keeps it in view. */
 const coverFocus = sql<
   string | null
 >`(SELECT m.focus FROM media m WHERE substr(${journalPosts.coverImageUrl}, -length('/media/' || m.key)) = '/media/' || m.key)`;
@@ -91,11 +87,7 @@ export async function getPostBySlug(
   return rows[0] ?? null;
 }
 
-/**
- * Where a renamed post's old slug now leads (journal_slug_redirects, written by a Carrel rename),
- * or null. Only a live post is led to, so the 301 never ends at a 404: while the post is a draft or
- * in the trash its old address answers 404 itself, and a delete removes the rows.
- */
+/** Where a renamed post's old slug leads, only for a live post, so the 301 never ends at a 404. */
 export async function getJournalSlugRedirect(db: Db, slug: string): Promise<string | null> {
   const [row] = await db
     .select({ toSlug: journalSlugRedirects.toSlug })
@@ -106,10 +98,6 @@ export async function getJournalSlugRedirect(db: Db, slug: string): Promise<stri
   return row?.toSlug ?? null;
 }
 
-/**
- * The byline of a post: its credited staff member's display name, or null when it credits Foxing
- * alone.
- */
 export async function getJournalAuthor(
   db: Db,
   post: { authorId: string | null },
@@ -125,10 +113,7 @@ export async function getJournalAuthor(
 
 export type JournalSeriesPart = JournalCard & { seriesPart: number | null };
 
-/**
- * The live posts of one series, in reading order: by part number, a post with none after the
- * numbered ones, then by publish date. For a post's series nav and the series' own page.
- */
+/** Live posts of one series in reading order: by part number (unnumbered after), then publish date. */
 export async function listJournalSeriesParts(db: Db, series: string): Promise<JournalSeriesPart[]> {
   return db
     .select({ ...CARD_COLUMNS, seriesPart: journalPosts.seriesPart })
@@ -141,7 +126,6 @@ export async function listJournalSeriesParts(db: Db, series: string): Promise<Jo
     );
 }
 
-/** Each series on published posts with the newest change to one of its posts, for the sitemap. */
 export async function listSitemapSeries(
   db: Db,
 ): Promise<Array<{ series: string; updatedAt: Date }>> {
@@ -165,11 +149,7 @@ export async function listSitemapSeries(
   );
 }
 
-/**
- * Whether a slug names a post taken down on purpose: in Carrel's trash, and live once (published_at
- * in the past, which unpublishing keeps). Such an address answers 410, not 404, so a crawler drops
- * it and a reader is told it was not a typo. A draft trashed before it went live stays a 404.
- */
+/** Whether a slug names a post taken down on purpose (trashed after going live): answers 410, not 404; a draft trashed before going live stays 404. */
 export async function isJournalPostWithdrawn(
   db: Db,
   slug: string,
@@ -190,7 +170,6 @@ export async function isJournalPostWithdrawn(
   return Boolean(row);
 }
 
-/** All published post slugs + last-modified, for the sitemap. */
 export async function listPublishedSlugs(
   db: Db,
 ): Promise<Array<{ slug: string; updatedAt: Date }>> {
@@ -203,7 +182,6 @@ export async function listPublishedSlugs(
   return rows.map((r) => ({ slug: r.slug, updatedAt: r.updatedAt ?? new Date(0) }));
 }
 
-/** Latest published posts for the RSS feed and sitemap. */
 export async function listRssPosts(db: Db, limit = 30): Promise<JournalPost[]> {
   return db
     .select()
@@ -215,7 +193,6 @@ export async function listRssPosts(db: Db, limit = 30): Promise<JournalPost[]> {
 
 export type JournalTag = { tag: string; count: number };
 
-/** Distinct tags across published posts, for the tag index and archive filters. */
 export async function listTags(db: Db): Promise<JournalTag[]> {
   const rows = await db.all<{ tag: string; count: number }>(sql`
     SELECT je.value AS tag, COUNT(*) AS count
@@ -227,7 +204,6 @@ export async function listTags(db: Db): Promise<JournalTag[]> {
   return rows.map((r) => ({ tag: r.tag, count: Number(r.count) }));
 }
 
-/** Each tag on published posts with the newest change to a post that carries it, for the sitemap. */
 export async function listSitemapTags(db: Db): Promise<Array<{ tag: string; updatedAt: Date }>> {
   const rows = await db.all<{ tag: string; updated_at: number }>(sql`
     SELECT je.value AS tag, MAX(journal_posts.updated_at) AS updated_at
@@ -239,7 +215,6 @@ export async function listSitemapTags(db: Db): Promise<Array<{ tag: string; upda
   return rows.map((r) => ({ tag: r.tag, updatedAt: new Date(Number(r.updated_at)) }));
 }
 
-/** Published posts carrying one tag, newest first. */
 export async function listPostsByTag(
   db: Db,
   tag: string,

@@ -1,6 +1,3 @@
-/* The Journal: the index, archive, tag pages and a post. */
-
-/* Journal article prose: Source Serif body on a comfortable measure. */
 .article-prose {
   font-family: var(--fx-body);
   font-size: var(--fs-h3);
@@ -97,7 +94,6 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-/* The series page lists its parts in an ol; each item holds one card, at the row's height. */
 .fx-journal-tag-grid > li {
   display: grid;
 }

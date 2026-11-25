@@ -1,7 +1,5 @@
-// Sync executors. One adapter per single-owner resource: existence/LWW probe,
-// insert, update, delete, and the pull query. The pure conflict decision lives in
-// domain/sync.ts (resolveSyncOp); this file only executes a decision against D1. Every
-// operation is scoped to the session user id -- payload.user_id is never trusted.
+// Sync executors: one adapter per single-owner resource. The pure conflict decision is domain/sync.ts (resolveSyncOp); this file only executes
+// it against D1, scoped to the session user (payload.user_id never trusted).
 import { toDate } from "@dustinedwards/site-runtime/time";
 import { and, eq, gt, sql } from "drizzle-orm";
 import type { Db } from "../db";
@@ -10,7 +8,6 @@ import { recomputeBookRating } from "./diary";
 import { annotations, diaryEntries, readingSessions, userBooks, vocabulary } from "../schema";
 import type { SyncOp } from "../validators/sync";
 
-/** Minimal existence + freshness probe for the LWW decision. updatedAt is epoch ms. */
 export type Existing = { updatedAt: number } | null;
 
 export type SyncAdapter = {

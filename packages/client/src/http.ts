@@ -1,8 +1,4 @@
-// The one /api/v1 transport for web and mobile. Web calls it same-origin with the
-// session cookie; mobile passes a base URL and a headers() that adds the Better Auth
-// cookie from secure storage. Every failure becomes an ApiError whose message is
-// fit to show the reader as-is (role="alert" on web, an inline error on mobile):
-// nothing is swallowed.
+// The one /api/v1 transport for web and mobile. Every failure becomes an ApiError whose message is fit to show the reader as-is; nothing is swallowed.
 import { readSse } from "capsomer/behavior/sse";
 
 export class ApiError extends Error {
@@ -22,13 +18,10 @@ export class ApiError extends Error {
 export const OFFLINE_MESSAGE = "Could not reach the server. Check your connection and try again.";
 
 export interface ApiClientOptions {
-  /** Origin the API lives on; "" for same-origin (web). */
   baseUrl?: string;
-  /** Extra headers per request, e.g. mobile's session cookie. */
   headers?: () => Record<string, string> | Promise<Record<string, string>>;
   fetch?: typeof fetch;
   credentials?: RequestCredentials;
-  /** Opens a WebSocket; mobile passes one that sends the session cookie. */
   openSocket?: (url: string) => WebSocket;
 }
 
@@ -68,7 +61,6 @@ export function createApiClient(opts: ApiClientOptions = {}) {
     return (data ?? {}) as T;
   }
 
-  /** POSTs and reads a server-sent event stream, handing each event to onEvent. */
   async function stream(
     path: string,
     body: Body,
@@ -108,7 +100,6 @@ export function createApiClient(opts: ApiClientOptions = {}) {
     patch: <T>(path: string, body: Body) => request<T>("PATCH", path, body),
     delete: <T>(path: string, body?: Body) => request<T>("DELETE", path, body),
     stream,
-    /** A WebSocket to an /api/v1 path, on the same origin as the requests. */
     socket: (path: string): WebSocket => {
       const origin = opts.baseUrl || globalThis.location.origin;
       const url = `${origin.replace(/^http/, "ws")}/api/v1${path}`;
@@ -119,7 +110,6 @@ export function createApiClient(opts: ApiClientOptions = {}) {
 
 export type ApiClient = ReturnType<typeof createApiClient>;
 
-/** A query string from defined values only. */
 export function qs(params: Record<string, string | number | boolean | null | undefined>): string {
   const entries = Object.entries(params).filter(
     (e): e is [string, string | number | boolean] =>
@@ -129,7 +119,6 @@ export function qs(params: Record<string, string | number | boolean | null | und
   return `?${entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join("&")}`;
 }
 
-/** A failed write, worded for the reader: what failed first, then the server's reason. */
 export function writeErrorMessage(error: unknown): string | null {
   if (!error) return null;
   if (!(error instanceof ApiError)) return "Could not save. Try again.";
@@ -137,18 +126,13 @@ export function writeErrorMessage(error: unknown): string | null {
   return `Could not save: ${error.message}`;
 }
 
-/** The message to show for a failed mutation or query, or null. */
 export function failedRequestMessage(error: unknown): string | null {
   if (!error) return null;
   if (error instanceof ApiError) return error.message;
   return OFFLINE_MESSAGE;
 }
 
-/**
- * The API's refusal as an ApiError. The API answers errors as RFC 9457 problem details (site-runtime
- * ./http-errors): `code` to branch on, `detail` to show, and any extension members (a validation's `errors`,
- * a quota's `resets_at`) as `details`. This package carries no site-runtime dependency, so it reads them here.
- */
+/** The API's refusal as an ApiError, read from RFC 9457 problem details (`code`, `detail`, extension members as `details`); this package carries no site-runtime dependency. */
 function problemError(status: number, body: unknown): ApiError {
   const fallback = `Request failed (${status}). Try again.`;
   if (!body || typeof body !== "object" || Array.isArray(body))

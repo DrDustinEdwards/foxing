@@ -14,10 +14,7 @@ export function resolveModel(role: CompanionRole): string {
   return MODELS[role];
 }
 
-/**
- * Estimated cost of one call, in whole cents, rounded up so quota math never undercounts. Priced by site-runtime's
- * PRICES (the network's one table), cache reads and writes included: the companion caches its prompt.
- */
+/** Estimated cost of one call in whole cents, rounded up so quota math never undercounts; cache reads and writes included (site-runtime PRICES). */
 export function estimateCostCents(
   role: CompanionRole,
   usage: TokenCounts & { long?: TokenCounts },
@@ -27,7 +24,6 @@ export function estimateCostCents(
   return Math.ceil(micros / 10_000);
 }
 
-/** A call that spent nothing yet: the start of a running total. */
 export function emptyUsage(): Usage {
   const none = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cacheWrite1h: 0 };
   return { ...none, long: { ...none } };

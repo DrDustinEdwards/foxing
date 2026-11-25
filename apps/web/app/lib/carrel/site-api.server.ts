@@ -1,10 +1,7 @@
-// Carrel's site API (@dustinedwards/site-api) on the Worker: the Journal adapter, the CARREL_SITE_KEY secret and the
-// CARREL_RATE_LIMIT binding, with its preview links at /preview/<token>, mounted by site-api's siteApiStep
-// (workers/app.ts). The key reaches only /api/carrel/v1; a preview link carries no key, its token is the address, and
-// it shows one post's current source until it expires or Carrel revokes it. Inside the prefix the package guards in
-// order: prefix, rate limit, key, route. Outside it, a request that presents the key is refused before any other step
-// runs (carrelKeyOffPrefix), so the key can never stand in for a session on an admin, user, club or /api/v1 route, now
-// or after a later change to how sessions are read.
+// Carrel's site API on the Worker, mounted by site-api's siteApiStep (workers/app.ts). The key reaches only
+// /api/carrel/v1 (guards in order: prefix, rate limit, key, route); a preview link carries no key, its token is the address.
+// Outside the prefix a request presenting the key is refused first (carrelKeyOffPrefix), so the key can never stand in for
+// a session on an admin, user, club or /api/v1 route.
 
 import {
   insidePrefix,
@@ -23,17 +20,11 @@ import { SITE_ORIGIN } from "../origins";
 import { journalSiteAdapter } from "./journal-adapter.server";
 
 /**
- * One site API over the Journal, for a Carrel request, a preview link and the cron alike: site-api's standard store
- * (packages/core/migrations/0011_site_api_store.sql) and hooks. The store makes every write safe to send again under
- * its change id, keeps the preview links and the webmentions each post sent, and holds a failed hook for the cron to
- * retry. The hooks run after a write that changes a public page: a published change tells IndexNow at once (a request
- * from a preview origin sends nothing), the pages a post links to hear of it by webmention, and a schedule the cron
- * puts live purges the stored pages (the gateway purges after a Carrel write itself). A missing CARREL_RATE_LIMIT
- * binding throws in the limiter, which the package answers 503: the API fails closed rather than running unlimited.
- *
- * `kit` is the gateway's, for a request: a preview draws the journal route in-process at its own address, through the
- * shared render, with the post handed to the route (journalPreviewContext). It carries no nonce, as a stored public
- * page carries none, so the page is the server's HTML and no script of it runs. The cron passes none.
+ * One site API over the Journal for a Carrel request, a preview link and the cron alike: site-api's standard store and
+ * hooks (writes are safe to resend under their change id; failed hooks are retried by the cron). A missing
+ * CARREL_RATE_LIMIT binding throws in the limiter, which answers 503: it fails closed rather than unlimited.
+ * `kit` is the gateway's, for a request: a preview draws the journal route in-process with the post handed to it, with no
+ * nonce, so no script of it runs. The cron passes none.
  */
 function carrelSiteApi(env: Env, sourceIp: string | null, kit?: StepKit): SiteApi {
   return standardSiteApi({
@@ -60,24 +51,16 @@ function carrelSiteApi(env: Env, sourceIp: string | null, kit?: StepKit): SiteAp
   });
 }
 
-/** The gateway step for /api/carrel/v1 and the preview links; an accepted write purges the stored pages. */
 export const carrelStep: GatewayStep<Env> = siteApiStep<Env>((env, kit, request) =>
   carrelSiteApi(env, request.headers.get("cf-connecting-ip"), kit),
 );
 
-/**
- * The per-minute cron's job (workers/app.ts): every scheduled post and update whose time has come goes live, with the
- * hooks a Carrel publish runs; the hooks that failed earlier run again; the posts 30 days in the trash are deleted; and
- * the replay store is pruned. A schedule that fails fails the job, and is tried next minute.
- */
+/** The per-minute cron's job: puts due scheduled posts live, reruns failed hooks, deletes posts 30 days in the trash and prunes the replay store. A failed schedule fails the job and retries next minute. */
 export async function runCarrelSchedules(env: Env, now: Date): Promise<void> {
   await carrelSiteApi(env, null).runSchedulesOrThrow({ now });
 }
 
-/**
- * The first gateway step: a request outside the prefix that presents the Carrel key as its bearer token is refused,
- * 401. Compared by site-runtime's constant-time digest check; an unset or short key matches nothing.
- */
+/** The first gateway step: a request outside the prefix presenting the Carrel key as bearer is refused 401 (constant-time check; an unset or short key matches nothing). */
 export const carrelKeyOffPrefix: GatewayStep<Env> = async (request, env) => {
   if (insidePrefix(new URL(request.url).pathname)) return undefined;
   const header = request.headers.get("authorization");

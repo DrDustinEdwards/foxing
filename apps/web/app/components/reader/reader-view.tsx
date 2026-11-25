@@ -1,9 +1,5 @@
-// The reading surface. Renders a shell on the server and mounts the Readium
-// engine client-side (lazy import, so ts-toolkit never loads on catalog pages or
-// during SSR). Owns navigation, TOC, the progress scrubber, typography controls,
-// keyboard nav, and annotations (7-color highlights, notes, bookmarks). Writes go
-// to /api/v1 (annotations + progress) from the browser and surface every failure;
-// anonymous readers can read fully and are prompted to sign in for personal features.
+// The reading surface: a server shell that mounts the Readium engine client-side (lazy, so ts-toolkit never loads on
+// catalog pages or during SSR). Writes go to /api/v1 from the browser and surface every failure.
 import {
   useBookAnnotations,
   useCreateAnnotation,
@@ -58,7 +54,6 @@ interface ReaderViewProps {
   manifestUrl: string;
   signedIn: boolean;
   loginHref: string;
-  /** Every annotation layer the viewer may see, resolved in the loader. */
   layers: ReaderAnnotations;
   shareableClubs: { id: string; name: string }[];
   initialLocator: Locator | null;
@@ -73,18 +68,14 @@ export function ReaderView(props: ReaderViewProps) {
   const currentLocatorRef = useRef<Locator | null>(initialLocator);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const flushSave = useRef(() => {}); // saves the position waiting out the debounce, when the reader leaves
-  // Last position we actually persisted (seeded with the restored one), so we never
-  // re-save an unchanged position.
   const lastSavedRef = useRef<Locator | null>(initialLocator);
 
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
-  // Reading settings and layers are kept in this browser (Capsomer's useRemembered): the defaults
-  // on the server and while hydrating, then the stored choice.
+  // Settings and layers are kept in this browser (useRemembered): defaults on the server and while hydrating.
   const [storedSettings, rememberSettings] = useRemembered(SETTINGS_KEY);
   const settings = useMemo(() => parseSettings(storedSettings), [storedSettings]);
-  // The layers live in the shared cache: every write below patches it first (the
-  // highlight is on the page before the server answers) and rolls back on failure.
+  // The layers live in the shared cache: every write patches it first and rolls back on failure.
   const resolved = useBookAnnotations(book.id, props.layers).data;
   const annotations = resolved.mine as ReaderAnnotation[];
   const others = resolved.others as unknown as ReaderOther[];
@@ -92,10 +83,7 @@ export function ReaderView(props: ReaderViewProps) {
   const popular = resolved.popular as unknown as ReaderPopular[];
   const [storedLayers, rememberLayers] = useRemembered(LAYERS_KEY);
   const layers = useMemo(() => parseLayers(storedLayers), [storedLayers]);
-  // Ids the reader chose to reveal past their spoiler/ahead gate, this session only.
   const [revealed, setRevealed] = useState<Set<string>>(() => new Set());
-  // The other reader's annotation whose attribution popover is open (distinct from the
-  // owner EditPopover, which is for your own marks).
   const [attribution, setAttribution] = useState<ReaderOther | null>(null);
   const [attributionAnchor, setAttributionAnchor] = useState<DecorationRect | null>(null);
   const [toc, setToc] = useState<TocEntry[]>([]);
@@ -107,13 +95,10 @@ export function ReaderView(props: ReaderViewProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const editing = annotations.find((a) => a.id === editingId) ?? null; // from the cache, so a color change shows
   const setEditing = (a: ReaderAnnotation | null) => setEditingId(a?.id ?? null);
-  // Viewport-space rect of the tapped highlight, so the popover anchors to the
-  // passage. Null when opened from the Contents list (then it floats bottom-center).
+  // Viewport-space rect of the tapped highlight; null from the Contents list (the popover then floats bottom-center).
   const [editAnchor, setEditAnchor] = useState<DecorationRect | null>(null);
   const [signInPrompt, setSignInPrompt] = useState(false);
-  // Personal-feature writes (highlights, notes, bookmarks, progress) go to /api/v1
-  // and never swallow a failure: saving drives a role="status" indicator, writeError
-  // a role="alert" banner (mirrors book-status-control's visible-write pattern).
+  // Writes never swallow a failure: saving drives a role="status" indicator, writeError a role="alert" banner.
   const writes = [
     useCreateAnnotation(),
     useUpdateAnnotation(),
@@ -123,7 +108,6 @@ export function ReaderView(props: ReaderViewProps) {
     useSaveProgress(),
   ] as const;
   const [createAnn, updateAnn, deleteAnn, likeAnn, comment, saveProgress] = writes;
-  // Each write's method on its own, so a callback depends on the method, not the whole write.
   const createRun = createAnn.run;
   const updateFire = updateAnn.fire;
   const deleteFire = deleteAnn.fire;
@@ -141,7 +125,6 @@ export function ReaderView(props: ReaderViewProps) {
   const othersRef = useRef(others);
   const layersRef = useRef(layers);
   const popularRef = useRef(popular);
-  // The refs follow the latest render once it commits, before any effect below reads them.
   useLayoutEffect(() => {
     settingsRef.current = settings;
     annotationsRef.current = annotations;
@@ -150,10 +133,7 @@ export function ReaderView(props: ReaderViewProps) {
     popularRef.current = popular;
   });
 
-  // Redraw the decoration layers from the current mine/others sets, honoring the layer
-  // toggles. Your own always render when the Mine layer is on; others render as an
-  // underline in the author's color when their layer group is on ("My clubs" = club +
-  // friend, "Everyone" = public). Popular is drawn separately as an ambient underline.
+  // Redraw the decoration layers from the mine/others sets and the layer toggles ("My clubs" = club + friend, "Everyone" = public).
   const reapplyHighlights = useCallback(
     (
       mine: ReaderAnnotation[],
@@ -190,7 +170,6 @@ export function ReaderView(props: ReaderViewProps) {
     const layerState = layersRef.current;
     const theme = settingsRef.current.theme;
     reapplyHighlights(annotationsRef.current, othersRef.current, layerState, theme);
-    // Popular follows the Everyone layer; drawn separately as an ambient underline.
     const popularSpecs = layerState.everyone
       ? popularRef.current
           .filter((p) => p.locator)
@@ -204,7 +183,6 @@ export function ReaderView(props: ReaderViewProps) {
       if (saveTimer.current) clearTimeout(saveTimer.current);
       flushSave.current = () => {
         flushSave.current = () => {};
-        // Don't re-persist a position already saved (the restore navigation re-emits it: no "Saving..." flash).
         if (samePosition(loc, lastSavedRef.current)) return;
         lastSavedRef.current = loc;
         saveFire({ bookId: book.id, locator: loc, progressPct: annotationPct(loc) ?? 0 });
@@ -214,10 +192,7 @@ export function ReaderView(props: ReaderViewProps) {
     [book.id, saveFire],
   );
 
-  // Boot: load saved settings, build the engine, wire listeners. Mounts once per
-  // book; all inputs it needs (signedIn, initialLocator, the callbacks) are stable
-  // for a reading session or read through refs, so re-running on their identity
-  // would needlessly rebuild the navigator.
+  // Boot once per book: its inputs are session-stable or read through refs, so re-running would rebuild the navigator.
   useEffect(() => {
     const initial = parseSettings(readStored(SETTINGS_KEY));
     settingsRef.current = initial;
@@ -236,8 +211,7 @@ export function ReaderView(props: ReaderViewProps) {
           listeners: {
             onPosition: (loc) => {
               currentLocatorRef.current = loc;
-              // Where the reader stands, on the container: a browser test waits on it for a
-              // page turn or a Contents jump to land.
+              // The container's position, which a browser test waits on for a page turn or Contents jump.
               containerRef.current?.setAttribute(
                 "data-position",
                 `${loc.href}@${String(loc.locations?.progression ?? 0)}`,
@@ -245,8 +219,6 @@ export function ReaderView(props: ReaderViewProps) {
               setPct(annotationPct(loc) ?? 0);
               if (typeof loc.title === "string") setChapter(loc.title);
               setSelection(null);
-              // Turning the page moves away from the anchored passage, so close its
-              // popover rather than leaving it floating over unrelated text.
               setEditing(null);
               setEditAnchor(null);
               setAttribution(null);
@@ -259,18 +231,13 @@ export function ReaderView(props: ReaderViewProps) {
               setSelection(payload);
             },
             onDecorationActivated: (id, rect) => {
-              // One tap resolves to exactly one id, in either layer. Prefer your own
-              // (the fill) then fall back to an other reader's (the underline).
+              // One tap resolves to one id: your own (the fill) first, then another reader's (the underline).
               const mine = annotationsRef.current.find((a) => a.id === id);
               const other = mine ? null : othersRef.current.find((o) => o.id === id);
               if (!mine && !other) return;
               setSelection(null);
-              // The rect arrives in device pixels relative to the content frame's
-              // viewport (the injectable scales by devicePixelRatio and the navigator
-              // forwards it as-is). Convert to CSS pixels and offset by the frame's
-              // position so the fixed popover lands on the passage. The engine keeps a
-              // pool of frames; pick the shown one (the others are hidden), never the
-              // first in DOM order.
+              // The rect is in device pixels relative to the content frame's viewport: convert to CSS pixels and offset by the frame's
+              // position. The engine pools frames, so pick the shown one, not the first in DOM order.
               const iframe = visibleFrame(containerRef.current);
               const fr = iframe?.getBoundingClientRect();
               const dpr = window.devicePixelRatio || 1;
@@ -308,10 +275,7 @@ export function ReaderView(props: ReaderViewProps) {
         }
         engineRef.current = engine;
         setToc(engine.toc);
-        // Render the user's saved highlights/notes AND any active social layers now
-        // that engineRef is set: applyHighlights/applyPopular go through engineRef, and
-        // onReady fires from inside createEngine (before this assignment), so redrawing
-        // here is what makes saved + shared annotations reappear on reload.
+        // onReady fires inside createEngine before engineRef is set, so redraw here for saved and shared annotations to reappear on reload.
         redraw();
       } catch (e) {
         if (destroyed) return;
@@ -330,8 +294,6 @@ export function ReaderView(props: ReaderViewProps) {
     // oxlint-disable-next-line react/exhaustive-deps -- mount once per book; inputs are session-stable or ref-read
   }, [manifestUrl]);
 
-  // Keyboard navigation (ignored while a panel, composer, or prompt is open, or
-  // when focus is in a text field).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (panel || noteDraft || editing || signInPrompt || attribution) return;
@@ -383,8 +345,7 @@ export function ReaderView(props: ReaderViewProps) {
       color?: HighlightColor;
       body?: string;
       selectedText?: string;
-      // 'club' is the explicit share-to-club exposure; omitted lets the server resolve
-      // the reader's default-annotation visibility.
+      // 'club' is the explicit share-to-club exposure; omitted lets the server resolve the default visibility.
       visibility?: "club";
     }) => {
       const chapterTitle = currentLocatorRef.current?.title;
@@ -446,8 +407,6 @@ export function ReaderView(props: ReaderViewProps) {
     [book.id, deleteFire],
   );
 
-  // A layer toggle, or any change to the cached annotations (a write, its rollback, a
-  // refetch), redraws the decoration set.
   useEffect(() => {
     redraw();
     // oxlint-disable-next-line react/exhaustive-deps -- redraw reads live refs; these are the triggers
@@ -471,8 +430,6 @@ export function ReaderView(props: ReaderViewProps) {
     });
   }, []);
 
-  // Like / unlike another reader's annotation: the cache flips at once and reverts on
-  // failure. Goes to the generic reactions endpoint (target_type='annotation').
   const toggleLike = useCallback(
     (other: ReaderOther) => {
       if (!requireSignIn()) return;
@@ -487,9 +444,7 @@ export function ReaderView(props: ReaderViewProps) {
     [requireSignIn, likeFire, book.id],
   );
 
-  // Reply to another reader's annotation, posted into a shared club (the passage-comment
-  // write path enforces active membership of that club in core). clubId is implicit when
-  // the viewer shares one club with the author; otherwise the popover offers a picker.
+  // clubId is implicit when the viewer shares one club with the author; otherwise the popover offers a picker.
   const postReply = useCallback(
     async (other: ReaderOther, clubId: string, body: string) => {
       if (!requireSignIn()) return false;
@@ -518,9 +473,6 @@ export function ReaderView(props: ReaderViewProps) {
 
   const canvas = READING_CANVAS[settings.theme];
   const bookmarks = annotations.filter((a) => a.type === "bookmark");
-  // Persistent list of highlights + notes: the reliable way to see which passages
-  // carry a note and to reopen one (the in-text tap works too, but this is always
-  // available). Clicking an entry jumps to it and opens its edit/delete popover.
   const marks = annotations.filter(
     (a) => (a.type === "highlight" || a.type === "note") && a.locator,
   );

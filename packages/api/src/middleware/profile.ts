@@ -1,5 +1,4 @@
-// Step 3: attach the profile (tier, timezone, suspension). Suspended users are
-// blocked from writes with a 403.
+// Attaches the profile (tier, timezone, suspension); suspended users are blocked from writes with a 403.
 import { createMiddleware } from "hono/factory";
 import { isAdminEmail } from "@dustinedwards/site-runtime/access";
 import { profilesRepo } from "@foxing/core";

@@ -1,6 +1,3 @@
-// Admin: Content. Create site announcements (banner, home, or journal placement) and
-// manage the existing set: activate/deactivate and delete. Reads announcements in-process;
-// writes to /api/v1/admin/announcements with a visible error on failure.
 import { NativeSelect } from "capsomer/react/select-native";
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
@@ -32,7 +29,6 @@ export function meta() {
 
 const PLACEMENTS = ["banner", "home", "journal"] as const;
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
 
 export default function AdminContent({ loaderData }: Route.ComponentProps) {

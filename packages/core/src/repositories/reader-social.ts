@@ -1,10 +1,6 @@
-// Social reading layer reads (the club passage layer + shared annotations). These
-// resolve which OTHERS' annotations a viewer may see in the reader, plus the club
-// passage discussion and the popular-highlights aggregation. Authorization lives in
-// the SQL here: every branch is a positive filter (a non-private visibility AND a
-// user set the viewer is entitled to), so an unauthorized row is never fetched, let
-// alone returned. The domain layer (domain/reader-annotations) composes these and
-// applies the courtesy spoiler/progress gate; it never widens what the SQL admits.
+// Reads for the social reading layer: others' annotations a viewer may see, club passage discussion and popular highlights.
+// Authorization lives in the SQL: every branch is a positive filter on a non-private visibility AND an entitled user set, so an
+// unauthorized row is never fetched. domain/reader-annotations applies the spoiler gate and never widens what the SQL admits.
 import { and, eq, gte, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import { chunked, type Db } from "../db";
 import { annotations, clubMembers, clubs, closeFriends, profiles } from "../schema";
@@ -13,7 +9,6 @@ import { annotations, clubMembers, clubs, closeFriends, profiles } from "../sche
 // never part of another reader's layer.
 const OTHER_TYPES = ["highlight", "note"] as const;
 
-/** Author identity attached to every others' row so the popover can attribute it. */
 export type AuthorRef = {
   id: string;
   username: string | null;
@@ -21,7 +16,6 @@ export type AuthorRef = {
   avatarUrl: string | null;
 };
 
-/** A raw annotation row admitted by one of the visibility branches, with its author. */
 export type SocialAnnotationRow = {
   id: string;
   userId: string;
@@ -81,10 +75,7 @@ function toRow(
   };
 }
 
-/** V: the viewer's ACTIVE clubs whose CURRENT read is this book. Restricted to the
- *  current read (clubs.current_book_id), so a finished-book
- *  club_books row does NOT keep a passage layer alive. This one set defines both who
- *  the viewer co-reads with and which passage discussion they may see. */
+/** V: the viewer's active clubs whose CURRENT read (clubs.current_book_id) is this book, so a finished-book club_books row keeps no passage layer alive. */
 export async function viewerClubIdsReadingBook(
   db: Db,
   viewerId: string,
@@ -93,9 +84,7 @@ export async function viewerClubIdsReadingBook(
   return (await shareableClubsForBook(db, viewerId, bookId)).map((c) => c.id);
 }
 
-/** The viewer's active clubs whose CURRENT read is this book, with names, for the
- *  reader's "Share to club" toggle. Same current-read scope as V; a share targets the
- *  club context the reply/comment is written into. */
+/** V with names, for the reader's "Share to club" toggle. */
 export async function shareableClubsForBook(
   db: Db,
   viewerId: string,
@@ -117,8 +106,7 @@ export async function shareableClubsForBook(
   return [...seen.entries()].map(([id, name]) => ({ id, name }));
 }
 
-/** A: users (other than the viewer) who are ACTIVE members of any club in V. Their
- *  visibility='club' annotations are the ones the viewer is entitled to see. */
+/** A: other users who are active members of any club in V; their visibility='club' annotations are entitled. */
 export async function coReadingAuthorIds(
   db: Db,
   clubIds: string[],
@@ -136,8 +124,7 @@ export async function coReadingAuthorIds(
   return [...out];
 }
 
-/** F: authors who added the viewer to their close friends. Their visibility='friends'
- *  annotations are the ones the viewer is entitled to see. */
+/** F: authors who added the viewer to their close friends; their visibility='friends' annotations are entitled. */
 export async function closeFriendAuthorIds(db: Db, viewerId: string): Promise<string[]> {
   const rows = await db
     .select({ userId: closeFriends.userId })
@@ -146,10 +133,7 @@ export async function closeFriendAuthorIds(db: Db, viewerId: string): Promise<st
   return [...new Set(rows.map((r) => r.userId))];
 }
 
-/** Others' annotations in a fixed set of authors at one visibility. Used for the club
- *  (authors=A, visibility='club') and friends (authors=F, visibility='friends')
- *  branches. The author set already encodes the entitlement, so this can never leak a
- *  non-entitled row. */
+/** Others' annotations by a fixed author set at one visibility; the set encodes the entitlement, so it cannot leak a non-entitled row. */
 async function othersByAuthors(
   db: Db,
   bookId: string,
@@ -184,9 +168,7 @@ export function friendOthers(db: Db, bookId: string, authorIds: string[]) {
   return othersByAuthors(db, bookId, authorIds, "friends");
 }
 
-/** Public others: any user's visibility='public' highlight/note on this book, minus the
- *  viewer's own (those come back through MINE). viewerId null (anonymous) skips the
- *  self-exclusion, since there is no self to exclude. */
+/** Any user's public highlight/note on this book, minus the viewer's own (those come via MINE); anonymous skips the exclusion. */
 export async function publicOthers(
   db: Db,
   bookId: string,
@@ -206,9 +188,7 @@ export async function publicOthers(
   return rows.map(toRow);
 }
 
-/** Passage discussion (type='comment') scoped to the viewer's active clubs reading the
- *  book (V). club_id IN V is the whole access check: a comment surfaces only inside a
- *  club the viewer actively belongs to and that reads the book. */
+/** Passage comments in the viewer's active clubs reading the book; club_id IN V is the whole access check. */
 export async function commentsInClubs(
   db: Db,
   bookId: string,
@@ -239,10 +219,7 @@ export type PopularRow = {
   locator: Record<string, unknown> | null;
 };
 
-/** Popular highlights: normalized passages that >= 3 DISTINCT users have publicly
- *  highlighted. Counted from public highlights only, so it never reveals a private or
- *  club-scoped one. The representative locator is the earliest public highlight of that
- *  passage, used to anchor the subtle underline layer. */
+/** Passages >= 3 DISTINCT users highlighted publicly (never a private or club one), anchored on the earliest locator. */
 export async function popularHighlights(db: Db, bookId: string): Promise<PopularRow[]> {
   // Grouped in SQL, so a book with many public highlights sends back one row per popular passage, not every row.
   // SQLite takes a bare column (locator) from the row that min() picked, which is the earliest highlight.
@@ -272,7 +249,6 @@ export async function popularHighlights(db: Db, bookId: string): Promise<Popular
   }));
 }
 
-/** The distinct-user threshold a passage must clear to count as a popular highlight. */
 export function popularThreshold(): number {
   return 3;
 }

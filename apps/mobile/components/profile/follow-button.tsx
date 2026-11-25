@@ -4,8 +4,6 @@ import { Plus, Check } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
-// Follow or unfollow one reader. The toggle patches every open profile and people
-// list at once (useFollow), so the follower count moves with the button.
 export function FollowButton({
   userId,
   isFollowing,

@@ -1,6 +1,4 @@
-// /demos/goals: the goals page's reading activity (routes/goals.tsx) drawn with sample weeks, so its chart
-// can be seen and checked live without a sign-in (devkit live/areas.json, area 10). No loader reads D1, and
-// the goal editor is left out: it writes, and a demo writes nothing.
+// /demos/goals: sample weeks so the goals chart can be checked live without a sign-in; no loader reads D1 and the goal editor is left out.
 import { DemoNotice } from "~/components/demo-notice";
 import { PageShell } from "~/components/page-shell";
 import { ReadingActivity } from "~/components/reading/reading-activity";
@@ -29,5 +27,4 @@ export default function GoalsDemo({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates, as /goals does (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

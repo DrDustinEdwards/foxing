@@ -1,16 +1,12 @@
 import type { ReaderSettings } from "@/components/reader/reader-types";
 import type { Locator, Preferences } from "react-native-readium";
 
-// Soften a 6-digit hex color to an 8-digit one with ~20% alpha so the
-// popular-highlight tint sits behind text instead of competing with
-// it. Pass-through for inputs we can't parse.
 export function toSoftTint(hex: string): string {
   if (/^#[0-9a-f]{6}$/i.test(hex)) return hex + "33";
   if (/^#[0-9a-f]{8}$/i.test(hex)) return hex;
   return hex;
 }
 
-// Splits chapter text into utterances; TtsBar and highlightSentence share it so indexes line up.
 export function splitSentences(chapterText: string): string[] {
   const parts = (chapterText ?? "").replace(/\s+/g, " ").match(/[^.!?]+[.!?]+["')\]]*\s*/g) ?? [];
   return parts.map((s) => s.trim()).filter((s) => s.length > 0);
@@ -37,9 +33,7 @@ export function settingsToReadiumPreferences(s: ReaderSettings): Preferences {
   };
 }
 
-// CFI <-> Locator conversion. Readium uses its own Locator shape, stored
-// as the whole Locator stringified where progress_cfi used to live. Any
-// string that is not Locator JSON decodes to undefined.
+// Readium's Locator is stored whole, stringified; any string that is not Locator JSON decodes to undefined.
 export function decodeLocator(cfi: string | undefined): Locator | undefined {
   if (!cfi) return undefined;
   if (!cfi.startsWith("{")) return undefined;
@@ -56,7 +50,6 @@ export function encodeLocator(locator: Locator | Record<string, unknown>): strin
   return JSON.stringify(locator);
 }
 
-// Comments on one passage share this key: the chapter plus the first 200 characters of the passage text.
 export function locatorKey(locator: { href: string; text?: { highlight?: string } }): string {
   return `${locator.href}|${(locator.text?.highlight ?? "").slice(0, 200)}`;
 }

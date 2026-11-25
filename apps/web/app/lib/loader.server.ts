@@ -1,5 +1,3 @@
-// Shared loader plumbing for public catalog routes: the per-request Drizzle handle,
-// the env, the request origin (for same-origin asset URLs; canonical and OG URLs use SITE_ORIGIN), and affiliate config.
 import type { AffiliateConfig } from "@foxing/core";
 import { createDb } from "@foxing/core";
 import { publicPageHeaders } from "@dustinedwards/site-runtime/edge-cache";
@@ -23,16 +21,11 @@ export function affiliateConfig(env: Env): AffiliateConfig {
   };
 }
 
-// The presets are site-runtime ./edge-cache publicPageHeaders: a page stored at the edge for
-// `freshSeconds`, then served stale up to `staleSeconds` more while it re-renders, tagged "pages" so
-// Carrel's and the admin API's writes purge it (workers/app.ts). Never kept in a browser.
+// Presets of site-runtime's publicPageHeaders: stored at the edge for `freshSeconds`, then stale for `staleSeconds`, tagged "pages" so Carrel's and the admin API's writes purge it.
 
-/** Catalog pages (books, authors, book of the month): an hour at the edge, a day stale. */
 export const catalogPageHeaders = () =>
   publicPageHeaders({ freshSeconds: 3600, staleSeconds: 86400 });
-/** Pages that change rarely (about, terms, guides, awards, picks): an hour, a week stale. */
 export const staticPageHeaders = () =>
   publicPageHeaders({ freshSeconds: 3600, staleSeconds: 604800 });
-/** The journal and the marketing home: ten minutes at the edge, a day stale. */
 export const listingPageHeaders = () =>
   publicPageHeaders({ freshSeconds: 600, staleSeconds: 86400 });

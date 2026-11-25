@@ -34,8 +34,6 @@ export function ClubJoinCta({
     );
   }
 
-  // Joining a club that approves members, or one that is full, files a request or a
-  // waitlist place; the server decides which.
   const waiting = membership?.status === "waitlisted" || membership?.status === "requested";
   const label = busy
     ? "…"

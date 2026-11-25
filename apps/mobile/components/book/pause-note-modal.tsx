@@ -3,8 +3,6 @@ import { SheetScaffold } from "@/components/ui/sheet-scaffold";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
-// Pause confirmation + optional note. A bottom sheet; the note tends to be a sentence
-// at most.
 export function PauseNoteModal({
   visible,
   note,

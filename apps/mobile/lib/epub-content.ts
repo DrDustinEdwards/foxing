@@ -1,17 +1,4 @@
-// In-process EPUB content extraction for the Readium reader.
-//
-// Readium's native renderer paints the book but exposes no JS API for
-// chapter plain text or paragraph arrays. The TTS bar and bilingual mode
-// both need that text, so we open the EPUB ourselves on the JS thread:
-// download once (via the existing epub-cache utility), unzip it with
-// jszip, parse the OPF manifest, and stream chapter HTML through a simple
-// tag-stripper.
-//
-// Performance note: jszip parses the whole ZIP into an in-memory tree on
-// open, ~30-80 ms for a 500 KB book. The opened archive is cached per
-// EPUB URL so subsequent chapter reads are <5 ms. Memory pressure is the
-// book's compressed bytes plus jszip's internal index, well under 5 MB
-// for a typical Gutenberg classic.
+// Extracts chapter text from the EPUB in JS, since Readium exposes none: jszip opens the archive once per URL (cached) and chapter HTML is tag-stripped.
 
 import JSZip from "jszip";
 import * as FileSystem from "expo-file-system/legacy";
@@ -25,11 +12,9 @@ interface SpineItem {
 
 interface OpenedEpub {
   zip: JSZip;
-  // Absolute paths within the zip, in spine order. Used so we can resolve
-  // relative chapter hrefs from any source (Readium Locator, TOC link).
+  // Absolute zip paths in spine order, to resolve relative chapter hrefs.
   spine: SpineItem[];
-  // Root directory of the OPF file. Chapter hrefs in the manifest are
-  // relative to this path, not to the zip root.
+  // OPF directory; manifest hrefs are relative to it, not the zip root.
   rootDir: string;
 }
 
@@ -51,8 +36,7 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
 }
 
 function decodeBase64Fallback(input: string): string {
-  // RN's Hermes ships atob in newer SDKs, but keep a fallback so this
-  // module works in unit-test environments too.
+  // Fallback for environments without atob (unit tests).
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
   const cleaned = input.replace(/[^A-Za-z0-9+/=]/g, "");
   let out = "";
@@ -68,9 +52,7 @@ function decodeBase64Fallback(input: string): string {
   return out;
 }
 
-// Locate the OPF file via META-INF/container.xml. The path inside the zip
-// can be anything (publishers vary); container.xml's <rootfile> element
-// is the canonical pointer.
+// container.xml's <rootfile> is the canonical OPF pointer; the path varies by publisher.
 async function findOpfPath(zip: JSZip): Promise<string> {
   const containerFile = zip.file("META-INF/container.xml");
   if (!containerFile) throw new Error("container.xml not found");
@@ -87,14 +69,10 @@ function dirname(path: string): string {
 
 function resolveRelative(rootDir: string, ref: string): string {
   if (ref.startsWith("/")) return ref.slice(1);
-  // Strip any fragment (#chap1) before joining; the zip path doesn't carry it.
   const cleaned = ref.split("#")[0];
   return `${rootDir}${cleaned}`;
 }
 
-// Minimal OPF spine parser. Pulls manifest items + spine itemref order +
-// resolves item idrefs back to manifest hrefs. Doesn't try to validate the
-// full OPF schema; just enough to enumerate chapter files in reading order.
 function parseOpf(rootDir: string, opfXml: string): SpineItem[] {
   const manifest = new Map<string, { href: string; mediaType: string }>();
   const itemRegex = /<item\s+([^>]+?)\/?>/gi;
@@ -122,9 +100,6 @@ async function openEpub(remoteUrl: string): Promise<OpenedEpub> {
   const cached = openCache.get(remoteUrl);
   if (cached) return cached;
   const promise = (async (): Promise<OpenedEpub> => {
-    // Download to local cache if needed and read the raw bytes for jszip.
-    // ensureEpubLocalUri skips the redundant base64 round-trip that
-    // ensureEpubLocallyCached does.
     const path = await ensureEpubLocalUri(remoteUrl);
     const buf = await readFileAsArrayBuffer(path);
     const zip = await JSZip.loadAsync(buf);
@@ -137,15 +112,11 @@ async function openEpub(remoteUrl: string): Promise<OpenedEpub> {
     return { zip, spine, rootDir };
   })();
   openCache.set(remoteUrl, promise);
-  // If parsing fails, drop the cached promise so the next caller can retry.
   promise.catch(() => openCache.delete(remoteUrl));
   return promise;
 }
 
-// HTML to plain text. Drops <script> + <style> blocks entirely, then strips
-// remaining tags. Block-level elements get a trailing newline so paragraph
-// boundaries survive into the text output, the sentence splitter in TtsBar
-// then divides those into individual utterances.
+// Block-level elements end with a newline so paragraph boundaries survive for the sentence splitter.
 function epubHtmlToText(html: string): string {
   const noScript = html
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
@@ -189,20 +160,14 @@ function decodeEntities(s: string): string {
   });
 }
 
-// Resolve a Readium Locator.href (or a TOC link href, or a raw spine path)
-// against the EPUB's spine. Returns the absolute zip path of the chapter's
-// HTML file, or null if no match.
 function resolveChapterPath(opened: OpenedEpub, hrefOrPath: string): string | null {
   const cleaned = hrefOrPath.split("#")[0];
   if (!cleaned) return null;
-  // Match by suffix so callers can pass either the absolute spine path or
-  // the relative href (sometimes Readium strips the leading rootDir).
   for (const item of opened.spine) {
     if (item.href === cleaned) return item.href;
     if (item.href.endsWith(`/${cleaned}`)) return item.href;
     if (cleaned.endsWith(`/${item.href}`)) return item.href;
   }
-  // Fallback: try a direct zip lookup (last-ditch for unusual hrefs).
   if (opened.zip.file(cleaned)) return cleaned;
   return null;
 }

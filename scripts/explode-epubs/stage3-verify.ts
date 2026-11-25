@@ -71,7 +71,6 @@ async function main() {
   console.log(`[stage3] manifests present: ${present}/${work.length}, missing: ${missing.length}`);
   if (missing.length) console.log(`  first missing: ${missing.slice(0, 10).join(", ")}`);
 
-  // Sample-parse manifests + position lists.
   const sample = work.slice(0, SAMPLE);
   for (const b of sample) {
     try {

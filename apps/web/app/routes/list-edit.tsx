@@ -1,5 +1,3 @@
-// Edit a reading list at /lists/:id/edit. Owner-gated in the loader. The form PATCHes
-// /api/v1/lists/:id.
 import { createDb, socialRepo } from "@foxing/core";
 import { PageShell } from "~/components/page-shell";
 import { ListForm } from "~/components/social/list-form";
@@ -45,7 +43,6 @@ export default function ListEdit({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
 
 export { ErrorBoundary } from "~/components/route-error";

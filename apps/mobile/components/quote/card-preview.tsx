@@ -35,7 +35,6 @@ export function CardPreview(props: CardPreviewProps) {
   if (cardType === "reading") return <ReadingCard {...props} baseStyle={baseStyle} />;
   if (cardType === "club_invite") return <ClubInviteCard {...props} baseStyle={baseStyle} />;
 
-  // Default "quote" card
   return (
     <View style={baseStyle}>
       <View style={{ flex: 1, justifyContent: "center" }}>

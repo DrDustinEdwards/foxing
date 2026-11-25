@@ -21,9 +21,7 @@ export function AddBookSheet({
   onMatch: (slug: string) => void;
 }) {
   const colors = useColors();
-  // Two-step sheet: 'choose' shows the two actions; 'url' swaps in a text
-  // input + lookup result. Keeping it inside the same modal avoids modal
-  // stacking jank on Android.
+  // Both steps share one modal to avoid modal stacking jank on Android.
   const [mode, setMode] = useState<"choose" | "url">("choose");
   const [url, setUrl] = useState("");
   const [lookupBusy, setLookupBusy] = useState(false);
@@ -32,8 +30,6 @@ export function AddBookSheet({
 
   useEffect(() => {
     if (!visible) {
-      // Reset to the chooser whenever the sheet closes so the next open
-      // starts fresh instead of remembering the previous URL search state.
       // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it closes
       setMode("choose");
       setUrl("");
@@ -56,7 +52,6 @@ export function AddBookSheet({
         setLookupError("This book isn't in the Foxing catalog yet.");
         return;
       }
-      // Add it to Want to Read, then open its page so the reader can start it.
       setStatus.fire({ bookId: match.id, status: "want", book: match });
       onMatch(match.slug);
     } catch (e) {
@@ -155,7 +150,6 @@ export function AddBookSheet({
   );
 }
 
-// Single row in the chooser, extracted so the options share their layout.
 function AddOption({
   Icon,
   label,
@@ -196,9 +190,6 @@ function AddOption({
   );
 }
 
-// The book's title from a Standard Ebooks (/ebooks/{author}/{title}), Open Library
-// (/works/OL...W/{Title}) or Goodreads (/book/show/{id}.{Title}) link,
-// for a catalog search.
 function titleFromBookUrl(input: string): string | null {
   let parsed: URL;
   try {

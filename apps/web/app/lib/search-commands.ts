@@ -1,22 +1,15 @@
-// The search palette's commands, shared by the React palette (components/command-palette.tsx) on a page that
-// hydrates and the search-palette island (islands/search-palette.ts) on one that does not. Recent searches and
-// quick links are its commands; typing federates catalog books, authors, people and clubs from
-// /api/v1/search/suggest. No React and relative imports only: the islands are bundled on their own.
+// The search palette's commands, shared by the React palette and the search-palette island. No React and relative imports only: the islands are bundled on their own.
 import type { Command } from "capsomer/behavior/command-menu";
 import { readStored, writeStored } from "capsomer/behavior/hooks";
 import { fetchSuggest } from "./book-suggest";
 
-/** The header's search button: its name, and how /site.js finds it on a page that does not hydrate. */
 export const SEARCH_BUTTON_LABEL = "Search the catalog";
 export const PALETTE_LABEL = "Search Foxing";
 export const PALETTE_PLACEHOLDER = "Search books, people, clubs...";
 
-/** Where recent searches are kept in this browser (Capsomer's stored values: localStorage, or the page alone). */
 export const RECENT_KEY = "foxing:recent-searches";
 const RECENT_MAX = 6;
 
-// GO TO quick links. Public entries show to everyone; the signed-in set is appended for
-// authed users. Every target is a real route (Quotes is cut and never appears).
 const PUBLIC_LINKS = [
   { to: "/books", label: "Browse books" },
   { to: "/clubs", label: "Reading clubs" },
@@ -31,7 +24,6 @@ const SIGNED_IN_LINKS = [
   { to: "/settings", label: "Settings" },
 ];
 
-/** The recent searches in a stored value; anything else reads as none. */
 export function parseRecent(raw: string | null): string[] {
   try {
     const parsed = raw ? (JSON.parse(raw) as unknown) : [];
@@ -50,7 +42,6 @@ function pushRecent(query: string) {
   writeStored(RECENT_KEY, JSON.stringify(next));
 }
 
-/** How a command moves the reader: React Router's navigate on a hydrated page, a page load otherwise. */
 export type Go = (to: string) => void;
 
 const searchPage = (q: string) => `/search?q=${encodeURIComponent(q)}`;
@@ -62,7 +53,6 @@ function runSearch(go: Go, q: string) {
   };
 }
 
-/** The palette's own commands: recent searches, then the quick links. */
 export function quickCommands(recent: string[], signedIn: boolean, go: Go): Command[] {
   return [
     ...recent.map((r) => ({ id: `recent:${r}`, label: r, group: "Recent", run: runSearch(go, r) })),
@@ -75,7 +65,6 @@ export function quickCommands(recent: string[], signedIn: boolean, go: Go): Comm
   ];
 }
 
-/** The live results for what the reader typed: "search all", then the suggestions by kind. */
 export async function liveCommands(q: string, signal: AbortSignal, go: Go): Promise<Command[]> {
   const all: Command = {
     id: "search:all",

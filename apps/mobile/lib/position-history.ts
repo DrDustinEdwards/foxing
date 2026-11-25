@@ -1,8 +1,3 @@
-// Per-book position history, the last 50 unique reading positions, persisted
-// to AsyncStorage so a swipe-back gesture or the GoTo > History tab can take
-// the user to where they were. Keyed by bookId so multiple books don't share
-// a single timeline.
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface PositionEntry {
@@ -45,9 +40,6 @@ export async function clearHistory(bookId: string): Promise<void> {
   } catch {}
 }
 
-// Append an entry; if the new entry has the same CFI as the current tail,
-// refresh that entry in place instead of growing the list. Keeps the
-// history a meaningful list of distinct positions rather than every tick.
 export function appendEntry(history: PositionEntry[], entry: PositionEntry): PositionEntry[] {
   const last = history[history.length - 1];
   if (last && last.cfi === entry.cfi) {

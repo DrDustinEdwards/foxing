@@ -15,14 +15,12 @@ import { cloudflareContext } from "~/context";
 import type { Route } from "./+types/login";
 import { noindexMeta } from "~/lib/seo";
 
-// A sign-in page is a private page: no Web Analytics beacon (site-runtime PRIVATE_PAGE_HEADERS).
 export const headers = () => PRIVATE_PAGE_HEADERS;
 
 export function meta() {
   return noindexMeta("Sign in to Foxing");
 }
 
-// `next` is where to return after signing in again (signInAgainIfStale), else /me.
 export function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const next = new URL(request.url).searchParams.get("next");
@@ -64,5 +62,4 @@ export default function Login({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

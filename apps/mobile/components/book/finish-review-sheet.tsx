@@ -8,10 +8,6 @@ import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { SectionLabel } from "@/components/ui/section-label";
 
-// Post-finish review sheet, two pages. Page 1 is rating + review, saved as a
-// diary entry; Page 2 collects optional mood tags for the book on the shelf.
-// Skip is always available on Page 2.
-
 interface FinishReviewSheetProps {
   visible: boolean;
   bookId: string;
@@ -62,7 +58,6 @@ export function FinishReviewSheet({
     setMoods(new Set());
   }, [visible]);
 
-  // Rating is 0..5 in half steps; the diary stores half stars, 1..10.
   const savePage1 = useCallback(async () => {
     if (rating === 0 && !review.trim()) return true;
     const saved = await diary.run({
@@ -327,8 +322,6 @@ export function FinishReviewSheet({
   );
 }
 
-// Same half-star tap zones as the library Stars component, sized up for the
-// finish-review experience.
 function HalfStarRow({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   const colors = useColors();
   const SIZE = 32;

@@ -1,5 +1,3 @@
-// Format a timestamp as "5m ago", "yesterday", "Mar 5". Locale-aware
-// for older dates only, the bucketed labels read the same in every locale.
 export function relativeTime(at: string | number): string {
   const now = Date.now();
   const t = new Date(at).getTime();

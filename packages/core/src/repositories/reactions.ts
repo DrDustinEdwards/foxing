@@ -1,7 +1,4 @@
-// Reactions data access. One generalized table replaces the old per-feature
-// like tables. Phase 6 wires reading_list + diary_entry targets (list likes, review
-// likes). Owner resolution (for the reaction notification) is done here so the domain
-// can notify the target's author without knowing each table's shape.
+// One generalized reactions table. Owner resolution (for the reaction notification) is here so the domain can notify the target's author without knowing each table's shape.
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { chunked, type Db } from "../db";
 import { annotations, diaryEntries, reactions, readingLists } from "../schema";
@@ -78,9 +75,7 @@ export async function hasReacted(
   return !!row;
 }
 
-/** The owner of a reaction target and who may see it, so the domain can notify the owner
- *  and refuse a reaction on something the actor cannot read. Null when the target does not
- *  exist or is not a type that takes reactions. */
+/** The owner of a reaction target and who may see it; null when it does not exist or takes no reactions. */
 export async function resolveTarget(
   db: Db,
   targetType: string,
@@ -105,14 +100,9 @@ export async function resolveTarget(
   return row ?? null;
 }
 
-/** True when the viewer is one of the owner's close friends. */
-/** True when both users are active members of one club. */
 export type LikeSummary = { likeCount: number; likedByMe: boolean };
 
-/** Per-target 'like' counts plus whether the viewer liked each, for a set of targets of
- *  one type (e.g. the reader's others' annotations). Returns a map keyed by target id;
- *  a target with no likes is simply absent. One grouped read + one membership read, both
- *  chunked, so the reader popover never issues a query per annotation. */
+/** Per-target 'like' counts plus whether the viewer liked each; a target with no likes is absent. One grouped read + one membership read, both chunked, so no query per annotation. */
 export async function likeSummary(
   db: Db,
   targetType: string,

@@ -1,8 +1,4 @@
-// Social endpoints: follows, close friends, reading lists, the
-// activity feed, and Year in Reading recap. Handlers stay thin: guard the session,
-// validate, call the core social/recap domain (which authorizes, commits, and emits),
-// return. Feed visibility resolves entirely server-side in core -- the client is never
-// trusted to say what it may see.
+// Feed visibility resolves entirely server-side in core; the client is never trusted to say what it may see.
 import {
   addListBookInput,
   createListInput,
@@ -45,7 +41,6 @@ socialRoutes.delete("/close-friends/:userId", rateLimit("write"), async (c) => {
   return c.json({ ok: true });
 });
 
-// Who the viewer follows, who follows them, and their close friends.
 socialRoutes.get("/people", async (c) => {
   const session = requireSession(c);
   return c.json(await views.people(c.get("db"), session.id));
@@ -100,9 +95,6 @@ socialRoutes.get("/lists/:id", async (c) => {
   if (!page) throw errors.notFound("List not found.");
   return c.json(page);
 });
-
-// Server-side visibility resolution. The viewer is always the session user; there is no
-// way to request "someone else's feed".
 
 socialRoutes.get("/feed", async (c) => {
   const session = requireSession(c);

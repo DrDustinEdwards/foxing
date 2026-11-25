@@ -1,12 +1,8 @@
-// Reader settings: shape, persistence, and presets, owned by the reader screen.
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export type CanvasTheme = "default" | "sepia" | "dark" | "oled";
 export type FontSizeStep = "xs" | "s" | "m" | "l" | "xl" | "2xl" | "3xl";
 
-// Only what the Readium renderer applies (settingsToReadiumPreferences) or the
-// reader screen reads. A control whose value nothing reads does not belong here.
 export interface ReaderPrefs {
   fontSize: FontSizeStep;
   canvasTheme: CanvasTheme;
@@ -42,8 +38,7 @@ export async function loadPrefs(userId: string | null): Promise<ReaderPrefs> {
     const raw = await AsyncStorage.getItem(key(userId));
     if (!raw) return DEFAULT_PREFS;
     const parsed = JSON.parse(raw) as Partial<ReaderPrefs>;
-    // Merge so newly-added prefs adopt their default value rather than
-    // becoming undefined for existing users.
+    // Merge so newly added prefs default rather than undefined for existing users.
     return { ...DEFAULT_PREFS, ...parsed };
   } catch {
     return DEFAULT_PREFS;
@@ -57,8 +52,6 @@ export async function savePrefs(userId: string | null, prefs: ReaderPrefs): Prom
     console.warn("[reader-settings] save failed:", e);
   }
 }
-
-// ── Saved themes (custom + presets) ────────────────────────────────────
 
 export interface SavedTheme {
   id: string;

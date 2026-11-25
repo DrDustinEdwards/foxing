@@ -1,20 +1,11 @@
 const { withAppBuildGradle } = require("expo/config-plugins");
 
-// expo-build-properties@56 dropped support for the enableCoreLibraryDesugaring
-// key, but Readium's kotlin-toolkit AARs (readium-shared / readium-streamer /
-// readium-navigator) still require it to compile under SDK 56. This plugin
-// patches android/app/build.gradle on every prebuild to add the desugar
-// compileOption + dependency so the host project picks them up.
-//
-// The desugar_jdk_libs version is the latest compatible with AGP 8.7+ at the
-// time of writing (May 2026). If AGP is bumped, this may need to track.
+// expo-build-properties@56 dropped enableCoreLibraryDesugaring, but Readium's kotlin-toolkit AARs still need it under SDK 56; this adds the desugar compileOption and dependency on prebuild.
 const DESUGAR_LIB_VERSION = "2.1.5";
 
 function injectCompileOptions(contents) {
   if (contents.includes("coreLibraryDesugaringEnabled")) return contents;
 
-  // The generated SDK 56 app/build.gradle has no compileOptions block by
-  // default; insert one just after the android { line.
   return contents.replace(
     /android\s*\{\n/,
     `android {

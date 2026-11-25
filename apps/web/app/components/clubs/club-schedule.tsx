@@ -9,7 +9,6 @@ import {
 import type { ClubMeetingItem, ClubPollItem, ClubScheduleItem } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";
 import { Poll } from "capsomer/react/poll";
-// The poll's styles load only on a club's page (React 19 hoists the link).
 import pollCss from "capsomer/poll.css?url";
 import { Time } from "capsomer/react/time";
 import { useState } from "react";
@@ -277,7 +276,6 @@ export function ScheduleSection({
 }) {
   const { run, error, pending } = useAddSchedule();
   const hydrated = useHydrated();
-  // The time the list was first drawn, which splits upcoming from past.
   const [now] = useState(() => Date.now());
 
   async function add(e: React.FormEvent<HTMLFormElement>) {

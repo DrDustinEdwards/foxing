@@ -111,7 +111,6 @@ a:hover > .fx-entity {
   }
 }
 
-/* Foxing's ghost button: Capsomer's quiet button in the accent text, the soft accent on hover. */
 .cap-btn.fx-btn-ghost {
   --cap-btn-fg: var(--accent-text);
   --cap-btn-hover: var(--accent-soft);

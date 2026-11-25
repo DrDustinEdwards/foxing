@@ -1,8 +1,4 @@
-// The account panel of Capsomer's site header for a signed-in reader: identity and tier badge,
-// real stats (from the root loader's navUser), grouped links and a compact icon footer bar,
-// matching the legacy dropdown (no scroll). Capsomer draws the button and the panel around it,
-// and closes the panel when a link in it is followed. Icons are Capsomer's (capsomer/react/icons),
-// each imported by itself; the four the shared set lacks pass their own path on its grid.
+// The account panel of Capsomer's site header for a signed-in reader; icons are Capsomer's, and the four it lacks pass their own path.
 import type { HeaderAccount } from "capsomer/react/site-header";
 import {
   Icon,
@@ -17,7 +13,6 @@ import { Link } from "capsomer/react/link";
 import type { NavUser } from "~/lib/nav.server";
 import { Avatar, avatarInitials } from "../ui";
 
-// Foxing's own drawings, on the set's 24-unit grid, for the four the shared set lacks.
 const OWN = {
   findnext:
     "M11 4l1.5 4L16.5 9.5 12.5 11 11 15l-1.5-4L5.5 9.5 9.5 8zM17.5 14l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z",
@@ -26,9 +21,6 @@ const OWN = {
   signout:
     "M14 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2M10 12h10M17 9l3 3-3 3",
 };
-// Reading surfaces. The secondary bar holds the primary four (Home, Library, Feed,
-// People); notifications have the header bell. Collections is one compact row whose
-// sublinks reach the real routes (buddy reads + saved are cut).
 const READING_LINKS = [
   { to: "/stats", label: "Stats", icon: iconStats },
   { to: "/goals", label: "Goals", icon: iconGoals },
@@ -65,7 +57,6 @@ function MenuLink({
   );
 }
 
-// One dense Collections row: label plus an inline list of the real collection routes.
 function CollectionsRow() {
   return (
     <div className="fx-acct-row">
@@ -87,7 +78,6 @@ function CollectionsRow() {
   );
 }
 
-// Compact footer action: icon above a small label, in a divided 3-up bar.
 function FooterAction({
   icon,
   label,
@@ -135,7 +125,6 @@ function TierBadge({ tier }: { tier: "free" | "plus" }) {
   return <span className={isPlus ? "badge" : "badge badge-quiet"}>{isPlus ? "Plus" : "Free"}</span>;
 }
 
-/** The header's account slot: the rich panel on a desktop, the same links in the phone's sheet. */
 export function headerAccount(
   user: NavUser,
   signingOut: boolean,

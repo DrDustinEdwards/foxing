@@ -61,7 +61,6 @@
   padding: var(--space-3-5) var(--space-4);
 }
 
-/* The paywall's look on Capsomer's dialog (paywall.tsx): Capsomer places, sizes and animates it. */
 .fx-paywall-card {
   --cap-dialog-w: 28rem;
   border-radius: var(--fx-radius-hero);
@@ -220,7 +219,6 @@
 .fx-onboarding-text {
   color: var(--muted);
 }
-/* The genre fieldset's legend: no flex item, so it keeps the margin a field's gap gives a label. */
 .fx-onboarding-legend {
   margin-block-end: var(--space-2);
 }

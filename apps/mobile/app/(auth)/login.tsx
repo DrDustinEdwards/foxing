@@ -6,10 +6,6 @@ import { X as XIcon } from "phosphor-react-native";
 import { authClient } from "@/lib/api";
 import { useColors } from "@/constants/colors";
 
-// One way in for new and returning readers: Google, Apple, or a six-digit code sent to
-// their email (a new address gets an account; the username comes next, at onboarding).
-// A good sign-in updates the session, and the root layout routes on from there.
-
 const INPUT_CLASS =
   "font-ui rounded-xl px-4 py-4 text-base bg-bg-surface-light dark:bg-bg-surface-dark text-text-primary-light dark:text-text-primary-dark border border-border-interactive-light dark:border-border-interactive-dark";
 

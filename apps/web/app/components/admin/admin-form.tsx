@@ -1,14 +1,10 @@
-// Shared write helpers for admin pages. Every mutation goes through the /api/v1/admin
-// write surface from the browser (standing rule: writes are API calls, not loader
-// subrequests) and surfaces a visible pending state + role=alert error on failure. No
-// admin write may fail silently.
+// Shared admin write helpers: every mutation is an /api/v1/admin call from the browser with a visible pending state and role=alert error; no admin write may fail silently.
 import { OFFLINE_MESSAGE } from "@foxing/client";
 import { useState } from "react";
 import { FormError } from "~/components/ui";
 
 type Result = { ok: boolean; status: number; body: unknown };
 
-/** POST/PATCH/DELETE against /api/v1/admin<path>, returning a parsed result. */
 export async function adminFetch(
   path: string,
   init?: { method?: string; body?: unknown },
@@ -22,13 +18,11 @@ export async function adminFetch(
   return { ok: res.ok, status: res.status, body };
 }
 
-/** The server's problem detail, else "<fallback> (<status>)." */
 export function messageFrom(result: Result, fallback: string): string {
   const b = result.body as { detail?: string } | null;
   return b?.detail ?? `${fallback} (${result.status}).`;
 }
 
-/** Drives one admin mutation: pending flag, visible error, and an onDone callback. */
 export function useAdminAction(opts?: { onDone?: () => void }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +57,6 @@ export function AdminError({ error }: { error: string | null }) {
   return <FormError error={error} />;
 }
 
-// A labeled text field: a textarea when it has rows, else an input.
 export function AdminField({
   label,
   onChange,
@@ -94,8 +87,6 @@ export function AdminField({
   );
 }
 
-// One row of an admin list: the item's name with its badges, one line of detail under it, and
-// its actions at the end; an editor or a confirmation the row opens goes in children.
 export function AdminRow({
   title,
   meta,

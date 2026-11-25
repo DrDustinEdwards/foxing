@@ -1,9 +1,5 @@
-// Server-side event emitter. emit(db, event, actor, payload) writes activity_events
-// and/or notifications in one D1 batch. Events are emitted ONLY on core write paths,
-// never by clients, so web/mobile feeds stay in parity by construction.
-//
-// Phase 1 registers exactly one real handler (profile.onboarded) to establish the
-// pattern; later phases add handlers per the event catalog in spec-cf-api.md.
+// emit(db, event, actor, payload) writes activity_events and/or notifications in one D1 batch. Events are emitted ONLY on core
+// write paths, never by clients, so web and mobile feeds stay in parity.
 import type { BatchItem } from "drizzle-orm/batch";
 import type { Db } from "../db";
 import { activityEvents, notifications } from "../schema";
@@ -27,13 +23,11 @@ type NotificationWrite = {
   data?: Record<string, unknown> | null;
 };
 
-/** What a handler produces: rows to write for this event. */
 export type EmitResult = {
   activity?: ActivityWrite;
   notifications?: NotificationWrite[];
 };
 
-/** The registry maps an event name to the rows it produces. Extend per phase. */
 export type EventHandlers = Record<string, (actor: EventActor, payload: unknown) => EmitResult>;
 
 const handlers: EventHandlers = {

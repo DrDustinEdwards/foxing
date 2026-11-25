@@ -20,10 +20,6 @@ import { StreakCard } from "@/components/goals/streak-card";
 import { WeeklySummaryCard } from "@/components/goals/weekly-summary-card";
 import { PeriodGoalCard } from "@/components/goals/period-goal-card";
 
-// The reader's books goals for this year, month and ISO week (GET /goals, progress counted
-// on the server the same way the web goals page shows it), their streak and the last
-// seven days of reading. Saving a target patches the cached goals at once.
-
 type Period = W.Goal["periodType"];
 
 function currentPeriods(now: Date) {
@@ -37,14 +33,12 @@ function isCurrent(goal: W.Goal, period: Period, now: ReturnType<typeof currentP
   return true;
 }
 
-/** One period's goal: the target being typed, and save or remove against the server. */
 function usePeriodGoal(goals: W.GoalWithProgress[] | undefined, period: Period, max: number) {
   const [now] = useState(() => currentPeriods(new Date()));
   const row = goals?.find((g) => isCurrent(g.goal, period, now)) ?? null;
   const create = useCreateGoal();
   const update = useUpdateGoal();
   const remove = useDeleteGoal();
-  // The draft follows the saved target whenever it changes.
   const saved = row ? String(row.goal.target) : "";
   const [draft, setDraft] = useState(saved);
   const [followed, setFollowed] = useState(saved);
@@ -87,10 +81,8 @@ export default function GoalsScreen() {
   const month = usePeriodGoal(goals.data, "month", 50);
   const week = usePeriodGoal(goals.data, "week", 14);
 
-  // The day the screen opened: the year and month the goals are for.
   const [today] = useState(() => new Date());
 
-  // Where this year's pace lands: the finish rate so far, carried to the target.
   const projectedCompletion = useMemo(() => {
     const done = year.row?.progress ?? 0;
     const target = year.row?.goal.target ?? 0;

@@ -19,8 +19,6 @@ interface CompanionChatProps {
   visible: boolean;
   bookTitle: string;
   bookId: string;
-  // When set, the chat opens with this text ready in the box (a quoted passage or
-  // word), for the reader to finish their question.
   seedQuestion?: string | null;
   onClose: () => void;
 }
@@ -30,8 +28,6 @@ interface ChatMessage {
   content: string;
 }
 
-// A conversation about the book. The server keeps the thread and its history; the
-// companion avoids spoilers past what the reader has mentioned.
 export function CompanionChat({
   visible,
   bookTitle,

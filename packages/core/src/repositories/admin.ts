@@ -1,12 +1,6 @@
-// Admin data access. One module for every launch-critical operator surface: dashboard
-// counts, users, catalog books, book-of-the-month, celebrity picks, reader clubs,
-// journal posts, broadcast notifications, and site announcements. Reads run in-process
-// from RR loaders; writes are called by the /api/v1/admin routes (browser client), each
-// wrapped in an audit-log entry at the route layer. Suspension/admin flags live on
-// profiles; club verification lives on clubs.is_verified. No new columns beyond the
-// additive announcements table. Dashboard, audit and users live here; the catalog,
-// journal and announcement surfaces live in their own modules, re-exported below so
-// adminRepo stays one namespace.
+// Admin data access for the operator surfaces: dashboard, audit, users. Catalog, journal and announcement surfaces live in their own
+// modules, re-exported below so adminRepo stays one namespace. Reads run in-process from loaders; writes are called by the
+// /api/v1/admin routes, each audit-logged at the route layer.
 import { and, desc, eq, or, sql, type SQL } from "drizzle-orm";
 import { likeContains } from "@dustinedwards/site-runtime/d1";
 import type { SQLiteTable } from "drizzle-orm/sqlite-core";
@@ -125,7 +119,6 @@ export type AdminUserRow = {
   createdAt: Date;
 };
 
-/** `isAdmin` is the admin list's answer (isAdminEmail: the email on ADMIN_EMAIL and CO_OWNER_EMAILS in `admins`). */
 export async function listUsers(
   db: Db,
   opts: { q?: string; limit?: number; offset?: number; admins: AdminSettings },
@@ -156,8 +149,7 @@ export async function listUsers(
   }));
 }
 
-/** The account behind an operator call's named actor (api operator bearer). Only the
- *  id and email: whether it may act is decided from its profile, per request. */
+/** Only id and email: whether it may act is decided from its profile, per request. */
 export async function getOperatorActor(
   db: Db,
   id: string,
@@ -170,12 +162,10 @@ export async function getOperatorActor(
   return row ?? null;
 }
 
-/** One user for the admin screen; `isAdmin` is the admin list's answer, as in listUsers. */
 export async function getUserDetail(db: Db, id: string, admins: AdminSettings) {
   const [row] = await db.select().from(profiles).where(eq(profiles.id, id)).limit(1);
   if (!row) return null;
-  // Email lives on the Better Auth user row, not the profile. Last-active is the most
-  // recent session start (a good-enough proxy without a dedicated column).
+  // Email lives on the Better Auth user row; last-active is the latest session start.
   const [authRow] = await db
     .select({ email: user.email })
     .from(user)
@@ -213,7 +203,6 @@ export async function getUserActivityStats(db: Db, id: string): Promise<UserActi
   return { booksFinished, highlights, clubsJoined, diaryEntries: diary };
 }
 
-/** The role and permission state an admin change previews and then guards on. */
 export type UserRoleState = {
   id: string;
   username: string;
@@ -269,7 +258,6 @@ export async function setUserTier(
   return rows.length > 0;
 }
 
-/** Send one notification to a single user (admin-directed). */
 export async function notifyUser(
   db: Db,
   userId: string,

@@ -1,8 +1,4 @@
-// Social data access: follows, close_friends, reading_lists +
-// reading_list_books, and the activity_events feed query. Pure DB reads/writes; no
-// authorization and no event emission (those live in domain/social.ts). Reads run
-// in-process from web/mobile loaders; writes are called by the API after the domain
-// layer authorized them.
+// Social data access: follows, close_friends, reading lists and the activity_events feed query. No authorization or event emission (domain/social.ts).
 import { inList, olderThan } from "@dustinedwards/site-runtime/d1";
 import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
 import type { Db } from "../db";
@@ -21,7 +17,6 @@ export type ReadingList = typeof readingLists.$inferSelect;
 export type ReadingListBook = typeof readingListBooks.$inferSelect;
 export type ActivityEvent = typeof activityEvents.$inferSelect;
 
-/** Idempotent follow. Returns true if a new edge was created. */
 export async function follow(db: Db, followerId: string, followingId: string): Promise<void> {
   await db.insert(follows).values({ followerId, followingId }).onConflictDoNothing();
 }
@@ -45,7 +40,6 @@ export async function isFollowing(
   return !!row;
 }
 
-/** ids of the users this user follows. */
 export async function listFollowingIds(db: Db, userId: string): Promise<string[]> {
   const rows = await db
     .select({ id: follows.followingId })
@@ -54,7 +48,6 @@ export async function listFollowingIds(db: Db, userId: string): Promise<string[]
   return rows.map((r) => r.id);
 }
 
-/** ids of the users who follow this user. */
 export async function listFollowerIds(db: Db, userId: string): Promise<string[]> {
   const rows = await db
     .select({ id: follows.followerId })
@@ -79,9 +72,7 @@ export async function countFollowing(db: Db, userId: string): Promise<number> {
   return row?.n ?? 0;
 }
 
-// close_friends is a one-directional list the owner (user_id) curates. friend_id is
-// the person granted the owner's friends-only content. It is NOT symmetric and NOT
-// the same graph as follows.
+// close_friends is a one-directional list the owner curates (friend_id is granted the owner's friends-only content): NOT symmetric, not the follows graph.
 
 export async function addCloseFriend(db: Db, userId: string, friendId: string): Promise<void> {
   await db.insert(closeFriends).values({ userId, friendId }).onConflictDoNothing();
@@ -93,7 +84,6 @@ export async function removeCloseFriend(db: Db, userId: string, friendId: string
     .where(and(eq(closeFriends.userId, userId), eq(closeFriends.friendId, friendId)));
 }
 
-/** friend_ids the given user has added to their close-friends list. */
 export async function listCloseFriendIds(db: Db, userId: string): Promise<string[]> {
   const rows = await db
     .select({ id: closeFriends.friendId })
@@ -102,8 +92,6 @@ export async function listCloseFriendIds(db: Db, userId: string): Promise<string
   return rows.map((r) => r.id);
 }
 
-/** user_ids of the people whose close-friends list CONTAINS the given viewer. These are
- *  the authors whose friends-only events the viewer is entitled to see. */
 export async function listCloseFriendOfIds(db: Db, viewerId: string): Promise<string[]> {
   const rows = await db
     .select({ id: closeFriends.userId })
@@ -185,8 +173,6 @@ export interface ListSummary {
   covers: string[]; // up to four cover urls, in list order, for a preview stack
 }
 
-/** Per-list book count and a few preview covers for the owner's lists index. One pass over
- *  the list's books (scoped to the owner via the reading_lists join), grouped in memory. */
 export async function listSummariesForUser(db: Db, userId: string): Promise<ListSummary[]> {
   const rows = await db
     .select({ listId: readingListBooks.listId, coverUrl: books.coverUrl })
@@ -250,9 +236,7 @@ export async function removeBookFromList(db: Db, listId: string, bookId: string)
     .where(and(eq(readingListBooks.listId, listId), eq(readingListBooks.bookId, bookId)));
 }
 
-// Fetch the newest events authored by any of the candidate authors. Visibility
-// filtering per viewer happens in domain/social.ts (the pure resolver), NOT here: this
-// returns raw rows so the resolver stays unit-testable without D1.
+// Raw rows: visibility filtering per viewer happens in domain/social.ts (the pure resolver), so it stays unit-testable without D1.
 
 export async function listActivityByAuthors(
   db: Db,
@@ -279,8 +263,6 @@ export async function listActivityByAuthors(
     .limit(limit);
 }
 
-/** A single user's own activity, filtered to the visibilities the viewer may see. Used
- *  by the public profile activity tab. */
 export async function listActivityForUser(
   db: Db,
   userId: string,
@@ -301,7 +283,6 @@ export async function listActivityForUser(
     .limit(Math.min(opts.limit ?? 30, 100));
 }
 
-/** The nightly retention prune: notifications and activity events older than a year, as for the sign-in events. */
 export async function pruneActivity(db: Db, now = Date.now()): Promise<void> {
   const cutoff = new Date(now - 365 * 86_400_000);
   await db.batch([

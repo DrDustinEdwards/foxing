@@ -18,9 +18,6 @@ export interface AnnotationAuthor {
   avatarUrl: string | null;
 }
 
-// Another reader's shared annotation, resolved + tagged server-side. `gate` is the
-// courtesy collapse decision (spoiler/ahead); the body is present so tap-to-reveal is
-// instant, but rendered collapsed until revealed.
 export interface ReaderOther {
   id: string;
   type: "highlight" | "note";
@@ -59,8 +56,6 @@ export interface ReaderPopular {
   locator: Locator | null;
 }
 
-// Which social layers the reader shows. Kept in this browser (Capsomer's useRemembered); mine is on
-// by default, the social layers off (opt-in), so the reader opens as a private surface.
 export type LayerState = { mine: boolean; clubs: boolean; everyone: boolean };
 
 const DEFAULT_LAYERS: LayerState = { mine: true, clubs: false, everyone: false };
@@ -71,14 +66,11 @@ export const SETTINGS_KEY = "foxing.reader.settings";
 
 export const PROGRESS_DEBOUNCE = 1500;
 
-// "My clubs" shows club + friend layers; "Everyone" shows public. Popular follows
-// "Everyone" too. One place decides the mapping so the toggles and the redraw agree.
 export function layerShown(layer: ReaderOther["layer"], state: LayerState): boolean {
   if (layer === "public") return state.everyone;
   return state.clubs; // club | friend
 }
 
-/** The layers in a stored value (useRemembered(LAYERS_KEY)), over the defaults. */
 export function parseLayers(raw: string | null): LayerState {
   try {
     return raw ? { ...DEFAULT_LAYERS, ...JSON.parse(raw) } : DEFAULT_LAYERS;
@@ -87,9 +79,6 @@ export function parseLayers(raw: string | null): LayerState {
   }
 }
 
-// Two locators point at the same reading position when they share a resource and
-// their progression matches within a hair. Used to skip redundant progress saves,
-// which otherwise fire (and flash "Saving...") for the position we just restored.
 export function samePosition(a: Locator | null, b: Locator | null): boolean {
   if (!a || !b || a.href !== b.href) return false;
   return Math.abs(progressionOf(a) - progressionOf(b)) < 1e-4;
@@ -101,9 +90,6 @@ function progressionOf(loc: Locator): number {
   return typeof v === "number" ? v : 0;
 }
 
-// The engine keeps a pool of content frames (current, prev, next); only one is
-// shown at a time, the rest are hidden (visibility:hidden, opacity:0). Activation
-// rects are relative to the shown frame, so anchor against that one.
 export function visibleFrame(container: HTMLElement | null): HTMLIFrameElement | null {
   if (!container) return null;
   const frames = Array.from(container.querySelectorAll("iframe"));
@@ -114,7 +100,6 @@ export function visibleFrame(container: HTMLElement | null): HTMLIFrameElement |
   );
 }
 
-/** The reading settings in a stored value (useRemembered(SETTINGS_KEY)), over the defaults. */
 export function parseSettings(raw: string | null): ReaderSettings {
   try {
     return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : DEFAULT_SETTINGS;

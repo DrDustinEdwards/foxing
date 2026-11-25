@@ -1,5 +1,3 @@
-// Companion persistence: per-book conversation threads/messages, and the free-cached
-// catalog generator output, and the daily usage quota. All companion data access goes through here.
 import { reserveSettle } from "@dustinedwards/site-runtime/ai-caps";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { quotaDay } from "../companion/quota";
@@ -11,7 +9,6 @@ export type CompanionThread = typeof companionThreads.$inferSelect;
 export type CompanionMessageRow = typeof companionMessages.$inferSelect;
 export type BookAiCacheRow = typeof bookAiCache.$inferSelect;
 
-/** The user's existing thread for a book, or null if none exists yet. */
 export async function findThread(
   db: Db,
   userId: string,
@@ -31,7 +28,6 @@ export async function getThreadById(db: Db, id: string): Promise<CompanionThread
   return rows[0] ?? null;
 }
 
-/** Find the user's thread for a book, or create one. One thread per (user, book). */
 export async function getOrCreateThread(
   db: Db,
   userId: string,
@@ -49,7 +45,6 @@ export async function getOrCreateThread(
   return row ?? (await findThread(db, userId, bookId))!;
 }
 
-/** Recent messages in a thread, oldest first, for context assembly. */
 export async function listRecentMessages(
   db: Db,
   threadId: string,
@@ -80,7 +75,6 @@ export async function appendMessage(
   return row;
 }
 
-/** One cached, free-catalog-generator action's content for a book, if generated. */
 export async function getCachedAction(
   db: Db,
   bookId: string,
@@ -94,7 +88,6 @@ export async function getCachedAction(
   return rows[0] ?? null;
 }
 
-/** Every cached action generated for a book (used to assemble companion context). */
 export async function listCachedActions(db: Db, bookId: string): Promise<BookAiCacheRow[]> {
   return db.select().from(bookAiCache).where(eq(bookAiCache.bookId, bookId));
 }
@@ -146,7 +139,6 @@ export async function saveFactCheck(
     .where(and(eq(bookAiCache.bookId, r.bookId), eq(bookAiCache.action, r.action)));
 }
 
-/** Catalog books with cached texts and no fact-check yet, in id order, limited to `only` when it is given. */
 export async function findBooksNeedingFactCheck(db: Db, limit: number, only?: string[]) {
   return db
     .select()
@@ -162,13 +154,7 @@ export async function findBooksNeedingFactCheck(db: Db, limit: number, only?: st
     .limit(limit);
 }
 
-/**
- * Reserve one call against the reader's daily quota: `cents` (its worst case, companion.reserveCents) and one
- * request, only while the day is under both the cost ceiling and the request backstop. Check and reservation are one
- * conditional upsert: a D1 database "is inherently single-threaded, and processes queries one at a time"
- * (developers.cloudflare.com/d1/platform/limits/), and a SQLite statement is atomic, so parallel requests cannot all
- * pass on the same count. Returns the day reserved against, for settleUsage, or null when the quota is spent.
- */
+/** Reserve one call against the daily quota (`cents` worst case plus one request) only while under the cost ceiling and request backstop. Check and reservation are one conditional upsert (statements are atomic), so parallel requests cannot all pass on the same count. Returns the day reserved, for settleUsage, or null when spent. */
 export async function reserveUsage(
   db: Db,
   userId: string,
@@ -192,7 +178,6 @@ export async function reserveUsage(
   return result.meta.changes > 0 ? day : null;
 }
 
-/** Replace a reservation with the call's real cost, once it settles: `actualCents - reservedCents` added in place. */
 export async function settleUsage(
   db: Db,
   userId: string,
@@ -206,10 +191,7 @@ export async function settleUsage(
     .where(and(eq(companionUsage.userId, userId), eq(companionUsage.day, day)));
 }
 
-/**
- * A reader's companion quota as site-runtime's reserveSettle: reserve the worst case (reserveUsage), run the call, settle
- * to its real cost (settleUsage). Null from the reserve is a spent quota; a call that throws keeps its reservation.
- */
+/** The quota as site-runtime's reserveSettle; a call that throws keeps its reservation. */
 export function companionQuota<T>(db: Db, userId: string, now: Date = new Date()) {
   return reserveSettle<T, string>({
     reserve: (cents) => reserveUsage(db, userId, cents, now),

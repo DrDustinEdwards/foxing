@@ -20,7 +20,6 @@ import { ButtonLink } from "capsomer/react/link";
 import { signInHref } from "~/lib/sign-in-path";
 import { FormError } from "~/components/ui";
 
-// Bio length matches the legacy limit so the counter and the stored value agree.
 const BIO_MAX = 200;
 
 export function ProfileSection({
@@ -53,7 +52,6 @@ export function ProfileSection({
     });
     if (!saved) return;
     setStatus("saved");
-    // The password manager shows the new name beside this account's passkeys (the Signal API).
     void signalCurrentUserDetails({
       user: initial.userId,
       name: initial.email,
@@ -125,7 +123,6 @@ export function UsernameSection({ initial }: { initial: string }) {
   const normalized = value.trim().toLowerCase();
   const changed = normalized !== saved;
   const valid = USERNAME_RE.test(normalized);
-  // Debounced live availability check whenever a changed, valid username settles.
   const available = useUsernameAvailable(normalized, changed && valid);
   const avail = !changed
     ? "idle"
@@ -212,7 +209,6 @@ export function EmailSection({ initial }: { initial: string }) {
     setError(null);
     const newEmail = email.trim();
     try {
-      // Both mailed links open /email/confirm, which shows how each step went.
       const res = await authClient.changeEmail({ newEmail });
       if (res.error) {
         setError(res.error.message ?? "Could not change your email.");
@@ -269,7 +265,6 @@ export function AdminSection() {
 }
 
 export type SignInSettings = {
-  /** The account's id, address and display name, as the password manager shows them. */
   userId: string;
   email: string;
   displayName: string;
@@ -281,18 +276,9 @@ export type SignInSettings = {
     created: string | null;
     lastUsed: string | null;
   }[];
-  /** Exactly one passkey: suggest a second, on another device. */
-  /** The providers the site offers, and whether this account is joined to each. */
   providers: { id: "google" | "apple"; label: string; accountId: string | null }[];
 };
 
-/**
- * How the reader signs in (site-runtime ./sign-in): their passkeys, and Google or Apple joined
- * to the account. Joining happens only here, while signed in, never by a matching email at
- * sign-in. The email link always works, so nothing here can lock a reader out.
- */
-/** One auth change at a time (keyed, for its button's label): a stale sign-in goes to sign in
- *  again, an error shows in the section, success reloads the settings. */
 function useAuthAction() {
   const revalidator = useRevalidator();
   const [busy, setBusy] = useState<string | null>(null);
@@ -328,8 +314,6 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
   const { busy, error, run } = useAuthAction();
   const [renaming, setRenaming] = useState<string | null>(null);
 
-  // Tells the password manager which passkeys Foxing still accepts and the account's current
-  // name (the Signal API), so one removed elsewhere stops being offered.
   useEffect(() => {
     const credentialIds = initial.passkeys.map((p) => p.credentialId);
     // A passkey left out would be dropped from the password manager, so a gap sends nothing.
@@ -428,7 +412,6 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
                         p.id,
                         async () => {
                           const res = await authClient.passkey.deletePasskey({ id: p.id });
-                          // Gone here, so the password manager stops offering it.
                           if (!res.error && p.credentialId)
                             void signalUnknownCredential({
                               rpId: location.hostname,
@@ -524,11 +507,6 @@ export type SessionSettings = {
   lastActive: string;
 }[];
 
-/**
- * Where the reader is signed in (site-runtime ./sign-in sessionRows), this device first. Listing
- * them needs a recent sign-in, so `null` offers one. Signing a device out ends its session through
- * the settings page's action, by id.
- */
 export function SessionsSection({ sessions }: { sessions: SessionSettings | null }) {
   const { busy, error, run } = useAuthAction();
   const signOut = useFetcher<{ revoked: boolean }>();
@@ -617,8 +595,6 @@ export type SecurityActivity = {
   location: string | null;
 }[];
 
-/** The last ten sign-ins and sign-in changes (site-runtime securityHistory), newest first, so a
- *  reader can spot one that was not theirs. */
 export function SecurityHistorySection({ activity }: { activity: SecurityActivity }) {
   return (
     <Card title="Recent security activity">
@@ -629,7 +605,6 @@ export function SecurityHistorySection({ activity }: { activity: SecurityActivit
       ) : (
         <ul className="cap-stack" data-gap="4">
           {activity.map((a, i) => (
-            // An index key: a fixed, newest-first list that never reorders on screen
             <li key={i} className="cap-text" data-size="small" data-tone="muted" data-face="ui">
               <span className="cap-text" data-tone="ink" data-weight="strong">
                 {a.what}
@@ -649,8 +624,6 @@ export function SecurityHistorySection({ activity }: { activity: SecurityActivit
   );
 }
 
-/** The export needs a sign-in from the last 10 minutes; past that, `fresh` is false and the
- *  section offers one first. */
 export function DataSection({ fresh }: { fresh: boolean }) {
   return (
     <Card title="Your data">
@@ -671,8 +644,6 @@ export function DataSection({ fresh }: { fresh: boolean }) {
 const CONFIRM_PHRASE = "delete my account";
 const DELETE_CLUB = "";
 
-/** Clubs the user created: each passes to a member they pick before the account goes, so
- *  their leaving does not delete everyone else's discussion. */
 function ClubHandoverFields({
   clubs,
   choice,
@@ -727,8 +698,6 @@ function ClubHandoverFields({
   );
 }
 
-/** Deleting needs a sign-in from the last 10 minutes (Better Auth's deleteUser); past that,
- *  `fresh` is false and the section offers one first, as Signed-in devices does. */
 export function DangerSection({ fresh }: { fresh: boolean }) {
   const [confirm, setConfirm] = useState("");
   const [choice, setChoice] = useState<Record<string, string>>({});
@@ -749,8 +718,6 @@ export function DangerSection({ fresh }: { fresh: boolean }) {
       successors[club.clubId] = picked === DELETE_CLUB ? null : picked;
     }
     if (!(await del.run({ successors }))) return;
-    // The account and its data are gone; end the session and return to the marketing
-    // page with a full navigation so the root loader re-runs anonymous.
     setLeaving(true);
     await signOutToHome();
   }

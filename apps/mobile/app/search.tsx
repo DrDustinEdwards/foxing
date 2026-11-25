@@ -41,8 +41,6 @@ const RECENT_KEY = "recent_searches";
 const MAX_RECENT = 10;
 const DEBOUNCE_MS = 250;
 
-// Search: books and authors from GET /search, people and clubs from the same
-// typeahead the web header uses.
 export default function SearchScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -55,7 +53,6 @@ export default function SearchScreen() {
   const inputRef = useRef<TextInputInstance>(null);
 
   useEffect(() => {
-    // Autofocus on open.
     setTimeout(() => inputRef.current?.focus(), 50);
     void AsyncStorage.getItem(RECENT_KEY).then((raw) => {
       if (!raw) return;

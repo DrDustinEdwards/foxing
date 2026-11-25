@@ -1,16 +1,6 @@
-// Find next book: a tiered recommendation engine.
-//   Tier 1 (taste)    - favourite_genres -> award winners + most-loved in those genres.
-//                       Empty genres fall back to a cross-genre curated starter set.
-//   Tier 2 (behavior)- finished/rated books -> favorite authors + top genres boost.
-//   Tier 3 (AI)       - Plus + ANTHROPIC_API_KEY only: the model re-ranks the top data
-//                       candidates with a personalised reason each, as JSON matching a
-//                       schema (structured output, not parsed from prose). Cached in KV
-//                       (7 days); any parse/API/quota failure falls back to the data
-//                       ranking silently. Free users, or no key, get the full data page.
-//
-// Tiers 1+2 are pure data (rankCandidates); tier 3 is an overlay. The composition reads
-// in-process via the repos; the caller/KV are injected so this stays testable with a
-// stubbed model and a fake KV, no network and no binding.
+// Next-book recommendations. Tiers 1+2 (taste, behavior) are pure data (rankCandidates). Tier 3 (AI, Plus + ANTHROPIC_API_KEY)
+// re-ranks the top candidates as structured output, cached in KV for 7 days; any failure falls back to the data ranking silently.
+// Caller and KV are injected, so tests need no network or binding.
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { UNTRUSTED_DATA_RULE, untrusted } from "@dustinedwards/site-runtime/anthropic";
 import { checkProse } from "@dustinedwards/site-runtime/prose";
@@ -35,19 +25,14 @@ export interface RecommendationSet {
   isPlus: boolean;
 }
 
-/** The minimal KV surface the AI cache needs (a subset of Cloudflare KVNamespace),
- *  so core takes no binding type. */
 export interface RecKv {
   get(key: string): Promise<string | null>;
   put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
 }
 
 export interface RecDeps {
-  /** Real caller when ANTHROPIC_API_KEY is set, else null (tier 3 skipped). */
   caller: StructuredCaller | null;
-  /** KV for the AI cache (the quota is D1), or null (tier 3 recomputes / is skipped). */
   kv: RecKv | null;
-  /** A refresh busts the AI cache (rate-limited); ignored for the data tiers. */
   refresh?: boolean;
   now?: Date;
 }
@@ -56,7 +41,6 @@ export interface RankSignals {
   favoriteGenres: string[];
   behaviorGenres: string[];
   favoriteAuthors: string[];
-  /** Lowercased author -> an example liked title, preferring a highly-rated one. */
   exampleByAuthor: Record<string, { title: string; rated: boolean }>;
 }
 
@@ -76,11 +60,6 @@ const RATED_HIGH = 7; // rating_half >= 7 (3.5 stars) counts as "liked"
 const TARGET = 16;
 const AI_CANDIDATES = 40;
 
-/**
- * Pure ranker for tiers 1 + 2. Scores each candidate by rating quality, awards, staff
- * pick, taste-genre match, behavior-genre match, and author match, and derives a reason
- * from the strongest signal. Deterministic order for stable pages.
- */
 export function rankCandidates(
   candidates: RecCandidate[],
   signals: RankSignals,
@@ -104,7 +83,6 @@ export function rankCandidates(
     const subs = c.subjects ?? [];
     const isAward = awardIds.has(c.id);
 
-    // Rating quality: up to +2, damped by how many ratings back it.
     const rating = c.weightedRating ?? 0;
     const rc = c.ratingCount ?? 0;
     score += Math.min(2, (rating / 5) * 2) * Math.min(1, Math.log10(rc + 1) / 2);
@@ -150,7 +128,6 @@ export function rankCandidates(
   return ranked;
 }
 
-/** Whether AI text a reader would see has a high or critical prose finding (checklist W1). */
 function proseFlagged(text: string): boolean {
   return checkProse(text).some((i) => i.severity === "high" || i.severity === "critical");
 }
@@ -167,13 +144,7 @@ function toRec(r: RankedRec): Recommendation {
   };
 }
 
-/**
- * The model's structured selection, checked again here. Null when nothing usable is in it,
- * so the caller falls back to the data ranking. Only ids in `allowedIds` survive; duplicates
- * and non-strings are dropped; reasons are cleaned to one line. A reason with a high or
- * critical prose finding (site-runtime's checkProse: a stock phrase, a refusal, chatbot
- * markup) is null, and the reader sees the data ranking's own reason for that book instead.
- */
+/** The model's structured selection, checked again: only ids in `allowedIds` survive, and a reason with a high or critical prose finding (checkProse) is null, so the reader sees the data ranking's reason. Null when nothing usable. */
 function selectAiPicks(
   value: unknown,
   allowedIds: Set<string>,
@@ -259,7 +230,6 @@ function buildProfilePrompt(
   return lines.join("\n");
 }
 
-/** The structured-output schema: ranked picks, each a candidate's id and its reason. */
 function picksSchema(ids: string[]): Record<string, unknown> {
   return {
     type: "object",
@@ -290,7 +260,6 @@ async function aiOverlay(
   if (!caller || !kv) return null;
   const now = deps.now ?? new Date();
 
-  // Refresh throttle: honor a refresh at most once per window; otherwise serve cache.
   let refresh = deps.refresh ?? false;
   if (refresh) {
     const tkey = `recs-refresh:${userId}`;
@@ -370,8 +339,6 @@ async function aiOverlay(
   return recs;
 }
 
-/** Resolve a cached [{bookId, reason}] against the current candidate pool (drops any
- *  book that is now owned/gone). Null if too little survives to fill a page. */
 function resolveCached(cached: string, byId: Map<string, RankedRec>): Recommendation[] | null {
   try {
     const parsed = JSON.parse(cached) as Array<{ bookId: string; reason: string }>;
@@ -388,7 +355,6 @@ function resolveCached(cached: string, byId: Map<string, RankedRec>): Recommenda
   }
 }
 
-/** Fill a partial AI list up to TARGET from the data ranking (no duplicates). */
 function padTo(recs: Recommendation[], dataRanked: RankedRec[]): Recommendation[] {
   const have = new Set(recs.map((r) => r.bookId));
   const out = [...recs];
@@ -402,9 +368,7 @@ function padTo(recs: Recommendation[], dataRanked: RankedRec[]): Recommendation[
   return out.slice(0, TARGET);
 }
 
-/** Coerce favourite_genres to a clean string[]. A brand-new profile stores NULL (Drizzle
- *  maps it to null); a dirty/legacy value that is not an array collapses to no genres, so
- *  the tier-1 starter-set fallback runs instead of throwing. */
+/** favourite_genres as a clean string[]: NULL or a non-array value collapses to no genres, so the starter-set fallback runs instead of throwing. */
 function normalizeGenres(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.filter((g): g is string => typeof g === "string" && g.trim().length > 0);
@@ -426,7 +390,6 @@ export async function getRecommendations(
   const isPlus = profile?.subscriptionTier === "plus";
   const signals = buildSignals(favoriteGenres, finished, rated);
 
-  // Candidate pool: base (top-rated) + author matches + genre matches, minus owned.
   const genrePool = [...new Set([...favoriteGenres, ...signals.behaviorGenres])];
   const [byRating, byAuthors, bySubjects] = await Promise.all([
     catalogRepo.listRecCandidatesByRating(db, 400),
@@ -453,7 +416,6 @@ export async function getRecommendations(
   const dataRanked = rankCandidates(candidates, signals, awardIds);
   const dataTop = dataRanked.slice(0, TARGET).map(toRec);
 
-  // Tier 3: Plus + key only. Any failure inside is logged and falls back to the data ranking.
   if (isPlus && deps.caller) {
     try {
       const profilePrompt = buildProfilePrompt(favoriteGenres, finished, rated, signals);

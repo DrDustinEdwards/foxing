@@ -1,7 +1,4 @@
-// Client-only Readium ts-toolkit wiring. Imported dynamically by the reader
-// component (inside an effect) so none of this evaluates during SSR. Wraps the
-// EpubNavigator behind a small imperative API and extracts the R1 selection
-// context (before/after + cssSelector) from the content frame at selection time.
+// Client-only Readium ts-toolkit wiring, imported dynamically from an effect so none of it evaluates during SSR.
 import { HttpFetcher, Locator as ReadiumLocator, Manifest, Publication } from "@readium/shared";
 import {
   EpubNavigator,
@@ -25,12 +22,10 @@ import { initialEpubPreferences, toEpubPreferences } from "./settings";
 
 const CONTEXT_CHARS = 40;
 const ANNOTATION_GROUP = "annotations";
-// A second group, drawn but never registered for activation, that carries the
-// "has a note" outline. Keeping it separate means the fill in ANNOTATION_GROUP is
-// the sole click target, so a tap always resolves to one annotation.
+// A second group, drawn but never registered for activation, carrying the "has a note" outline, so the ANNOTATION_GROUP
+// fill is the sole click target and a tap resolves to one annotation.
 const NOTE_GROUP = "annotation-notes";
-// The popular-highlights ambient underline. Its own non-active group so it never
-// competes with your own or others' tappable decorations for a click.
+// The popular-highlights ambient underline: its own non-active group so it never competes for a click.
 const POPULAR_GROUP = "popular-highlights";
 
 export interface DecorationRect {
@@ -45,8 +40,6 @@ interface HighlightSpec {
   locator: Locator;
   color: HighlightColor;
   hasNote: boolean;
-  // "mine" renders a solid fill (your own); "other" renders an underline in the author's
-  // color (someone else's shared annotation). Both stay tappable.
   ownership: "mine" | "other";
 }
 
@@ -65,8 +58,6 @@ export interface SelectionPayload {
 interface EngineListeners {
   onPosition: (locator: Locator) => void;
   onSelection: (payload: SelectionPayload) => void;
-  // rect is the activated highlight's bounds in navigator-container CSS pixels,
-  // so the popover can be anchored to the passage instead of floating bottom-center.
   onDecorationActivated: (id: string, rect: DecorationRect | null) => void;
   onReady: () => void;
 }
@@ -99,23 +90,17 @@ export interface ReaderEngine {
 }
 
 /**
- * The reader page's Content-Security-Policy nonce (workers/security-headers.ts, the /read policy).
- * Readium renders each resource into a blob: frame, which inherits this page's policy, and loads
- * its own helpers there as blob: scripts (the CSS selector generator, and the execution-prevention
- * shim that stops an EPUB's own scripts). The policy allows no blob: script, so each helper is
- * given this nonce instead; an EPUB's inline scripts never carry it and stay blocked (its script
- * files are served as text/plain by /reader-assets, so they do not run either). The browser
- * hides the nonce attribute but keeps the `nonce` property, which is what is read here.
+ * The reader page's CSP nonce (workers/security-headers.ts). Readium loads its helper scripts into blob: frames that
+ * inherit the page's policy, which allows no blob: script, so each is given this nonce; an EPUB's inline scripts never
+ * carry it. The browser hides the nonce attribute but keeps the `nonce` property, which is read here.
  */
 function pageNonce(): string | undefined {
   return document.querySelector<HTMLScriptElement>("script[nonce]")?.nonce || undefined;
 }
 
 /**
- * Puts the nonce on Readium's built-in script injectables before the first frame is built. The
- * built-in rules are not configurable (only extra rules are), so this reaches the navigator's
- * `_readiumRulesPromise` (@readium/navigator 2.6). If a Readium upgrade renames it, this says so in
- * the console, the reader's frames stop working, and the e2e reader spec fails.
+ * Puts the nonce on Readium's built-in script injectables before the first frame is built. They are not configurable, so
+ * this reaches `_readiumRulesPromise` (@readium/navigator 2.6); a Readium rename is logged and fails the e2e reader spec.
  */
 async function nonceReadiumInjectables(nav: EpubNavigator): Promise<void> {
   const nonce = pageNonce();
@@ -135,23 +120,16 @@ async function nonceReadiumInjectables(nav: EpubNavigator): Promise<void> {
   }
 }
 
-/**
- * The one markup Readium writes inside a book frame (@readium/navigator-html-injectables 2.5, the decoration template
- * for a highlight it draws as a box): an empty div with Readium's marker, a class and a style it computes. Matched
- * whole, so no other element or attribute can ride along.
- */
+/** The one markup Readium writes inside a book frame (@readium/navigator-html-injectables 2.5), matched whole so nothing else rides along. */
 const READIUM_DECORATION =
   /^<div data-readium="true" class="readium-[\w-]+" style="[^"<>]*"><\/div>$/;
 
-/** Where a book frame finds the call that gives it the page's default policy (see readerFramePolicy). */
 const FRAME_POLICY_KEY = "foxing:reader-frame-policy";
 
 /**
- * The script Readium puts first in every book frame, so the frame has a Trusted Types default policy before any of
- * Readium's frame code runs. A blob: frame inherits this page's Content-Security-Policy, with
- * require-trusted-types-for, but not its policies; without one, Readium's highlight styles and decoration boxes would be
- * refused. The frame asks this page for the same default policy every site uses (site-runtime ./trusted-types), with
- * Readium's decoration template let through. Like Readium's own frame scripts it carries the page's nonce.
+ * The script Readium puts first in every book frame so it has a Trusted Types default policy before Readium's frame code
+ * runs: a blob: frame inherits the page's CSP (require-trusted-types-for) but not its policies, and would refuse Readium's
+ * highlight styles and decoration boxes. Carries the page's nonce, like Readium's own frame scripts.
  */
 function readerFramePolicy(nonce: string | undefined): IInjectableRule {
   const page = window as unknown as Record<string, (frame: Window) => void>;
@@ -178,9 +156,7 @@ function serialize(loc: unknown): Locator {
   return anyLoc?.serialize ? anyLoc.serialize() : (loc as Locator);
 }
 
-// Read the active content frame's live selection to build the TextQuoteAnchor
-// context the ts-toolkit decorator uses (exact + prefix/suffix) plus a cssSelector
-// root. Content frames are same-origin blob iframes, so the parent can read them.
+// Content frames are same-origin blob iframes, so the parent can read their live selection.
 function readSelectionContext(
   container: HTMLElement,
 ): (SelectionContext & { exact: string }) | null {
@@ -218,7 +194,6 @@ function readSelectionContext(
     const root = rootEl ?? doc.body;
     const rootText = root.textContent ?? "";
 
-    // Character offset of the selection start/end within the root's textContent.
     const startProbe = doc.createRange();
     startProbe.selectNodeContents(root);
     startProbe.setEnd(range.startContainer, range.startOffset);
@@ -247,10 +222,8 @@ function readSelectionContext(
 }
 
 /**
- * Opens the reader. Readium parses each chapter with DOMParser into an inert document, adds its helpers and loads it
- * into a blob: frame as a whole new document; nothing it parses is moved into this page. The page's Trusted Types
- * default policy (site-runtime ./trusted-types) escapes markup at that sink unless the page holds
- * allowDocumentParsing(), so the reader holds it from opening until destroy().
+ * Opens the reader. Readium parses each chapter into an inert document and loads it into a blob: frame; the page's Trusted
+ * Types default policy escapes markup at that sink unless the page holds allowDocumentParsing(), held until destroy().
  */
 export async function createEngine(opts: CreateEngineOptions): Promise<ReaderEngine> {
   const releaseParsing = allowDocumentParsing();
@@ -280,8 +253,6 @@ async function openEngine(opts: CreateEngineOptions): Promise<ReaderEngine> {
   const fetcher = new HttpFetcher(window.fetch.bind(window), manifest.baseURL);
   const pub = new Publication({ manifest, fetcher });
 
-  // Real position list (from the manifest's position-list link) drives the
-  // scrubber; fall back to one-per-resource only if the link is absent.
   let positions = await pub.positionsFromManifest();
   if (positions.length === 0) {
     const items = manifest.readingOrder.items;
@@ -347,32 +318,22 @@ async function openEngine(opts: CreateEngineOptions): Promise<ReaderEngine> {
     },
   } as never);
 
-  // Apply full typography once loaded (kept out of the constructor so an
-  // out-of-range value can never block the first render).
+  // Applied once loaded so an out-of-range value can never block the first render.
   try {
     await nav.submitPreferences(toEpubPreferences(settings) as never);
   } catch (e) {
     console.warn("[reader] initial submitPreferences failed", e);
   }
 
-  // The content frame's ReadiumCSS computes its column geometry once, from the
-  // iframe's inner width. Our CSS sizes .readium-navigator-iframe to fill the
-  // (centered, max-width) container, but a freshly-loaded frame can run that
-  // one-shot compute before the fill width is painted, leaving the book laid out
-  // in the intrinsic 300px. Nudging the navigator's resize recomputes against the
-  // real width; it is a no-op once geometry already matches.
+  // ReadiumCSS computes column geometry once from the iframe's inner width, and a fresh frame can do that before the fill
+  // width is painted (leaving 300px); nudging resize recomputes it, and is a no-op once it matches.
   const forceRelayout = (): Promise<void> => {
     const rh = (nav as unknown as { resizeHandler?: () => Promise<void> }).resizeHandler;
     return typeof rh === "function" ? rh.call(nav).catch(() => {}) : Promise.resolve();
   };
 
-  // Once the fill width is painted (two frames), recompute geometry against it, then snap
-  // back to the saved locator. The relayout re-paginates the resource, which can shift the
-  // saved progression onto a neighboring page (it was landing a page early), so we
-  // re-navigate afterward to land on the exact saved page. Both finish before the reader
-  // reports ready: Readium refuses any navigation while another is in flight, so a Contents
-  // jump or page turn made during this snap was silently dropped (the social-reading e2e
-  // gate's reader landed back on its saved page whenever the machine was slow).
+  // Once the fill width is painted, recompute geometry then re-navigate to the saved locator (the relayout can shift it a
+  // page). Both finish before ready: Readium drops any navigation made while another is in flight.
   await new Promise<void>((done) =>
     requestAnimationFrame(() => requestAnimationFrame(() => done())),
   );
@@ -417,8 +378,6 @@ async function openEngine(opts: CreateEngineOptions): Promise<ReaderEngine> {
     goToTotalProgression: (fraction: number) =>
       nav.go(findByProgression(fraction), false, () => {}),
     applyHighlights: (specs: HighlightSpec[], theme: ReaderTheme) => {
-      // One activatable group holds both layers so a tap resolves to exactly one id;
-      // your own render as a solid fill, others as an underline in the author's color.
       const marks = specs.map((s) => ({
         id: s.id,
         locator: ReadiumLocator.deserialize(s.locator) ?? s.locator,
@@ -428,9 +387,7 @@ async function openEngine(opts: CreateEngineOptions): Promise<ReaderEngine> {
             : decorationStyleFor(s.color, theme),
       }));
       nav.applyDecorations(marks as never, ANNOTATION_GROUP);
-      // The note outline is a separate group so it stays purely visual; the mark above
-      // is what a tap resolves to. Only your own notes get the outline (others' notes
-      // read through the underline + attribution popover).
+      // The note outline is a separate group so it stays purely visual; only your own notes get it.
       const notes = specs
         .filter((s) => s.hasNote && s.ownership === "mine")
         .map((s) => ({
@@ -450,9 +407,7 @@ async function openEngine(opts: CreateEngineOptions): Promise<ReaderEngine> {
     },
     applySettings: async (next: ReaderSettings) => {
       await nav.submitPreferences(toEpubPreferences(next) as never);
-      // Column-count / scroll / font changes shift the geometry; recompute against
-      // the container's current width. Deferred a frame so the container's new
-      // max-width (which tracks the column count) is committed before we measure.
+      // Deferred a frame so the container's new max-width (which tracks the column count) is committed before measuring.
       requestAnimationFrame(() => void forceRelayout());
     },
     currentLocator: () => {

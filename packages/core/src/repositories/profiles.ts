@@ -1,6 +1,5 @@
 import { likeContains } from "@dustinedwards/site-runtime/d1";
-// Profiles repository. All profile data access goes through here so an org/classroom
-// tenancy layer (Foxing Edu) can be added later without touching call sites.
+// All profile data access goes through here so a tenancy layer can be added without touching call sites.
 import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { chunked, type Db } from "../db";
 import { profiles } from "../schema";
@@ -11,7 +10,6 @@ export type Profile = typeof profiles.$inferSelect;
 export type SignedInProfile = Profile & { isAdmin: boolean };
 export type NewProfile = typeof profiles.$inferInsert;
 
-/** Minimal identity for rendering an actor in a feed / follower list. */
 export type ProfileSummary = {
   id: string;
   username: string;
@@ -29,8 +27,6 @@ export async function getProfileByUsername(db: Db, username: string): Promise<Pr
   return rows[0] ?? null;
 }
 
-/** Batch identity lookup for a set of user ids, keyed by id. Users without a profile
- *  row are simply absent from the map. */
 export async function getProfileSummaries(
   db: Db,
   ids: string[],
@@ -52,10 +48,7 @@ export async function getProfileSummaries(
   return map;
 }
 
-/** Public profiles matching a query (username or display name), for the command
- *  palette's federated search. Only PUBLIC profiles are returned (null visibility
- *  defaults to public), so this is safe to serve on the anonymous, edge-cached suggest
- *  endpoint. */
+/** PUBLIC profiles only (null visibility defaults to public), so it is safe on the anonymous, edge-cached suggest endpoint. */
 export async function searchProfiles(db: Db, query: string, limit = 4): Promise<ProfileSummary[]> {
   const q = query.trim();
   if (q.length < 2) return [];
@@ -94,8 +87,7 @@ export async function updateProfile(
   return row ?? null;
 }
 
-/** Change the username. Callers must check uniqueness first (getProfileByUsername);
- *  this is the write only. Format is validated at the API boundary. */
+/** Write only: callers check uniqueness first (getProfileByUsername). */
 export async function updateUsername(
   db: Db,
   userId: string,
@@ -121,7 +113,6 @@ export async function getProfileByStripeCustomerId(
   return rows[0] ?? null;
 }
 
-/** Link a Foxing user to its Stripe customer (from checkout.session.completed). */
 export async function setStripeCustomerId(
   db: Db,
   userId: string,
@@ -139,7 +130,6 @@ export type SubscriptionState = {
   periodEnd: Date | null;
 };
 
-/** Project the subscription onto the profile: tier + status + renewal/trial end. */
 export async function setSubscriptionState(
   db: Db,
   userId: string,
@@ -156,7 +146,6 @@ export async function setSubscriptionState(
     .where(eq(profiles.id, userId));
 }
 
-/** Record the dunning status (invoice.payment_failed) without changing tier. */
 export async function setSubscriptionStatus(db: Db, userId: string, status: string): Promise<void> {
   await db
     .update(profiles)
@@ -164,7 +153,6 @@ export async function setSubscriptionStatus(db: Db, userId: string, status: stri
     .where(eq(profiles.id, userId));
 }
 
-/** Set the notification_prefs json (Phase 7 push/in-app category + quiet-hours prefs). */
 export async function setNotificationPrefs(
   db: Db,
   userId: string,
@@ -176,8 +164,7 @@ export async function setNotificationPrefs(
     .where(eq(profiles.id, userId));
 }
 
-/** Set the visibility json (profile / progress / default-annotation prefs). The client
- *  sends the full object, so this is a plain replace like setNotificationPrefs. */
+/** A plain replace like setNotificationPrefs: the client sends the full object. */
 export async function setVisibilityPrefs(
   db: Db,
   userId: string,

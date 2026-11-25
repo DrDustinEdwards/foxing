@@ -1,7 +1,4 @@
-// Club hooks: the clubs index, a club page, a thread, every club write, and the live
-// socket. Writes patch the open page and refetch only it; the socket tells open
-// screens another member changed something, so they refetch (or, for poll tallies,
-// patch in place) without a reload.
+// Writes patch the open page and refetch only it; the socket tells open screens another member changed something, so they refetch (poll tallies patch in place).
 import { type ClubLiveMessage, PING_FRAME } from "@foxing/types";
 import type * as W from "@foxing/types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -58,7 +55,6 @@ export function useThreadPage<S extends W.ThreadPage | undefined = undefined>(
   );
 }
 
-/** Patches every open page of one club. */
 function patchClub(clubId: string, update: (page: W.ClubPage) => W.ClubPage) {
   return patchAll<W.ClubPage>(keys.clubPages, (page) =>
     page.club.id === clubId ? update(page) : page,

@@ -1,5 +1,3 @@
-// Create a reading list at /lists/new. The form POSTs /api/v1/lists and navigates to
-// the new list. A public list emits a list_created feed event server-side.
 import { PageShell } from "~/components/page-shell";
 import { ListForm } from "~/components/social/list-form";
 import { Container, PageHeader } from "~/components/ui";
@@ -29,5 +27,4 @@ export default function ListNew({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

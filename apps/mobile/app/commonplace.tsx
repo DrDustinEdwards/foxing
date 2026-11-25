@@ -23,9 +23,6 @@ import { BackHeader } from "@/components/ui/back-header";
 
 type Filter = "all" | "public" | "private";
 
-// Notes and saved passages (GET /annotations, the same entries as the web commonplace
-// page), plus quotes the reader copies in from elsewhere. Adds and deletes go through
-// the offline sync queue and show at once.
 const TYPES: W.AnnotationType[] = ["commonplace", "note"];
 
 export default function CommonplaceScreen() {
@@ -370,8 +367,6 @@ export default function CommonplaceScreen() {
   );
 }
 
-/** A saved passage keeps its quote in selectedText and the reader's thought in body;
- *  a plain note has only body. */
 const passageOf = (e: W.MyAnnotation) => e.selectedText ?? e.body ?? "";
 const noteOf = (e: W.MyAnnotation) => (e.selectedText ? e.body : null);
 const sourceOf = (e: W.MyAnnotation) =>

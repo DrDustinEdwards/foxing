@@ -1,7 +1,6 @@
 import { ButtonLink, Link } from "capsomer/react/link";
 import { cn } from "capsomer/react/hooks";
 
-/** Page-width container. One measure for every catalog surface. */
 export function Container({
   children,
   className,
@@ -11,7 +10,6 @@ export function Container({
   children: React.ReactNode;
   className?: string;
   as?: React.ElementType;
-  /** A layout class's gap step (capsomer/utilities.css), when className holds one. */
   "data-gap"?: string;
 }) {
   return (
@@ -21,7 +19,6 @@ export function Container({
   );
 }
 
-/** Brand-subtle tag pill (Rule 07 tag role). */
 export function TagPill({
   children,
   to,
@@ -41,12 +38,10 @@ export function TagPill({
   );
 }
 
-/** Neutral metadata chip (era, length, language, etc.). */
 export function Chip({ children, className }: { children: React.ReactNode; className?: string }) {
   return <span className={cn("fx-chip", className)}>{children}</span>;
 }
 
-/** A filter choice in a row of chips; pressed when it is the one shown. */
 export function FilterTab({
   active,
   onClick,
@@ -71,11 +66,8 @@ type ButtonProps = {
   type?: "button" | "submit";
 };
 
-// Capsomer's button: primary is the family's primary fill (AA with its label in both themes),
-// secondary its outlined default, ghost its quiet variant in the accent text (fx-btn-ghost).
 const BUTTON_VARIANT = { primary: "primary", secondary: undefined, ghost: "quiet" } as const;
 
-/** One button, two intents. Renders as ButtonLink (to) or button. */
 export function Button({
   children,
   to,
@@ -99,11 +91,7 @@ export function Button({
   );
 }
 
-/**
- * Capsomer's card (capsomer/card.css), one destination: the link wraps the card's <div> (an <article> there leaves the link with no name), whose
- * heading and text are its own children. Foxing's entity look (design-system Rule 15: shadow-sm to
- * shadow-md on hover, the border stays quiet) is ui.css .fx-entity. Awards, clubs, lists.
- */
+/** Capsomer's card as one destination: the link wraps the card's <div> (an <article> there leaves the link with no name). */
 export function EntityCard({
   to,
   children,
@@ -120,7 +108,6 @@ export function EntityCard({
   );
 }
 
-/** Breadcrumb trail, Capsomer's. The BreadcrumbList JSON-LD is Prelum's (lib/seo.ts). */
 export function Breadcrumbs({ trail }: { trail: Array<{ label: string; to?: string }> }) {
   return (
     <nav aria-label="Breadcrumb" className="cap-breadcrumb fx-breadcrumbs">
@@ -143,7 +130,6 @@ export function Breadcrumbs({ trail }: { trail: Array<{ label: string; to?: stri
   );
 }
 
-/** Plain empty state. Illustration zones are not extended here (design decision). */
 export function EmptyState({
   title,
   className,
@@ -166,7 +152,6 @@ export function EmptyState({
   );
 }
 
-/** Two-letter initials from a display name, mirroring the legacy avatar fallback. */
 export function avatarInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
@@ -174,7 +159,6 @@ export function avatarInitials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-/** Round avatar: the image when present, else initials on the soft accent. */
 export function Avatar({
   src,
   name,
@@ -192,8 +176,6 @@ export function Avatar({
   );
 }
 
-/** Page title block: display heading + optional lede, and the page's own actions
-    (a New button, Refresh) beside it when there are any. */
 export function PageHeader({
   title,
   lede,
@@ -203,7 +185,6 @@ export function PageHeader({
   title: string;
   lede?: string;
   actions?: React.ReactNode;
-  /** A line under the lede, such as a link to the full archive. */
   children?: React.ReactNode;
 }) {
   const heading = (
@@ -231,7 +212,6 @@ export function PageHeader({
   );
 }
 
-/** An action's failure message, announced to assistive tech; nothing when there is none. */
 export function FormError({
   error,
   className,

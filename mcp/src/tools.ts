@@ -1,27 +1,8 @@
 /**
- * The tools. Ruling mcp-2026-10-10 and capsid/research/design-mcp-servers.md section 5 (Foxing Admin).
- *
- * WHOLE JOBS, NOT ENDPOINT MIRRORS (rule 4). Each tool finishes a job, and every
- * step of it is one authenticated request to /api/v1/admin, which owns every
- * rule. NAMES (rule 5) are `foxing_{action}_{resource}`. ANNOTATIONS (rule 6)
- * are set honestly, with the reasoning beside any that is not obvious.
- * RESPONSES (rule 7) page every list with has_more and an opaque next_cursor (checklist T8).
- * CONFIRMATION (checklist T11): the three tools that overwrite or publish change nothing until called again with the
- * token their first answer carries (confirm.ts). foxing_moderate_user is the exception: the admin API has its own
- * preview-then-perform step for a suspension (packages/api/src/admin-confirm.ts), so the tool passes that step through
- * and its token is the API's, not this server's.
- *
- * ONLY TOOLS THE API OFFERS. This server adds no route of its own, so a design tool without one is not here:
- * - foxing_read_errors (no error or log read in the API),
- * - foxing_award_badge (no badge route),
- * - foxing_run_task (the one task route, /ops/companion-cache-batch, is outside
- *   /admin and takes no operator bearer),
- * - foxing_stage_tier_change: a tier change stays in the app for Dustin (tier and award decisions are his).
- * Carrel owns writing (rule 11), and Book of the Month delete stays in the admin screen.
- *
- * EVERY CALL GOES THROUGH site-runtime's invokeTool (mcp-handler.ts), which
- * proves the caller owns what the tool names (rule 12.1), checks the scope each
- * tool declares (12.3), and writes the append-only log before and after (12.4).
+ * Foxing Admin tools: each finishes one job, every step an authenticated request to /api/v1/admin, which owns every rule.
+ * The tools that overwrite or publish change nothing until called again with the token their first answer carries
+ * (confirm.ts); foxing_moderate_user passes the API's own preview token through. invokeTool (mcp-handler.ts) checks
+ * ownership and scope and writes the append-only log. No tool exists without an API route (no error read, badge, task run or tier change).
  */
 
 import type { AuditEnv } from "@dustinedwards/site-runtime/audit-log";
@@ -35,18 +16,13 @@ import { confirmationFor, isConfirmed } from "./confirm";
 import { errorMessage } from "@dustinedwards/site-runtime/log";
 export type ToolEnv = Partial<ApiEnv> & Partial<AuditEnv> & { ADMIN_EMAIL?: string };
 
-/** The MCP content shape a tool returns. */
 export type ToolOutput = {
   content: Array<{ type: "text"; text: string }>;
   isError?: boolean;
   structuredContent?: Record<string, unknown>;
 };
 
-/**
- * Rule 12.5 and checklist S2. Display names, usernames, bios and club names are written by Foxing's readers, and audit
- * params can carry them too: a result holding them goes through site-runtime's outsideResult, the shared data notice and
- * the value inside its <data> delimiters, under this label.
- */
+/** Reader-written text (names, bios, club names) goes through site-runtime's outsideResult, inside <data> delimiters. */
 const READER_DATA = "foxing-reader-data";
 
 function ok(data: Record<string, unknown>, outside: string | null = null): ToolOutput {
@@ -57,7 +33,6 @@ function ok(data: Record<string, unknown>, outside: string | null = null): ToolO
   };
 }
 
-/** A result that opens with a line for the client, then the JSON. */
 function said(data: Record<string, unknown>, line: string): ToolOutput {
   return {
     content: [{ type: "text", text: `${line}\n\n${JSON.stringify(data, null, 2)}` }],
@@ -69,7 +44,6 @@ function inputError(message: string): ToolOutput {
   return { isError: true, content: [{ type: "text", text: message }] };
 }
 
-/** The API's refusal, its message VERBATIM, with its code and field details alongside. */
 function refusal(result: ApiCallResult): ToolOutput {
   const parts = [result.error ?? "The Foxing admin API refused the request."];
   if (result.code) parts.push(`code: ${result.code}`);
@@ -86,10 +60,7 @@ function refusal(result: ApiCallResult): ToolOutput {
   };
 }
 
-/**
- * A failure on this side, named so it cannot be mistaken for the API refusing something. The client gets only its kind
- * (checklist S4: no raw error text, which can carry hosts, stack lines or config names); the detail goes to the log.
- */
+/** A failure on this side: the client gets only its kind (raw text can carry hosts or config names); the detail goes to the log. */
 function wrapperFailure(cause: unknown): ToolOutput {
   const kind = cause instanceof ApiLegError ? cause.kind : "unexpected";
   console.error(
@@ -105,7 +76,6 @@ function wrapperFailure(cause: unknown): ToolOutput {
   return { isError: true, content: [{ type: "text", text: message }] };
 }
 
-/** Wraps a handler body so an API-leg failure becomes a named tool error. */
 async function guarded(body: () => Promise<ToolOutput>): Promise<ToolOutput> {
   try {
     return await body();
@@ -114,7 +84,6 @@ async function guarded(body: () => Promise<ToolOutput>): Promise<ToolOutput> {
   }
 }
 
-/** One request; a 2xx JSON body becomes the result, anything else the API's refusal. */
 function single(
   env: ToolEnv,
   method: "GET" | "POST" | "PATCH",
@@ -129,17 +98,13 @@ function single(
   });
 }
 
-/**
- * Opaque cursors (checklist T8). A cursor names a position in a list; a client passes it back unchanged and never
- * builds one. Today it wraps an offset, which the admin API takes; the shape can change without a tool change.
- */
+/** A cursor wraps an offset the client passes back unchanged; its shape can change without a tool change. */
 const CURSOR = /^c([0-9]{1,7})$/;
 
 export function encodeOffsetCursor(offset: number): string {
   return base64url(`c${offset}`);
 }
 
-/** The offset a cursor names, or null for anything this server did not issue. */
 export function decodeOffsetCursor(cursor: string): number | null {
   if (!/^[A-Za-z0-9_-]{1,16}$/.test(cursor)) return null;
   try {
@@ -153,7 +118,6 @@ export function decodeOffsetCursor(cursor: string): number | null {
 const offsetOf = (args: Record<string, unknown>) =>
   typeof args.cursor === "string" ? (decodeOffsetCursor(args.cursor) ?? 0) : 0;
 
-/** Pages a list the API returns whole ({ items }), keeping has_more and next_cursor honest. */
 function pageOf(items: unknown[], limit: number, offset: number) {
   const hasMore = offset + limit < items.length;
   return {
@@ -164,7 +128,6 @@ function pageOf(items: unknown[], limit: number, offset: number) {
   };
 }
 
-/** One page the API cut ({ items, has_more, next_offset }), with its offset turned into a cursor. */
 function apiPageResult(
   env: ToolEnv,
   path: string,
@@ -183,10 +146,7 @@ function apiPageResult(
   });
 }
 
-/**
- * The confirmation step (confirm.ts). Without `confirm`, nothing is sent: the answer is the preview and a token for
- * exactly these arguments. With a token that matches, `run` sends the change.
- */
+/** Without `confirm` nothing is sent: the answer is a preview and a token for exactly these arguments. */
 async function confirmed(
   env: ToolEnv,
   tool: string,
@@ -229,13 +189,12 @@ type Level = "read" | "write";
 
 export interface ToolDefinition {
   name: string;
-  /** The scope a call needs, never inferred from an annotation; fixed per tool, so a read grant is listed only tools it can always call (T7). */
+  /** The scope a call needs, fixed per tool and never inferred from an annotation. */
   scope: Level;
   config: {
     title: string;
     description: string;
     inputSchema: z.ZodObject<z.ZodRawShape>;
-    /** The shape of structuredContent on success (the SDK validates it); a refusal is isError and unchecked. */
     outputSchema: z.ZodObject<z.ZodRawShape>;
     annotations: Annotations;
   };
@@ -263,7 +222,6 @@ const querySchema = z
   .optional()
   .describe("Optional. Text to search for. Omit to list newest first.");
 
-/** The admin API pages at most 50 at a time (MAX_PAGE in packages/api/src/routes/admin.ts). */
 const limitSchema = z
   .number()
   .int()
@@ -272,7 +230,6 @@ const limitSchema = z
   .optional()
   .describe("Optional. How many records to return, 1 to 50. Defaults to 20.");
 
-/** One record as the admin API returns it; its fields are the API's to change. */
 const record = z.record(z.string(), z.unknown());
 
 const cursorSchema = z
@@ -299,7 +256,6 @@ const confirmSchema = z
       "administrator approves the preview, call again with the same arguments and this token.",
   );
 
-/** What the first, unconfirmed call returns instead of a result. */
 const confirmationFields = {
   confirmation_required: z.literal(true).optional(),
   confirm: z.string().optional(),
@@ -307,14 +263,12 @@ const confirmationFields = {
   preview: record.optional(),
 };
 
-/** A page from the admin API (`page` in packages/api/src/routes/admin.ts), its offset as a cursor. */
 const apiPage = z.looseObject({
   items: z.array(record),
   has_more: z.boolean(),
   next_cursor: z.string().nullable(),
 });
 
-/** A page this server cuts from a whole list (pageOf). */
 const localPage = z.object({
   items: z.array(z.unknown()),
   total: z.number().int(),
@@ -322,13 +276,11 @@ const localPage = z.object({
   next_cursor: z.string().nullable(),
 });
 
-/** The window foxing_get_health reports 404s over. */
 const NOT_FOUND_DAYS = 7;
 
 const yearSchema = z.number().int().min(2000).max(2100);
 const monthSchema = z.number().int().min(1).max(12);
 
-/** Book of the Month fields, in the tool's snake_case, mapped to the API's body. */
 const botmFields = {
   book_id: z.string().min(1).max(100).nullable().optional().describe("The book's id, or null."),
   category: z.string().max(200).nullable().optional(),

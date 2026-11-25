@@ -1,7 +1,3 @@
-// People at /people: the follow graph (who you follow, who follows you) and the
-// close-friends management surface. Following/followers and curating close friends
-// (the audience for your friends-only content) are all free. The loader seeds the shared
-// cache; a toggle patches every list here in place.
 import { usePeople } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import { Link } from "capsomer/react/link";
@@ -117,5 +113,4 @@ export default function People({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

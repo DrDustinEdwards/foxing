@@ -1,6 +1,3 @@
-// Reading-list form (create + edit). Writes POST /lists or PATCH /lists/:id through the
-// shared client, then navigates. A public list emits a list_created feed event server-side. Failed writes
-// surface a visible error.
 import { useCreateList, useUpdateList } from "@foxing/client";
 import { useState } from "react";
 import { useNavigate } from "react-router";

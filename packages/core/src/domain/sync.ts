@@ -1,6 +1,4 @@
-// Offline sync domain. resolveSyncOp is the PURE conflict-resolution core,
-// unit-tested exhaustively; applySync/pullSync orchestrate it against D1 via the
-// per-resource adapters. Contract (spec-cf-api, offline sync protocol):
+// Offline sync. resolveSyncOp is the PURE conflict-resolution core; applySync/pullSync run it against D1. Contract:
 //   - create: insert if absent; a replayed create (client id already present) is an
 //     idempotent no-op. Client nanoids make offline creates safe to replay.
 //   - update: row-level LWW on updated_at -- apply only if the op is at least as new as
@@ -23,17 +21,12 @@ export type SyncDecision =
   | { action: "delete" }
   | { action: "noop"; reason: "replay" | "stale" | "append_only" | "missing_ok" };
 
-/**
- * Decide what a single op does given the currently stored row (or null). Pure and
- * deterministic: this is the unit-tested heart of the sync protocol.
- */
 export function resolveSyncOp(
   existing: Existing,
   op: { verb: SyncOp["verb"]; clientTs: number },
   opts: { appendOnly?: boolean } = {},
 ): SyncDecision {
   if (opts.appendOnly) {
-    // Sessions: create-if-absent only. A replay is a no-op; nothing updates or deletes.
     if (op.verb === "create") {
       return existing ? { action: "noop", reason: "replay" } : { action: "insert" };
     }
@@ -42,17 +35,13 @@ export function resolveSyncOp(
 
   switch (op.verb) {
     case "create":
-      // Idempotent replay: the client id already exists, so the create already landed.
       return existing ? { action: "noop", reason: "replay" } : { action: "insert" };
     case "update":
-      // Upsert recovery: an update whose create op never arrived still persists the row.
       if (!existing) return { action: "insert" };
-      // Row-level LWW / greatest-client_ts: apply only if not older than the stored row.
       return op.clientTs >= existing.updatedAt
         ? { action: "update" }
         : { action: "noop", reason: "stale" };
     default:
-      // delete: idempotent -- deleting a missing row is a success no-op.
       return existing ? { action: "delete" } : { action: "noop", reason: "missing_ok" };
   }
 }
@@ -65,13 +54,10 @@ export type SyncOpResult = {
   error?: string;
 };
 
-/** PUSH: apply queued ops in order, returning a per-op result. One failing op never
- *  fails the batch -- its result carries the error and the rest still apply. */
 export async function applySync(db: Db, userId: string, ops: SyncOp[]): Promise<SyncOpResult[]> {
   const results: SyncOpResult[] = [];
   for (const op of ops) {
     try {
-      // Validate + narrow the payload for the op's resource (delete needs no payload).
       if (op.verb !== "delete") {
         const schema = syncPayloadSchemas[op.resource];
         const parsed = schema.safeParse(op.payload ?? {});
@@ -130,8 +116,6 @@ export type SyncPull = {
   changes: Record<string, unknown[]>;
 };
 
-/** PULL: every synced row changed since the cursor (minus the overlap), plus the new
- *  cursor (max change timestamp seen, or the old cursor if nothing changed). */
 export async function pullSync(db: Db, userId: string, since: number): Promise<SyncPull> {
   const sinceMs = Math.max(0, since - OVERLAP_MS);
   const changes: Record<string, unknown[]> = {};
@@ -160,8 +144,7 @@ function changeTs(row: Record<string, unknown>): number {
   return 0;
 }
 
-/** Guard used by the route: a resource the sync protocol does not own is rejected so no
- *  online-only data (clubs/social) is ever pushed through the single-owner sync path. */
+/** Rejects a resource the sync protocol does not own, so online-only data (clubs, social) never goes through the single-owner path. */
 export function assertSyncResource(resource: string): asserts resource is SyncResource {
   if (!(resource in syncAdapters)) {
     throw domainErrors.validation(`Resource '${resource}' is not syncable.`);

@@ -51,9 +51,6 @@ function pacingLabel(p: string | null | undefined): string {
   return "";
 }
 
-// The book page: the shared GET /books/:idOrSlug view (the same object the web page
-// renders) plus the reader's own shelf state. Status changes patch the cache, so the
-// page never reloads.
 export default function BookDetail() {
   const colors = useColors();
   const router = useRouter();
@@ -70,20 +67,13 @@ export default function BookDetail() {
 
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
-  // Pause-note modal, captures the optional "why are you pausing?" note
-  // when the user picks Pause from the status menu.
   const [pauseModalOpen, setPauseModalOpen] = useState(false);
   const [pauseNote, setPauseNote] = useState("");
-  // Finish review sheet, opens immediately after a fresh transition to
-  // 'finished'. The celebration flow (quote card + series prompt) runs after
-  // the sheet closes so we don't stack two routes on top of each other.
+  // Celebration flow runs after the sheet closes so two routes do not stack.
   const [finishReviewOpen, setFinishReviewOpen] = useState(false);
   const finishCelebrationRef = useRef<(() => void) | null>(null);
-  // A Plus companion answer about the whole book.
   const [companion, setCompanion] = useState<"book_insight" | "deep_dive" | null>(null);
 
-  // Collapsibles, About/Deep Dive default closed.
-  // Content warnings also default closed so they don't dominate the page.
   const [showDescription, setShowDescription] = useState(false);
   const [showContentWarnings, setShowContentWarnings] = useState(false);
 
@@ -97,8 +87,6 @@ export default function BookDetail() {
     const wasFinished = userBook?.status === "finished";
     setBookStatus.fire({ bookId: book.id, status, book });
     if (status !== "finished" || wasFinished) return;
-    // Fresh transition to finished: the review sheet first, then the celebration
-    // (quote card, and the next book in the series) once it closes.
     haptic.success();
     const daysToRead = userBook?.startedAt
       ? Math.max(1, Math.round((Date.now() - userBook.startedAt) / 86_400_000))
@@ -138,8 +126,6 @@ export default function BookDetail() {
     };
     setFinishReviewOpen(true);
   }
-
-  // ── Render ───────────────────────────────────────────────────────────────
 
   if (pageQuery.isPending) {
     return (
@@ -968,8 +954,6 @@ export default function BookDetail() {
     </View>
   );
 }
-
-// ── Helpers ──────────────────────────────────────────────────────────────
 
 function BookRow({
   title,

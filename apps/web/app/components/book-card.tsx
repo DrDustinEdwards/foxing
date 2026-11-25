@@ -10,15 +10,10 @@ export type BookCardData = {
   publicationYear?: number | null;
 };
 
-/** Two rows of the most cards a row holds (five from 80rem, catalog.css): on a 1440 by 900 screen the second row is above the fold too, and web.dev says not to lazy-load images in the initial viewport. */
+/** Two rows of the most cards a row holds, so the second row is above the fold on a 1440 by 900 screen (web.dev: do not lazy-load the initial viewport). */
 const GRID_FIRST_ROW = 10;
 
-/**
- * Capsomer's card (capsomer/card.css), one destination: the link wraps the card's <div> (an <article> there leaves the link with no name), whose cover,
- * title and byline are its own children. The cover is the card's media, a 2:3 book cover.
- * Foxing's look (design-system Rule 15: the edge strengthens on hover, the title takes the
- * accent text) is catalog.css .fx-book.
- */
+/** Capsomer's card as one destination: the link wraps the card's <div> (an <article> there leaves the link with no name). */
 export function BookCard({
   book,
   className,
@@ -27,9 +22,7 @@ export function BookCard({
 }: {
   book: BookCardData;
   className?: string;
-  /** The card's place in its grid, from 0: the first is the page's LCP and the first row (up to five across) loads at once. */
   position?: number;
-  /** The title's heading level: 2 when the grid sits directly under the page's h1, 3 under a section h2. */
   headingLevel?: 2 | 3;
 }) {
   const Title = headingLevel === 2 ? "h2" : "h3";
@@ -60,7 +53,6 @@ export function BookCard({
   );
 }
 
-/** Responsive grid wrapper for book cards. */
 export function BookGrid({ children }: { children: React.ReactNode }) {
   return <div className="fx-book-grid">{children}</div>;
 }

@@ -5,23 +5,15 @@ import { Picture } from "capsomer/react/picture";
 type Props = {
   src: string | null | undefined;
   alt: string;
-  /** The book/list title, drawn into the placeholder when there is no cover. */
   fallbackLabel?: string;
-  /** Only the page's LCP image: eager + high priority. Everything else lazy. */
   priority?: boolean;
-  /** Above the fold but not the LCP: loads at once, at normal priority. */
   eager?: boolean;
-  /** coverThumb for covers shown at 80px or less. */
   use?: "cover" | "coverThumb";
   sizes?: string;
   className?: string;
 };
 
-/**
- * Book cover in a no-CLS 2:3 aspect box, as a `<picture>` of AVIF and WebP sizes (lib/images.ts),
- * and a typographic placeholder when a cover is missing (community-book covers, per the deferred
- * Stage 3 backfill).
- */
+/** Book cover in a no-CLS 2:3 box, as a `<picture>` of AVIF and WebP sizes, with a typographic placeholder when missing. */
 export function CoverImage({
   src,
   alt,
@@ -53,7 +45,6 @@ export function CoverImage({
   );
 }
 
-/** A cover's `<picture>` alone, for a page that draws its own box. */
 export function CoverPicture({
   src,
   use,

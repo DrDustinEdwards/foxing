@@ -1,7 +1,5 @@
-// Billing endpoints. Checkout + portal are user-initiated (auth required; a
-// free user may start checkout). Neither writes the tier -- only the Stripe webhook does
-// (webhooks-stripe.ts). Stripe is dependency-injected; when unconfigured every call
-// throws BillingNotConfiguredError, surfaced here as a clean 503.
+// Checkout and portal are user-initiated; neither writes the tier, only the Stripe webhook does. An unconfigured Stripe throws
+// BillingNotConfiguredError, surfaced as a 503.
 import { Hono } from "hono";
 import { billing, billingCheckoutInput } from "@foxing/core";
 import { errors } from "../error";

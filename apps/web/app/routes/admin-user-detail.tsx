@@ -1,8 +1,3 @@
-// Admin: User detail. Full profile for one reader plus operator controls: suspend,
-// change tier, send a notification, and delete the account. Reads run in-process via
-// adminRepo; every write goes to /api/v1/admin/users/:id/* with an audit-log entry and a
-// visible pending + role=alert error. Suspend and tier open a confirmation showing the
-// server's preview before anything changes. Who is an admin is ADMIN_EMAIL and CO_OWNER_EMAILS alone.
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { useNavigate, useRevalidator } from "react-router";
@@ -255,5 +250,4 @@ function OperatorControls({
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

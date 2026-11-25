@@ -6,9 +6,6 @@ import { SheetScaffold } from "@/components/ui/sheet-scaffold";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
-// One sheet for every single-answer companion action (a word, a passage, a chapter,
-// the cast so far, a translation, a search). The server writes the prompt; this
-// sends the request when the sheet opens and shows the answer as it streams in.
 export function CompanionSheet({
   visible,
   title,
@@ -20,14 +17,10 @@ export function CompanionSheet({
 }: {
   visible: boolean;
   title: string;
-  /** Sent when the sheet opens or the request changes; null waits (e.g. for a search query). */
   request: CompanionRequest | null;
   onClose: () => void;
-  /** Shown above the answer, e.g. the search box. */
   children?: ReactNode;
-  /** Shown under a finished answer, e.g. a save button. */
   footer?: (answer: string) => ReactNode;
-  /** Called with each finished answer. */
   onAnswer?: (answer: string) => void;
 }) {
   const colors = useColors();

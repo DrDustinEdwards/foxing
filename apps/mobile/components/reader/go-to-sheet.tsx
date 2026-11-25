@@ -34,19 +34,12 @@ interface TocItem {
 interface GoToSheetProps {
   visible: boolean;
   bookId: string;
-  // Current position percentage (0..1), used to prefill the location slider.
   currentProgress: number;
-  // Lazy-loaded TOC + bookmarks fetched by the host on open.
   loadToc: () => Promise<TocItem[]>;
-  // Lazy-loaded position history. The host owns the canonical list (kept in a
-  // ref mid-session); we just snapshot it each time the sheet opens.
   loadHistory?: () => Promise<PositionEntry[]>;
-  // Clear all history entries for this book.
   onClearHistory?: () => Promise<void> | void;
   onNavigateCfi: (cfi: string) => void;
   onNavigatePercent: (percent: number) => void;
-  // Reader resolves href → CFI internally via goToCfi if href is a CFI; the
-  // host can also accept hrefs and pass them through to renderer.goTo.
   onNavigateHref?: (href: string) => void;
   onClose: () => void;
 }
@@ -295,7 +288,6 @@ function MyPlacesTab({
   onClearHistory: () => void | Promise<void>;
 }) {
   const colors = useColors();
-  // Most recent first, capped at 20 even though the underlying list goes to 50.
   const recent = [...historyEntries].reverse().slice(0, 20);
   return (
     <ScrollView contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24 }}>

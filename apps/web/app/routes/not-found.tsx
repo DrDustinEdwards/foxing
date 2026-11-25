@@ -4,9 +4,7 @@ import type { Route } from "./+types/not-found";
 
 export { ErrorBoundary } from "~/components/route-error";
 
-// Every address no route matches. Its own route, so the header and footer the error page wears load only here and
-// not with the root, which every page that hydrates carries. The root loader is skipped for an unmatched address,
-// so the header is the signed-out one.
+// Its own route so the error page's header and footer load only here, not with the root; the root loader is skipped for an unmatched address, so the header is the signed-out one.
 export function loader(): never {
   throw new Response("Not found", { status: 404 });
 }

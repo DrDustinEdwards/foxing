@@ -120,7 +120,6 @@ adminRoutes.get("/admin/clubs", async (c) => {
   );
 });
 
-// One row per month, so the whole list is small; no paging.
 adminRoutes.get("/admin/botm", async (c) => {
   requireAdmin(c);
   return c.json({ items: await adminRepo.listBotmAdmin(c.get("db")) });
@@ -176,8 +175,6 @@ adminRoutes.get("/admin/not-found", async (c) => {
   return c.json({ days: query.days, items });
 });
 
-// What is wrong with the catalog (core domain/catalog-health.ts): counts per check, and the findings, one page
-// at a time, errors first. `check` narrows the findings to one check; the counts always cover all.
 // Must match COVER_ORIGIN in apps/web/app/lib/origins.ts.
 const COVER_ORIGIN = "https://covers.foxing.app";
 
@@ -202,12 +199,9 @@ adminRoutes.get("/admin/catalog-health", async (c) => {
   });
 });
 
-// Role and permission changes are preview then perform. A request without `confirm`
-// changes nothing: it returns who gains or loses what, and a single-use token bound to
-// that change (admin-confirm.ts). Only a second request carrying the token performs
-// it, writes only while the target still holds the previewed state, and records an
-// audit row naming the actor. These three routes are every role or permission write in
-// the admin surface; the Stripe webhook is the only other writer of tier.
+// Role and permission changes are preview then perform: without `confirm` nothing changes and the answer is who gains or loses what plus a
+// single-use token bound to that change (admin-confirm.ts); the second request writes only while the target still holds the previewed state
+// and audits the actor. The Stripe webhook is the only other writer of tier.
 
 const confirmToken = z.string().regex(CONFIRM_TOKEN_PATTERN).optional();
 
@@ -215,7 +209,6 @@ type RoleChangeSpec = {
   kind: RoleChangeKind;
   to: RoleValue;
   current: (state: adminRepo.UserRoleState) => RoleValue;
-  /** What the target gains or loses, in words, after their @username. */
   effect: string;
   auditAction: string;
   apply: (db: Db, id: string, from: RoleValue) => Promise<boolean>;

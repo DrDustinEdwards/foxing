@@ -23,8 +23,6 @@ import { authClient } from "@/lib/api";
 import { Colors, useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
-// The profile is created on the last step, so a reader who quits halfway comes back to
-// this flow (the root layout sends anyone signed in without a profile here).
 type StepId = "welcome" | "profile" | "taste" | "first_book";
 const STEP_ORDER: StepId[] = ["welcome", "profile", "taste", "first_book"];
 
@@ -41,7 +39,6 @@ export default function OnboardingScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Persisted draft across steps.
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState(session?.user?.name ?? "");
   const [genres, setGenres] = useState<Set<string>>(new Set());
@@ -242,9 +239,6 @@ function isValidGoal(value: string): boolean {
   return Number.isFinite(n) && n >= 1 && n <= 200;
 }
 
-// ── Welcome ──────────────────────────────────────────────────────────────
-
-// Pinned-dark brand splash: dark-scheme tokens regardless of the system scheme.
 const C = Colors.dark;
 
 function Welcome({ onStart }: { onStart: () => void }) {
@@ -292,8 +286,6 @@ function Welcome({ onStart }: { onStart: () => void }) {
     </View>
   );
 }
-
-// ── Taste (genres + reading goal) ────────────────────────────────────────
 
 function TasteStep({
   genres,
@@ -390,8 +382,6 @@ function TasteStep({
   );
 }
 
-// ── Profile (username + display name) ────────────────────────────────────
-
 function ProfileStep({
   username,
   setUsername,
@@ -463,8 +453,6 @@ function ProfileStep({
     </View>
   );
 }
-
-// ── First Book ───────────────────────────────────────────────────────────
 
 function FirstBookStep({
   books,
@@ -573,8 +561,6 @@ function FirstBookStep({
     </View>
   );
 }
-
-// ── Reusable layout bits ─────────────────────────────────────────────────
 
 function Heading({ children }: { children: React.ReactNode }) {
   const colors = useColors();

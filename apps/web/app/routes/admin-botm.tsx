@@ -1,7 +1,3 @@
-// Admin: Book of the Month. Create a monthly pick (attach a catalog book, curator note),
-// publish/unpublish, and delete. A published row with a book is what makes Today's Pick
-// and the BOTM surfaces render. Reads in-process; writes to /api/v1/admin/botm with a
-// visible error on failure.
 import { NativeSelect } from "capsomer/react/select-native";
 import { MONTH_NAMES } from "@foxing/client";
 import { adminRepo, createDb } from "@foxing/core";
@@ -221,5 +217,4 @@ function BotmRow({
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

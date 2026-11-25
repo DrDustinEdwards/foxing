@@ -21,12 +21,7 @@ import { data } from "react-router";
 import type { Route } from "./+types/book-detail";
 import { signInHref } from "~/lib/sign-in-path";
 
-/**
- * The LCP cover's preload for the Link header, so Early Hints starts it before the HTML arrives
- * (site-runtime ./preload). None with a srcset, whose width the browser picks, and none for a
- * cover URL a Link header cannot carry (preloads refuses it), which would otherwise fail the page.
- */
-/** Catalog text (Markdown: paragraphs, the odd list or bold title) as HTML, through Prelum's render, which drops raw HTML. */
+/** The LCP cover's preload for the Link header (Early Hints); none with a srcset or for a URL a Link header cannot carry. */
 async function textHtml(body: string | null): Promise<string | null> {
   if (!body) return null;
   const { html } = await render({ file: "book-text", body, resolveImage: async () => null });
@@ -48,8 +43,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const page = await views.bookPage(db, params.slug, affiliateConfig(env));
   if (!page) throw new Response("Not found", { status: 404 });
   if (page.book.slug !== params.slug) {
-    // Found by its id, or by a slug that is not its own: one 301 to the book's own address
-    // (site-runtime's renameRedirect), so each book keeps one URL and an old link still lands.
+    // One 301 to the book's own address (renameRedirect), so each book keeps one URL.
     const canonical = page.book.slug;
     const moved = await renameRedirect(request, {
       prefix: "/books/",
@@ -61,16 +55,14 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const readable = book.readable;
   const community = book.community;
 
-  // Personalized shelf status + shelves. Anonymous requests are edge-cached (this
-  // loader does not run), so this only fires for signed-in readers (cache bypassed).
+  // Anonymous requests are edge-cached (this loader does not run), so this fires only for signed-in readers.
   const user = await sessionUserFromRequest(request, env);
   const userId = user?.id ?? null;
   const [myBook, shelves] = userId
     ? await Promise.all([views.myBook(db, userId, book.id), views.shelves(db, userId)])
     : [undefined, []];
 
-  // The catalog's own description first (the generated one only where the catalog's was filler or empty), and the
-  // generated notes on the author, the reading order and books like it.
+  // The catalog's own description first, the generated one only where it was filler or empty.
   const [descriptionHtml, authorBio, readingOrder, similarBooks] = await Promise.all([
     textHtml(book.description ?? page.ai.description),
     textHtml(page.ai.authorBio),
@@ -102,7 +94,6 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
         title: book.title,
         author: book.author,
         authorSlug: book.authorSlug,
-        // Plain text for the meta description and the JSON-LD.
         description: descriptionHtml ? htmlToText(descriptionHtml) : null,
         coverUrl: book.coverUrl,
         publicationYear: book.publicationYear,
@@ -133,7 +124,6 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       title: `${book.title} by ${book.author}`,
       description,
       pathname: location.pathname,
-      // The share card (routes/og-book.tsx), drawn at site-runtime's 1200x630.
       image: { url: `/og/book/${book.slug}`, width: 1200, height: 630, type: "image/png" },
       imageAlt: `${book.title} by ${book.author}`,
       type: "book",
@@ -153,8 +143,6 @@ function readingTime(words: number | null): string | null {
 export default function BookDetail({ loaderData }: Route.ComponentProps) {
   const { book, awards, related, buys, readable, descriptionHtml, notes } = loaderData;
   const { signedIn, bookId, loginHref } = loaderData;
-  // The reader's state for this book lives in the cache, so a status or shelf change
-  // shows at once and survives navigating away and back.
   const mine = useMyBook(bookId, loaderData.myBook, signedIn).data;
   const shelves = useShelves(loaderData.shelves).data;
   const time = readingTime(book.wordCount);

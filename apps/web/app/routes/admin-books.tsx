@@ -1,6 +1,3 @@
-// Admin: Books. Search the catalog, toggle the staff-pick (featured) flag, and edit
-// core metadata on a book. A featured book surfaces on the home and discovery rails.
-// Reads in-process; writes to /api/v1/admin/books with a visible error on failure.
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { useRevalidator } from "react-router";
@@ -31,7 +28,6 @@ export function meta() {
   return noindexMeta("Admin · Books | Foxing");
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
 
 export default function AdminBooks({ loaderData }: Route.ComponentProps) {

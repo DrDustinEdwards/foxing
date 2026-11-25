@@ -1,10 +1,4 @@
-// Shared chrome for the signed-out auth screens (login, signup, the passkey offer).
-// A centered, branded card on the ground: Foxing wordmark, a surface card, and a footer
-// slot for the cross-links. Fields and buttons are Capsomer's cap-input and cap-btn, the
-// same as settings and everywhere else. The fox emoji is allowed in auth chrome (Rule 9).
-//
-// The ways in are the family's one sign-in (site-runtime ./sign-in): a passkey first, Google
-// and Apple, and an emailed link (with Turnstile once its keys are set). No passwords.
+// Shared chrome for the signed-out auth screens: a centered branded card with a footer slot for cross-links.
 import {
   CONFIRM_PATH,
   SIGN_IN_EXPIRES_IN_WORDS,
@@ -19,11 +13,9 @@ import { authClient, signIn } from "~/lib/auth-client";
 import { signInWithPasskey, signalPasskeys } from "@dustinedwards/site-runtime/sign-in-client";
 import { useHydrated } from "capsomer/react/hooks";
 
-/** Which ways in the page offers: the loader's signInMethods(env, { social: true }). */
 export type SignInMethods = { google: boolean; apple: boolean; turnstileSiteKey: string | null };
 
-/** After an email link, code, Google or Apple: offer a passkey (/passkey skips straight on when
- *  there is one already or a recent "Not now"), then `next`. */
+/** After a sign-in: offer a passkey (skipped when one exists or after a recent "Not now"), then `next`. */
 const afterLink = (next: string) => `/passkey?next=${encodeURIComponent(next)}`;
 const AFTER_LINK_NEW = afterLink("/onboarding");
 
@@ -66,8 +58,7 @@ export function AuthShell({
   );
 }
 
-/** An emailed link's confirm button: a plain form that posts to the page's own URL, token and
- *  all, so the browser follows Better Auth's redirect. */
+/** A confirm button posting to the page's own URL, token included, so the browser follows Better Auth's redirect. */
 export function ConfirmButtonForm({ label, limited }: { label: string; limited?: boolean }) {
   return (
     <form method="post" className="cap-stack" data-gap="4">
@@ -83,7 +74,6 @@ export function ConfirmButtonForm({ label, limited }: { label: string; limited?:
   );
 }
 
-/** Labeled text input matching the settings form rows. */
 function Field({ label, ...props }: { label: string } & InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className="cap-field">
@@ -93,7 +83,6 @@ function Field({ label, ...props }: { label: string } & InputHTMLAttributes<HTML
   );
 }
 
-/** Inline brand link used in auth copy and footers. */
 export function AuthLink({ to, children }: { to: string; children: ReactNode }) {
   return (
     <Link to={to} className="fx-auth-shell-link-2">
@@ -102,10 +91,8 @@ export function AuthLink({ to, children }: { to: string; children: ReactNode }) 
   );
 }
 
-/** Secondary full-width button, used for the provider and reveal actions. */
 const authSecondaryButtonClass = "cap-btn cap-full";
 
-/** The four-color Google "G", inline per the no-icon-libraries rule. */
 function GoogleGlyph() {
   return (
     <svg aria-hidden="true" viewBox="0 0 18 18" className="fx-auth-shell-icon">
@@ -129,7 +116,6 @@ function GoogleGlyph() {
   );
 }
 
-/** The OAuth redirect behind the Google and Apple buttons. */
 async function startSocial(
   provider: "google" | "apple",
   redirectTo: string,
@@ -142,12 +128,9 @@ async function startSocial(
     newUserCallbackURL: AFTER_LINK_NEW,
     errorCallbackURL: SIGN_IN_PATH,
   });
-  // The call redirects the whole page; reset only if it somehow returns.
   setPending(false);
 }
 
-/** Apple's logo, inline per the no-icon-libraries rule, in the text color (Apple's guidelines
- *  allow a monochrome logo beside "Continue with Apple" on a plain button). */
 function AppleGlyph() {
   return (
     <svg
@@ -161,11 +144,7 @@ function AppleGlyph() {
   );
 }
 
-/**
- * "Continue with Google" or "Continue with Apple": a full-width OAuth redirect. A new user (no profile row) lands
- * on /onboarding, an existing one on /me, each through the passkey offer; a failed handshake returns to /login with Better
- * Auth's ?error= code (SignInError reads it).
- */
+/** An OAuth redirect: a new user (no profile row) lands on /onboarding, an existing one on /me; a failure returns to /login with Better Auth's ?error=. */
 function SocialButton({
   provider,
   redirectTo = "/me",
@@ -189,32 +168,20 @@ function SocialButton({
   );
 }
 
-/**
- * After a passkey sign-in: tells the password manager which of the account's passkeys Foxing still
- * accepts (the Signal API). The names it shows are sent from Settings, where the display name is
- * known. Best effort, and never holds up the sign-in.
- */
+/** After a passkey sign-in, tells the password manager which passkeys Foxing still accepts (Signal API). Best effort. */
 async function signalAfterPasskeySignIn(userId: string | null) {
   try {
     const { data } = await authClient.passkey.listUserPasskeys();
     if (data)
       await signalPasskeys({ user: userId, credentialIds: data.map((p) => p.credentialID) });
-  } catch {
-    // The sign-in stands; the browser simply hears nothing this time.
-  }
+  } catch {}
 }
 
-/**
- * "Sign in with a passkey", the main way in. The browser asks which saved passkey to use; a
- * person with none can cancel and use another way. Also offers saved passkeys in the email
- * field's suggestions (conditional mediation), so a returning reader can just tap one.
- */
+/** The main way in; also offers saved passkeys in the email field's suggestions (conditional mediation). */
 export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // site-runtime's signInWithPasskey: on a passkey this site no longer has, it tells the browser
-  // to stop offering it (the Signal API).
   async function tryPasskey(autoFill: boolean) {
     const res = await signInWithPasskey(authClient, { autoFill });
     if (!res?.error) {
@@ -223,7 +190,6 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
       return;
     }
     const code = (res.error as { code?: string }).code;
-    // A canceled prompt is the person choosing another way, not a failure to show.
     if (autoFill || code === "AUTH_CANCELLED") return;
     setError(
       code === "RATE_LIMIT_UNAVAILABLE"
@@ -270,7 +236,6 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
   );
 }
 
-/** Google and Apple, each when the site has its settings. */
 export function SocialButtons({ methods, next }: { methods: SignInMethods; next?: string }) {
   return (
     <>
@@ -280,7 +245,6 @@ export function SocialButtons({ methods, next }: { methods: SignInMethods; next?
   );
 }
 
-/** What Better Auth's ?error= code on /login means for the reader, or null for none. */
 export function signInErrorMessage(code: string | null): string | null {
   if (!code) return null;
   // Accounts are joined only by a signed-in person (site-runtime ./sign-in), never by a
@@ -291,7 +255,6 @@ export function signInErrorMessage(code: string | null): string | null {
   return "That sign-in did not complete. Try again or use another way.";
 }
 
-/** "or" rule between the provider button and the email options. */
 export function AuthDivider() {
   return (
     <div className="cap-cluster" data-gap="4" aria-hidden="true">
@@ -302,13 +265,7 @@ export function AuthDivider() {
   );
 }
 
-/**
- * "Email me a sign-in link". Sends a magic link that both signs in existing users and
- * creates new ones (new users route to /onboarding), then offers a passkey. Enumeration-safe:
- * the same check-your-email state shows whether or not the address is registered. The email
- * field also offers saved passkeys (autocomplete "webauthn"). With Turnstile on, its widget
- * sits above the button and its token goes as Better Auth's x-captcha-response header.
- */
+/** "Email me a sign-in link": enumeration-safe (the same check-your-email state shows for any address); with Turnstile on, its token goes as x-captcha-response. */
 export function MagicLinkForm({
   turnstileSiteKey,
   next = "/me",
@@ -345,7 +302,6 @@ export function MagicLinkForm({
           email,
           callbackURL: afterLink(next),
           newUserCallbackURL: AFTER_LINK_NEW,
-          // A spent or expired link shows its own message on the confirm page.
           errorCallbackURL: CONFIRM_PATH,
         },
         turnstileSiteKey ? { headers: { "x-captcha-response": token } } : undefined,
@@ -356,18 +312,15 @@ export function MagicLinkForm({
       setRefusal("Could not send the link. Check your connection and try again.");
       return;
     }
-    // The refusals to show are the ones about the site, never whether the address has an account:
-    // the bot check, an address no mail reaches, and the link request turned off (no Turnstile
-    // keys) or its counter down. Everything else gets
-    // the same neutral result, so the form never says whether an address has an account.
+    // Only refusals about the site are shown (bot check, undeliverable address, link requests off); anything else gets the
+    // same neutral result, so the form never says whether an address has an account.
     const code = (res?.error as { code?: string } | undefined)?.code;
     if (code === "MISSING_RESPONSE" || code === "VERIFICATION_FAILED") {
       setRefusal("Complete the check, then send the link again.");
       setAttempt((n) => n + 1);
       return;
     }
-    // Email Service will not mail the address (an earlier mail bounced or was marked as spam), so
-    // check-your-inbox would wait for nothing (site-runtime ./sign-in's 422 UNDELIVERABLE_EMAIL).
+    // Email Service will not mail the address, so check-your-inbox would wait for nothing (422 UNDELIVERABLE_EMAIL).
     if (code === UNDELIVERABLE_EMAIL) {
       setRefusal(SIGN_IN_WORDS.link.undeliverable);
       return;
@@ -411,10 +364,8 @@ export function MagicLinkForm({
 }
 
 /**
- * What a refused code means and what to do next, from Better Auth's email OTP error codes
- * (better-auth 1.7.12 plugins/email-otp/routes.mjs) and site-runtime's per-address limit.
- * INVALID_OTP is both a wrong code and one that is gone (used, or replaced by a newer email);
- * after three wrong tries the code is spent, which Better Auth says only on the fourth.
+ * What a refused code means, from Better Auth's email OTP error codes and site-runtime's per-address limit.
+ * INVALID_OTP is both a wrong code and a gone one; after three wrong tries the code is spent, which Better Auth says only on the fourth.
  */
 function signInCodeError(code: string | undefined, wrongTries: number): string {
   if (code === "TOO_MANY_ATTEMPTS" || (code === "INVALID_OTP" && wrongTries >= 3))
@@ -430,12 +381,7 @@ function signInCodeError(code: string | undefined, wrongTries: number): string {
   return "The code could not be checked. Check your connection and try again.";
 }
 
-/**
- * After the link is sent: the same mail carries a six-digit code, for when the link opens in
- * another browser (the mail app's, a phone). Typed here, it signs this tab in, a new address
- * included (it then lands on /onboarding through /me). Three wrong codes spend it; the link
- * still works. `onRestart` goes back to the email form for a new link and code.
- */
+/** The same mail carries a six-digit code for when the link opens in another browser; three wrong codes spend it. `onRestart` returns to the email form. */
 function SignInCodeForm({
   email,
   next,

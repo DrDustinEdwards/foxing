@@ -1,12 +1,6 @@
-// Catalog health: what is wrong with the books table, found from the rows alone (no network). Pure, so the
-// rules are tested without a database; adminRepo.getCatalogHealth loads the rows.
-//
-// What a book catalog is checked for follows how book data is kept clean elsewhere: an ISBN is valid by its check
-// digit (ISBN-10 mod 11, ISBN-13 mod 10; ISO 2108), a work is one record per edition (Open Library and Goodreads merge
-// duplicates by ISBN and by normalized title plus author), a page needs the fields it shows (cover, description,
-// year: what the search engines' Book markup and Foxing's own pages read), and a retailer link must go to the
-// retailer. Catalog books (public domain, readable) are held to the page's fields; community books are reader-added
-// from outside data and only checked for what they do have.
+// Catalog health, found from the rows alone (pure, so the rules are tested without a database; adminRepo.getCatalogHealth loads
+// the rows). Catalog books (public domain, readable) are held to the page's fields; community books are reader-added and only
+// checked for what they have.
 
 import { toGenres } from "../repositories/catalog/facets";
 
@@ -102,7 +96,6 @@ export const CATALOG_CHECKS: Record<
 
 export const CATALOG_CHECK_NAMES = Object.keys(CATALOG_CHECKS) as [CatalogCheck, ...CatalogCheck[]];
 
-/** The columns the checks read. */
 export type HealthBook = {
   id: string;
   title: string;
@@ -111,7 +104,6 @@ export type HealthBook = {
   sourceType: string;
   coverUrl: string | null;
   description: string | null;
-  /** The stored generated description (book_ai_cache, book_description), shown when the catalog's is empty or filler. */
   aiDescription?: string | null;
   epubUrl: string | null;
   isbn: string | null;
@@ -140,7 +132,6 @@ export function isCollectionTitle(title: string): boolean {
   );
 }
 
-/** Digits (and a final X for an ISBN-10) with hyphens and spaces removed; "" for none. */
 export function normalizeIsbn(raw: string | null | undefined): string {
   return (raw ?? "").replace(/[\s-]/g, "").toUpperCase();
 }
@@ -159,7 +150,6 @@ export function isValidIsbn13(isbn: string): boolean {
   return sum % 10 === 0;
 }
 
-/** The ISBN-13 of a valid ISBN-10 (978 prefix), or null. */
 export function isbn10To13(isbn10: string): string | null {
   if (!isValidIsbn10(isbn10)) return null;
   const body = `978${isbn10.slice(0, 9)}`;
@@ -168,7 +158,6 @@ export function isbn10To13(isbn10: string): string | null {
   return `${body}${(10 - (sum % 10)) % 10}`;
 }
 
-/** The ISBN-13 a book is known by: its own, else its ISBN-10 converted; null when neither is valid. */
 function canonicalIsbn(book: Pick<HealthBook, "isbn" | "isbn13">): string | null {
   const thirteen = normalizeIsbn(book.isbn13);
   if (isValidIsbn13(thirteen)) return thirteen;
@@ -187,7 +176,6 @@ function fold(text: string): string {
     .trim();
 }
 
-/** "Austen, Jane" and "Jane Austen" are one author. */
 function authorKey(author: string): string {
   const parts = author.split(",");
   return fold(parts.length === 2 ? `${parts[1]} ${parts[0]}` : author);
@@ -211,9 +199,8 @@ const AMAZON_HOST = /(?:^|\.)amazon\.[a-z.]+$|(?:^|\.)amzn\.(?:to|com)$/i;
 
 const blank = (value: string | null | undefined) => !value || value.trim() === "";
 
-// The openings of the two-sentence template the catalog was seeded with ("A thoughtful and enduring work by
-// <author>. <title> rewards readers who like to read slowly and carefully."), 1,417 of 1,432 catalog books on
-// 2026-11-17. It is the same line for hundreds of books, so it describes none of them.
+// The two-sentence template the catalog was seeded with ("A thoughtful and enduring work by <author>. ..."): the same line
+// for hundreds of books, so it describes none of them.
 const TEMPLATE_OPENINGS = [
   "a thoughtful and enduring work by ",
   "a profound and moving work by ",
@@ -233,17 +220,12 @@ const TEMPLATE_OPENINGS = [
   "a gripping and suspenseful work by ",
 ];
 
-/** True for a seeded template line rather than a description of the book. */
 export function isTemplateDescription(value: string | null | undefined): boolean {
   if (blank(value)) return false;
   const text = value!.trim().toLowerCase();
   return text.length < 300 && TEMPLATE_OPENINGS.some((o) => text.startsWith(o));
 }
 
-/**
- * Every finding for `books`, errors first, then by title. `coverOrigin` is the host Foxing's own covers are served
- * from (https://covers.foxing.app), without a trailing slash.
- */
 export function auditCatalog(books: HealthBook[], coverOrigin: string): Finding[] {
   const findings: Finding[] = [];
   const add = (book: HealthBook, check: CatalogCheck, detail: string) =>
@@ -339,7 +321,6 @@ function hostOf(url: string): string {
   }
 }
 
-/** The groups of two or more books that share a key; books with no key are left out. */
 function groups(books: HealthBook[], key: (book: HealthBook) => string | null) {
   const byKey = new Map<string, HealthBook[]>();
   for (const book of books) {
@@ -357,7 +338,6 @@ const others = (group: HealthBook[], book: HealthBook) =>
     .map((b) => b.id)
     .join(", ") + (group.length > 4 ? ` and ${group.length - 4} more` : "");
 
-/** Counts per check, in the order of CATALOG_CHECKS, with the checks that found nothing included as 0. */
 export function summarize(findings: Finding[]) {
   return CATALOG_CHECK_NAMES.map((check) => ({
     check,

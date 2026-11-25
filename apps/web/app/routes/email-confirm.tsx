@@ -1,8 +1,4 @@
-// Where both email-change links open (site-runtime ./sign-in, EMAIL_CONFIRM_PATH): the approval
-// mailed to the current address and the confirmation mailed to the new one. Better Auth's own link
-// acts on a GET, so a mail scanner that opens every link could approve and make the change; this
-// page's GET only shows a button, and its POST runs the step through confirmEmailLink, which comes
-// back here with ?done= or ?error= (emailLinkResult).
+// Where both email-change links open. Better Auth's own link acts on a GET, so a mail scanner could approve the change; this GET only shows a button and its POST runs the step.
 import {
   type EmailLinkProblem,
   confirmEmailLink,
@@ -23,13 +19,11 @@ export function meta() {
   return noindexMeta("Confirm your email change | Foxing");
 }
 
-// The page's URL holds the token.
 export const headers = linkPageHeaders;
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const result = emailLinkResult(request.url);
   if (result.done !== "changed") return { ...result, userId: null, email: null, displayName: null };
-  // The change is made, and this browser is signed in to the account: name its new address.
   const { env } = context.get(cloudflareContext);
   const user = await sessionUserFromRequest(request, env);
   if (!user) return { ...result, userId: null, email: null, displayName: null };
@@ -44,11 +38,9 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
 export async function action({ context, request }: Route.ActionArgs) {
   const { env } = context.get(cloudflareContext);
-  // Better Auth's redirect (done, or back here with ?error=), or its per-IP limit.
   return redirectOrLimited(await confirmEmailLink(await getAuth(env), request));
 }
 
-/** What a refused link says. Email change links are Better Auth's, good for an hour. */
 const PROBLEM: Record<EmailLinkProblem, { title: string; text: string }> = {
   expired: {
     title: "This link has expired",
@@ -87,7 +79,6 @@ function SettingsLink() {
 export default function EmailConfirm({ loaderData, actionData }: Route.ComponentProps) {
   const { done, problem, userId, email, displayName } = loaderData;
 
-  // The new address is the account's name now, so the password manager shows it on the passkeys.
   useEffect(() => {
     if (done === "changed" && email)
       void signalCurrentUserDetails({
@@ -137,5 +128,4 @@ export default function EmailConfirm({ loaderData, actionData }: Route.Component
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle), for the signal after a change.
 export const handle = { hydrate: true };

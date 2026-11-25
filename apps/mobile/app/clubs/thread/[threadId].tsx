@@ -23,8 +23,6 @@ import { authClient } from "@/lib/api";
 import { PostCard } from "@/components/clubs/post-card";
 import { BackHeader } from "@/components/ui/back-header";
 
-// A club thread: GET /threads/:id, kept fresh by the club's live socket while you
-// are a member, so new posts appear without a reload.
 export default function ThreadScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -40,12 +38,9 @@ export default function ThreadScreen() {
   const [body, setBody] = useState("");
   const [hasSpoilers, setHasSpoilers] = useState(false);
   const [replyTo, setReplyTo] = useState<W.ClubPostItem | null>(null);
-  // Per-post reveal state for spoiler bodies. Defaults to hidden.
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const scrollRef = useRef<ScrollViewInstance>(null);
 
-  // Arrange posts: top-level first, then nest direct replies under each.
-  // We only render ONE level of nesting to keep the layout sane.
   const grouped = useMemo(() => {
     const posts = page?.posts ?? [];
     const topLevel = posts.filter((p) => !p.parentPostId);
@@ -72,13 +67,10 @@ export default function ThreadScreen() {
       setBody("");
       setHasSpoilers(false);
       setReplyTo(null);
-      // Scroll to end so the user sees their own post; small timeout lets
-      // the new layout pass settle.
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300);
     }
   }, [body, createPost, hasSpoilers, posting, replyTo, threadId]);
 
-  // Long-press your own post to delete it.
   const openPostActions = useCallback(
     (post: W.ClubPostItem) => {
       if (!threadId || !viewerId || post.author?.id !== viewerId) return;

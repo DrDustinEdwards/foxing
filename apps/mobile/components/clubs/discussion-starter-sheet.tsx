@@ -16,8 +16,6 @@ interface DiscussionStarterSheetProps {
   onPosted?: (threadId: string) => void;
 }
 
-// Drafts a discussion opener with the companion's discussion_starter (Plus), which
-// the member edits before posting it as a new thread. It never posts on its own.
 export function DiscussionStarterSheet({
   visible,
   clubId,

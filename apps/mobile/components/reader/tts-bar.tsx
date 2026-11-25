@@ -13,10 +13,7 @@ const SLEEP_TIMERS = [15, 30, 45, 60] as const;
 
 interface TtsBarProps {
   visible: boolean;
-  // Plain text of the chapter being read. Empty disables play.
   chapterText: string;
-  // Notify the host whenever the current sentence changes so it can ask
-  // the WebView to highlight it.
   onCurrentSentence?: (index: number | null, text: string | null) => void;
   onClose: () => void;
 }
@@ -40,8 +37,6 @@ export function TtsBar({ visible, chapterText, onCurrentSentence, onClose }: Tts
     setPlaying(false);
   }, []);
 
-  // Speak a specific sentence. onDone advances to the next; onStopped is
-  // expected (we call .stop on every transition) and is a no-op.
   const speakAt = useCallback(
     (i: number) => {
       if (i < 0 || i >= sentences.length) {
@@ -55,9 +50,7 @@ export function TtsBar({ visible, chapterText, onCurrentSentence, onClose }: Tts
         Speech.speak(text, {
           rate: speed,
           onDone: () => {
-            // Auto-advance. Skip if user paused / stopped in the meantime.
-            // We can't read state inside an old callback, rely on the
-            // module's "stopped" callback to short-circuit instead.
+            // Auto-advance; the "stopped" callback short-circuits if the user paused meanwhile (old callbacks cannot read state).
             const next = i + 1;
             if (next >= sentences.length) {
               setPlaying(false);
@@ -78,7 +71,6 @@ export function TtsBar({ visible, chapterText, onCurrentSentence, onClose }: Tts
     [onCurrentSentence, sentences, speed],
   );
 
-  // Clean up on unmount / visibility close.
   useEffect(() => {
     if (!visible) {
       stop();
@@ -87,8 +79,7 @@ export function TtsBar({ visible, chapterText, onCurrentSentence, onClose }: Tts
     }
   }, [visible, stop, onCurrentSentence]);
 
-  // Stop active speech if the user changes speed mid-sentence and resume
-  // from the same sentence so the rate change actually takes effect.
+  // Restart the current sentence so a speed change takes effect.
   useEffect(() => {
     if (!playing) return;
     try {
@@ -127,7 +118,6 @@ export function TtsBar({ visible, chapterText, onCurrentSentence, onClose }: Tts
     }
   }, [index, playing, speakAt, stop]);
 
-  // Sleep timer, stops playback after N minutes.
   const startSleepTimer = useCallback(
     (minutes: number) => {
       if (sleepTimerRef.current) clearInterval(sleepTimerRef.current);

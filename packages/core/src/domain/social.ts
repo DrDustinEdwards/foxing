@@ -1,8 +1,6 @@
-// Social domain logic: follows, close friends, reading lists, and THE feed
-// visibility resolver. Authorization and event emission live here, never in a client.
+// Follows, close friends, reading lists and THE feed visibility resolver. Authorization and events live here, never in a client.
 //
-// FEED VISIBILITY CONTRACT (reviewed + approved 2026-07-11). The follow graph and the
-// close-friends graph are INDEPENDENT. For a viewer V looking at an event authored by A:
+// FEED VISIBILITY CONTRACT: the follow and close-friends graphs are INDEPENDENT. For a viewer V and an event by A:
 //   - public event:  shown IFF V follows A.
 //   - friends event: shown IFF V is on A's close-friends list. Following A is NOT enough.
 //   - private event: never shown to anyone (and the diary path emits none).
@@ -31,11 +29,6 @@ export type FeedInputs = {
   events: socialRepo.ActivityEvent[];
 };
 
-/**
- * Filter candidate activity events down to what the viewer is entitled to see, applying
- * the two-independent-graphs rule above. Returns events only (follower items are merged
- * in by getFeed). Deterministic and side-effect free: this is the tested core.
- */
 export function resolveFeed(input: FeedInputs): socialRepo.ActivityEvent[] {
   const following = new Set(input.followingIds);
   const closeFriendOf = new Set(input.closeFriendAuthorIds);
@@ -104,7 +97,6 @@ export async function createList(
   input: Parameters<typeof socialRepo.createList>[2],
 ): Promise<socialRepo.ReadingList> {
   const list = await socialRepo.createList(db, actor.userId, input);
-  // A public list is a feed-worthy event; private lists stay silent.
   if (list.isPublic) {
     await emit(db, "list.created", actor, { listId: list.id, title: list.title });
   }
@@ -131,7 +123,6 @@ export async function updateList(
   const before = await requireOwnedList(db, actor, listId);
   const updated = await socialRepo.updateList(db, listId, patch);
   if (!updated) throw domainErrors.notFound("List not found.");
-  // Emit list_created when a list becomes public for the first time.
   if (!before.isPublic && updated.isPublic) {
     await emit(db, "list.created", actor, { listId: updated.id, title: updated.title });
   }
@@ -169,9 +160,6 @@ export async function removeBookFromList(
   await socialRepo.removeBookFromList(db, listId, bookId);
 }
 
-// Load both relationship graphs, fetch candidate activity + the viewer's own
-// new_follower notifications, resolve visibility (pure), merge by created_at, page.
-
 /** `nextCursor` is site-runtime encodeCursor's `<ms>.<id>` of the last row, or null on the last page. */
 export type FeedPage = { items: FeedItem[]; nextCursor: string | null };
 
@@ -188,7 +176,6 @@ export async function getFeed(
   ]);
 
   const authorIds = [...new Set([...followingIds, ...closeFriendAuthorIds])];
-  // Over-fetch candidates because some will be filtered out by visibility.
   const [candidates, followerNotifs] = await Promise.all([
     socialRepo.listActivityByAuthors(db, authorIds, { cursor, limit: limit * 3 }),
     notificationsRepo.listForUser(db, viewerId, { cursor, limit, type: "new_follower" }),
@@ -230,14 +217,12 @@ function keyOf(item: FeedItem): Key {
     : { at: item.createdAt?.getTime() ?? 0, id: item.notification.id };
 }
 
-/** The feed's order, newest first, as SQLite orders `created_at DESC, id DESC` (ids compared as plain text). */
 function compareKeys(a: Key, b: Key): number {
   if (a.at !== b.at) return a.at - b.at;
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
 
-/** Visibilities a viewer may see of a target's content. Owner sees all; a viewer who is
- *  on the target's close-friends list sees friends+public; everyone else sees public. */
+/** Owner sees all; a close friend sees friends+public; everyone else public. */
 export async function visibleVisibilitiesFor(
   db: Db,
   targetUserId: string,

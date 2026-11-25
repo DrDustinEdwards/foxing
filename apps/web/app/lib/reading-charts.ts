@@ -1,10 +1,4 @@
-// The reader's charts, drawn by Enarratio into Capsomer's chart frame (ChartFrame redraws each one
-// to its width and adds Enarratio's hover details, keyboard reading and sortable table). Each
-// returns a draw for ChartFrame's `draw`, which takes `fit`: for a bar chart the height the server's
-// drawing showed at the frame's width, so the redraw does not push the page down on a phone; for the
-// weeks heat strip nothing, since a primitive keeps its own height. The figure carries the title, the
-// finding, the drawing and, hidden, the numbers. The stats page and /year share the
-// months and genres charts.
+// The reader's charts, drawn by Enarratio into Capsomer's ChartFrame. A bar chart takes `fit` (the height the server drew at the frame's width) so the redraw does not push the page down on a phone.
 import { formatCount, plural } from "@drdustinedwards/site-helpers/text";
 import { MONTH_ABBR, MONTH_NAMES } from "@foxing/client";
 import { heatStrip } from "enarratio";
@@ -15,7 +9,6 @@ import "capsomer/enarratio.css";
 
 const SOURCE = "Your Foxing library";
 
-/** Books finished in each month of a year, as bars. */
 export function monthsChart(monthly: number[], year: number) {
   const total = monthly.reduce((a, b) => a + b, 0);
   const top = monthly.indexOf(Math.max(...monthly));
@@ -42,7 +35,6 @@ export function monthsChart(monthly: number[], year: number) {
     });
 }
 
-/** The year's most-read subjects, as horizontal bars. */
 export function genresChart(genres: Array<{ name: string; value: number }>, year: number) {
   const [top] = genres;
   const alt = `${top.name} led ${year} with ${plural(top.value, "book", undefined, { grouped: true })}, of the ${genres.length} most-read genres.`;
@@ -70,7 +62,6 @@ export function genresChart(genres: Array<{ name: string; value: number }>, year
     });
 }
 
-/** Books finished in each week of the last year, oldest first, on the heat ramp. */
 export function weeksChart(weeks: Array<{ start: number; books: number }>) {
   const label = (ms: number) => {
     const d = new Date(ms);
@@ -96,7 +87,6 @@ export function weeksChart(weeks: Array<{ start: number; books: number }>) {
     });
 }
 
-/** Votes per option in a club poll, as horizontal bars. */
 export function pollChart(
   id: string,
   options: Array<{ label: string; votes: number }>,

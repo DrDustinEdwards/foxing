@@ -1,4 +1,3 @@
-// Route helpers: session guard, the capped body read and step-5 zod validation at the boundary.
 import { readCapped, readJsonWith, requireJson } from "@dustinedwards/site-runtime/body";
 import type { Context } from "hono";
 import type { z } from "zod";
@@ -11,7 +10,6 @@ export function requireSession(c: Context<Env>): SessionUser {
   return session;
 }
 
-/** The signed-in session and the actor a domain call acts as (its user id and timezone). */
 export function actorOf(c: Context<Env>) {
   const session = requireSession(c);
   return { session, actor: { userId: session.id, timezone: c.get("profile")?.timezone } };
@@ -43,7 +41,6 @@ export async function readBody(
   return text;
 }
 
-/** The JSON body checked by `schema` (site-runtime readJsonWith): 413, 415 or 422 as problem details. */
 export function parseJson<S extends z.ZodTypeAny>(
   c: Context<Env>,
   schema: S,
@@ -52,7 +49,6 @@ export function parseJson<S extends z.ZodTypeAny>(
   return readJsonWith(c.req.raw, schema, { max });
 }
 
-/** parseJson for a body that may be left out: an empty one is validated as `{}`. */
 export function parseOptionalJson<S extends z.ZodTypeAny>(
   c: Context<Env>,
   schema: S,

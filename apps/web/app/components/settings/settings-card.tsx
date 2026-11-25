@@ -49,11 +49,9 @@ export function Card({ title, children }: { title: string; children: React.React
   );
 }
 
-/** Capsomer's input, on the page's ground where a form sits on a card. */
 export const inputClass = "cap-input fx-input-ground";
 
-/** A settings form's submit button, its done note and its error. The button waits for the page to
- *  hydrate: the form saves through script, and a press before that sends it as a plain GET instead. */
+/** A settings form's submit button, done note and error; the button waits for hydration because a press before it sends a plain GET. */
 export function SubmitRow({
   disabled,
   pending,

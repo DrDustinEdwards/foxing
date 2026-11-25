@@ -11,11 +11,7 @@ import {
   SEARCH_BUTTON_LABEL,
 } from "./search-commands";
 
-// The search palette on a page that does not hydrate (root.tsx), started by the header island (islands/header.ts), in
-// place of the React CommandPalette (components/command-palette.tsx), from the same commands. Capsomer's command menu
-// behavior builds and wires the dialog, live results included (attach's `search`, as the React menu's). Ctrl K, Cmd K,
-// "/" and the header's search button open it, fresh each time, as the React menu opens. Only a signed-out reader sees a
-// page that does not hydrate, so the quick links are the public ones.
+// The search palette on a page that does not hydrate, started by the header island, from the same commands as the React palette. Only a signed-out reader sees such a page, so the quick links are the public ones.
 
 const go: Go = (to) => location.assign(to);
 

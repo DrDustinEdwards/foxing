@@ -1,8 +1,3 @@
-// The signed-in reader's OWN Year in Reading (auth-gated, noindex). Reuses the exact
-// recap aggregation that powers the public /u/:username/recap/:year, targeted by user id
-// so it is always the viewer's own. /year shows the current year; /year/:year picks one.
-// A year picker links between years. The shareable public version lives on the profile.
-// The page is YearView (components/reading/year-view.tsx), which /demos/year draws with a sample year.
 import { createDb, views } from "@foxing/core";
 import { useState } from "react";
 import { YearView } from "~/components/reading/year-view";
@@ -27,7 +22,6 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const data = await views.recap(createDb(env.DB), { userId: user.id }, year, user.id);
   if (!data) throw new Response("Not found", { status: 404 });
 
-  // Year picker spans this year back six, always including the selected one.
   const years = new Set<number>([year]);
   for (let y = thisYear; y >= thisYear - 6; y--) years.add(y);
   return {
@@ -42,5 +36,4 @@ export default function Year({ loaderData }: Route.ComponentProps) {
   return <YearView data={loaderData} yearHref={(y) => (y === thisYear ? "/year" : `/year/${y}`)} />;
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

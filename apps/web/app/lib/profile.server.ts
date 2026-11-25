@@ -1,9 +1,4 @@
-// Profile gate for authenticated routes. A signed-in user with no profile row has
-// not finished onboarding (accounts created before onboarding existed, or a reset
-// mid-signup), so every profile-dependent loader must send them to /onboarding.
-// Reads the profile in-process via core, per the standing rule: loaders never
-// self-fetch the Worker's own /api/v1 (that loopback returns a 404 HTML page, not
-// JSON, unconditionally, which is what crashed /me before this gate existed).
+// Profile gate for authenticated routes: a signed-in user with no profile row has not finished onboarding, so profile-dependent loaders send them to /onboarding. Loaders never self-fetch /api/v1: that loopback returns a 404 HTML page.
 import type { SignedInProfile } from "@foxing/core";
 import { isAdminEmail } from "@dustinedwards/site-runtime/access";
 import { createDb, profilesRepo } from "@foxing/core";
@@ -21,8 +16,6 @@ export interface ProfileContext {
   profile: SignedInProfile;
 }
 
-// Resolve the profile for a known user id, or redirect to onboarding when absent.
-// Split from session resolution so it can be tested against D1 without Better Auth.
 export async function requireProfileForUser(env: Env, user: SessionUser): Promise<ProfileContext> {
   const row = await profilesRepo.getProfileById(createDb(env.DB), user.id);
   if (!row) throw redirect("/onboarding");
@@ -31,7 +24,6 @@ export async function requireProfileForUser(env: Env, user: SessionUser): Promis
   return { user, profile };
 }
 
-// Full gate for a loader: unauthenticated to /login, onboarded-less to /onboarding.
 export async function requireProfile(env: Env, request: Request): Promise<ProfileContext> {
   const user = await sessionUserFromRequest(request, env);
   if (!user) throw redirect(signInFrom(request));

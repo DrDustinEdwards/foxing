@@ -1,6 +1,3 @@
-// Annotations layer (3 tables). Replaces highlights, bookmarks, passage_comments,
-// commonplace_book, and every like/reaction/save table. Extension point for the
-// future Edu class layer (the visibility enum grows a 'class' value there).
 import {
   sqliteTable,
   text,

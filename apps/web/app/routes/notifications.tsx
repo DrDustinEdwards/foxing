@@ -1,7 +1,3 @@
-// The signed-in reader's notifications (auth-gated, noindex). Reads run in-process via
-// core's notifications view; requireProfile sends anonymous visitors to /login and
-// no-profile users to /onboarding. "Mark all read" clears the dots at once and rolls
-// back with a visible error if the write fails.
 import { useMarkNotificationsRead, useNotifications } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import { dateFormat } from "enarratio";
@@ -87,5 +83,4 @@ export default function Notifications({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

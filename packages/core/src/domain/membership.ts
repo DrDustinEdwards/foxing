@@ -1,6 +1,4 @@
-// Pure club-membership state machine. No DB: given the current status/role
-// and the club settings, decide the next state and who is allowed to act. The clubs
-// domain layer composes these with repo reads/writes; unit-tested in membership.test.ts.
+// Pure club-membership state machine: no DB; the clubs domain layer composes it with repo reads and writes.
 import type { ClubMemberRole, ClubMemberStatus } from "../enums";
 
 export const ROLE_RANK: Record<ClubMemberRole, number> = {
@@ -9,18 +7,14 @@ export const ROLE_RANK: Record<ClubMemberRole, number> = {
   owner: 2,
 };
 
-/** An active member is the only status that can read/post in a club. Accepts the raw
- *  text-column value (D1 stores status as text). */
 export function isActiveMember(status: string | null | undefined): boolean {
   return status === "active";
 }
 
-/** Moderators and owners can moderate (approve, ban, mute, remove posts). */
 export function canModerate(role: ClubMemberRole | null | undefined): boolean {
   return role === "owner" || role === "moderator";
 }
 
-/** Where a fresh join lands, given club settings and current capacity. */
 export function resolveJoinStatus(
   club: { memberApproval: boolean; maxMembers: number | null },
   activeCount: number,
@@ -30,7 +24,6 @@ export function resolveJoinStatus(
   return "active";
 }
 
-/** A pending member (requested or waitlisted) can be approved into the club. */
 export function canApprove(current: string): boolean {
   return current === "requested" || current === "waitlisted";
 }
@@ -45,8 +38,7 @@ export function canActOn(actorRole: ClubMemberRole, targetRole: ClubMemberRole):
   return false;
 }
 
-/** Only an owner may change roles, and never their own. Promotes/demotes between
- *  member and moderator; ownership transfer is out of scope for Phase 5. */
+/** Only an owner may change roles, never their own; ownership transfer is out of scope. */
 export function canSetRole(
   actorRole: ClubMemberRole,
   targetRole: ClubMemberRole,
@@ -57,9 +49,7 @@ export function canSetRole(
   return true;
 }
 
-/** Who may take over a club when its owner deletes their account, best first: active
- *  members other than the leaver, moderators before plain members, earlier joiners first.
- *  The first is the default successor; an empty list means the club goes with the account. */
+/** Successors for a deleted owner, best first: active members other than the leaver, moderators before plain members, earlier joiners first. Empty means the club goes with the account. */
 export function rankSuccessors<
   M extends { userId: string; status: string; role: string; joinedAt: Date | null },
 >(members: M[], leavingUserId: string): M[] {
@@ -70,18 +60,15 @@ export function rankSuccessors<
     .sort((a, b) => mod(b) - mod(a) || joined(a) - joined(b));
 }
 
-/** Unban restores a previously banned user to active membership. */
 export function canUnban(current: string): boolean {
   return current === "banned";
 }
 
-/** A mute lasts a bounded number of minutes; 0 clears it. Returns the epoch-ms
- *  expiry (null = unmuted). Pure: the caller supplies "now" so it stays testable. */
+/** A mute lasts a bounded number of minutes; 0 clears it. Returns the epoch-ms expiry (null = unmuted); the caller supplies "now". */
 export function muteUntil(nowMs: number, minutes: number): number | null {
   return minutes > 0 ? nowMs + minutes * 60_000 : null;
 }
 
-/** True when a mute is still in force at `nowMs`. */
 export function isMuted(mutedUntil: Date | null | undefined, nowMs: number): boolean {
   return mutedUntil != null && mutedUntil.getTime() > nowMs;
 }

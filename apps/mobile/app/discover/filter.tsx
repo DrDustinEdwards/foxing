@@ -10,7 +10,6 @@ import { Screen } from "@/components/ui/screen";
 
 type FilterType = "subject" | "era" | "length";
 
-// One shelf of the catalog: a genre, era or length bucket from Discover, a page at a time.
 export default function DiscoverFilterScreen() {
   const colors = useColors();
   const router = useRouter();

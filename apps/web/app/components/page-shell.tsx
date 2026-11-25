@@ -17,9 +17,6 @@ import { headerAccount } from "./nav/account-panel";
 import { BooksPanel, booksGroups, PicksPanel, picksGroups } from "./nav/header-panels";
 import { Container } from "./ui";
 
-// The signed-in reader's own pages: a line of tabs under the header on a desktop, Capsomer's
-// bottom bar on a phone. Clubs sits in the header's sections; the rest of the personal pages
-// (goals, lists, stats, year) are in the account panel.
 const YOUR_FOXING = [
   { href: "/home", label: "Home" },
   { href: "/library", label: "Library" },
@@ -32,7 +29,6 @@ const isCurrent = (pathname: string, href: string) =>
   pathname === href || pathname.startsWith(`${href}/`);
 
 const SEARCH_ICON = <Icon d={iconSearch} />;
-// No count on the bell: there is no unread-count source yet, and a fake badge is worse than none.
 const BELL_ICON = <Icon d={iconBell} />;
 
 function YourFoxingBar({ pathname }: { pathname: string }) {
@@ -65,7 +61,6 @@ function SiteNav() {
 
   async function signOut() {
     setSigningOut(true);
-    // Loaded only for a sign-out, so the Better Auth client is not in every page's bundle.
     await (await import("~/lib/auth-client")).signOutToHome();
   }
 
@@ -110,7 +105,6 @@ function SiteNav() {
         logo={{
           href: user ? "/home" : "/",
           label: "Foxing",
-          // The fox is allowed in nav and footer chrome (Rule 9).
           mark: (
             <span className="fx-logo-mark" aria-hidden="true">
               🦊
@@ -234,8 +228,6 @@ function FooterCol({
   );
 }
 
-/** Full page frame: Capsomer's header (with its skip link), the main landmark, the footer, and
- *  for a signed-in reader Capsomer's bottom bar on a phone, last so it sticks to the bottom. */
 export function PageShell({ children }: { children: React.ReactNode }) {
   const data = useRouteLoaderData<typeof RootLoader>("root");
   const signedIn = Boolean(data?.navUser);

@@ -1,11 +1,5 @@
-// Push delivery gate (Phase 7, D18). Pure decision logic: given a notification type, the
-// user's notification_prefs, and their timezone, decide whether a PUSH should go out now.
-// In-app notifications always land (written by the event emitter); this gate only governs
-// the Expo push. Unit-tested without any I/O -- the queue consumer supplies nowUtcMs.
-//
-// Categories collapse the notification types into the D18 preference switches. "Quiet
-// defaults": high-signal categories default on, noisy ones (reactions, poll activity)
-// default off, so an unconfigured user is not spammed.
+// Push gate: a pure decision on whether a PUSH goes out now, from the notification type, the user's notification_prefs and timezone. In-app
+// notifications always land. High-signal categories default on, noisy ones (reactions, poll activity) off, so an unconfigured user is not spammed.
 
 export type QuietHours = { start: string; end: string } | null | undefined;
 export type NotificationPrefs = {
@@ -68,8 +62,7 @@ function hhmmToMinutes(hhmm: string): number {
   return (h % 24) * 60 + (m % 60);
 }
 
-/** Local minutes-since-midnight in the given IANA timezone, from a UTC epoch ms. Uses
- *  Intl (available in Workers); no tz database bundled. */
+/** Local minutes-since-midnight in an IANA timezone; Intl, no tz database bundled. */
 export function localMinutes(nowUtcMs: number, timezone: string): number {
   const format = (timeZone: string) =>
     new Intl.DateTimeFormat("en-US", {

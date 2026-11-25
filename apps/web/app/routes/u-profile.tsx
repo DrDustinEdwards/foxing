@@ -1,8 +1,4 @@
-// Public profile at /u/:username. Visibility-aware: the loader resolves what the viewer
-// may see entirely in core (socialDomain.visibleVisibilitiesFor) and never trusts the
-// client. Shows identity, follow control, recent diary, lists, and activity. Anonymous
-// visitors can view public profiles; a non-public profile 404s for everyone but its
-// owner.
+// Public profile at /u/:username: visibility resolves entirely in core and never trusts the client; a non-public profile 404s for everyone but its owner.
 import { thing } from "@drdustinedwards/site-helpers/schema";
 import { useProfilePage } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
@@ -60,8 +56,7 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
   ];
 }
 
-// The current calendar year, for the "year in reading" recap link. Computed at
-// render (module scope would freeze it into the build).
+// Computed at render: module scope would freeze the year into the build.
 function currentYear(): number {
   return new Date().getUTCFullYear();
 }
@@ -425,8 +420,7 @@ function ProfileCovers({ books }: { books: CoverBook[] }) {
   );
 }
 
-// Branded notice for a private profile: confirms the account exists without leaking
-// any of its content. Replaces the hard 404 the rebuild had.
+// Branded notice for a private profile: confirms the account exists without leaking any content.
 function PrivateProfile({
   profile,
 }: {

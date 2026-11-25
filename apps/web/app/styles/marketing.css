@@ -1,4 +1,3 @@
-/* The landing page, the features and guide pages, about, privacy and terms. */
 /* Foxing's hero look is Capsomer's hero with Foxing's tokens; the search field takes its own row. */
 .cap-hero {
   --hero-title: 3rem;
@@ -31,7 +30,6 @@
 .fx-values > div > span {
   color: var(--accent);
 }
-/* The pick is a Capsomer card at the hero radius (Rule 06: rounded-xl), lifted. */
 .fx-pick {
   --radius-l: var(--fx-radius-hero);
   --card-shadow: var(--shadow-s);
@@ -87,7 +85,6 @@
   gap: var(--space-3);
 }
 
-/* The accessibility statement: Prelum's markup (h2, p, ul, a) in the legal pages' type. */
 .fx-statement {
   font-family: var(--ui);
   font-size: var(--title-6);

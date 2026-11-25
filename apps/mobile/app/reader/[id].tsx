@@ -72,10 +72,6 @@ import {
   prefsToSettings,
 } from "@/components/reader/reader-screen-helpers";
 
-// Word-pill state carries the surrounding sentence so the WordLookupSheet
-// receives real context (the AI prompt is sentence-scoped). Passage-pill
-// state carries the full selected text + cfi for the highlight + analyze
-// + discuss flows.
 interface WordPillState {
   word: string;
   surroundingText: string;
@@ -91,12 +87,9 @@ export default function Reader() {
   const colors = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  // iPad-class width threshold. 768pt is iPad-portrait / common 10" tablet
-  // width; below that we treat the device as a phone for layout purposes.
   const { width: windowWidth } = useWindowDimensions();
   const isTablet = windowWidth >= 768;
   const readerRef = useRef<ReaderRef>(null);
-  // Start of the reading stretch not yet logged as a session (see logStretch).
   const stretchStartRef = useRef<number>(Date.now());
   const positionRef = useRef<{ cfi: string | null; percentage: number }>({
     cfi: null,
@@ -115,10 +108,7 @@ export default function Reader() {
   const writes = useReaderWrites(book?.id ?? null);
   const writesRef = useRef(writes);
   writesRef.current = writes;
-  // PDFs are detected by URL extension. We only need to gate features that
-  // don't translate cleanly: the word tap pill relies on text-flow chunks.
   const isPdf = !!book && /\.pdf(\?|#|$)/i.test(book.epubUrl);
-  // The saved position is read once, when the book first loads.
   const [initialCfi, setInitialCfi] = useState<string | null>(null);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const [readerState, setReaderState] = useState<"loading" | "ready" | "error">("loading");
@@ -126,12 +116,8 @@ export default function Reader() {
   const [chrome, setChrome] = useState(false);
 
   const [prefs, setPrefs] = useState<ReaderPrefs>(DEFAULT_PREFS);
-  // Subscription tier for client-side Plus gating of AI actions. Unknown (still
-  // loading) does not block: the server remains the authoritative gate. 'free'
-  // shows the lock + upgrade prompt; 'plus' is ungated.
+  // Unknown tier (still loading) does not block; the server is the authoritative gate.
   const subscriptionTier = me.data?.profile?.subscriptionTier ?? null;
-  // When set, the upgrade prompt is shown; the string is the feature name for
-  // the headline (e.g. "Translate").
   const [upgradeFeature, setUpgradeFeature] = useState<string | null>(null);
   const locked = subscriptionTier === "free";
   const [showSettings, setShowSettings] = useState(false);
@@ -139,39 +125,26 @@ export default function Reader() {
   const [currentChapter, setCurrentChapter] = useState({ title: "", index: 0 });
   const [progress, setProgress] = useState(0);
 
-  // Floating pill state, anchored to a WebView-local rect. The pill itself
-  // handles its own color-picker expansion; we just feed it mode + payload.
   const [pillMode, setPillMode] = useState<PillMode | null>(null);
   const [pillAnchor, setPillAnchor] = useState<PillAnchor | null>(null);
   const [wordPayload, setWordPayload] = useState<WordPillState | null>(null);
   const [passagePayload, setPassagePayload] = useState<PassagePillState | null>(null);
 
-  // Sheet visibility, opened from pill actions or chrome buttons.
   const [wordSheet, setWordSheet] = useState<WordPillState | null>(null);
   const [passageSheet, setPassageSheet] = useState<PassagePillState | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatSeed, setChatSeed] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  // Which view the MenuSheet should open to. The top-bar Sparkle icon
-  // routes to the chapter-features sub-grid; the bottom-bar chevron-up
-  // routes to the secondary actions list.
   const [menuInitialView, setMenuInitialView] = useState<MenuInitialView>("secondary");
-  // Club panel: half-height slide-up. Tapping the bottom-bar club chip
-  // opens it; reading continues underneath since the panel isn't a Modal.
   const [clubPanelOpen, setClubPanelOpen] = useState(false);
   const [highlightsOpen, setHighlightsOpen] = useState(false);
-  // A companion tool from the menu (characters, this chapter, ...), shown as one answer.
   const [companionTool, setCompanionTool] = useState<CompanionTool | null>(null);
-  // The question typed into the Find tool; it waits until the reader submits one.
   const [findQuery, setFindQuery] = useState("");
   const [findSubmitted, setFindSubmitted] = useState<string | null>(null);
-  // Translate sheet: the selected word or passage, translated into prefs.targetLanguage.
   const [translateText, setTranslateText] = useState<string | null>(null);
   const previousChapterRef = useRef<string | null>(null);
-  // TTS state, bar visibility, chapter text snapshot, last sentence index.
   const [ttsOpen, setTtsOpen] = useState(false);
   const [ttsText, setTtsText] = useState("");
-  // Go To sheet (Contents/Location/Bookmarks/History).
   const [goToOpen, setGoToOpen] = useState(false);
   // Sleep timer, sheet visibility, active option, and remaining ms for the
   // countdown badge. The interval handle lives in a ref so re-renders don't
@@ -192,27 +165,18 @@ export default function Reader() {
   // PanResponder closes over this ref so the swipe-back handler always reads
   // the latest state without re-creating the responder on every render.
   const swipeBackRef = useRef<() => void>(() => {});
-  // Inline bookmark naming modal, shown when the chrome bookmark button
-  // is tapped on a position that doesn't have a bookmark yet.
   const [bookmarkPrompt, setBookmarkPrompt] = useState<{
     cfi: string;
     suggestedName: string;
   } | null>(null);
 
-  // Live WPM tracking. Each location change with pageWordCount lets us
-  // compute words/sec from the previous sample → smooth into a session
-  // average, saved as the calibrated WPM that /settings shows.
   const lastLocationTimeRef = useRef<number>(Date.now());
   const lastPageWordsRef = useRef<number>(0);
   const wpmSamplesRef = useRef<number[]>([]);
-  // Page turns in the stretch not yet logged as a session.
   const pagesReadRef = useRef<number>(0);
 
-  // Transient toast, currently used for "couldn't save highlight" feedback.
   const [toast, setToast] = useState<string | null>(null);
 
-  // This book's bookmarks, from the cached annotation layers; drives the filled
-  // vs outline bookmark icon in the top chrome without a per-page-turn lookup.
   const { bookmarks } = useBookmarks(book?.id ?? null);
   const bookmarkCfis = useMemo(() => new Set(bookmarks.map((b) => b.cfi)), [bookmarks]);
   const isCurrentBookmarked = useMemo(
@@ -221,20 +185,13 @@ export default function Reader() {
     [bookmarkCfis, progress],
   );
 
-  // Clubs the viewer belongs to that are currently reading THIS book. Empty
-  // = no Club button on the pill, no margin dots.
   const matchingClubs = readerPage.data?.shareableClubs ?? [];
 
-  // Sheet state, single sheet that handles both "tapped margin dot" and
-  // "tapped Club button on the pill". The pill path comes in with the
-  // selected passage; the dot path comes in with the commented passage.
   const [commentSheet, setCommentSheet] = useState<{
     cfi: string;
     passageText: string;
   } | null>(null);
 
-  // Club presence in the bottom chrome: members of the first matching club who
-  // are in the club right now (its live socket), not counting the viewer.
   const live = useClubLive(matchingClubs[0]?.id ?? null);
   const presence = live.presence.filter((u) => u !== userId);
 
@@ -243,7 +200,6 @@ export default function Reader() {
   // call the latest version that closes over the current `book`.
   const saveProgressRef = useRef<() => void>(() => {});
 
-  // Design-token-aware highlight palette, so highlights match the FloatingPill swatches.
   const palette = useMemo<Record<HighlightColor, string>>(() => highlightPalette(colors), [colors]);
 
   useEffect(() => {
@@ -251,7 +207,6 @@ export default function Reader() {
     readerRef.current?.setHighlightColors(palette);
   }, [palette, readerState]);
 
-  // Paint the reader's own highlights once the book is open, and again when they change.
   useEffect(() => {
     if (readerState !== "ready") return;
     for (const m of layers.data?.mine ?? []) {
@@ -264,8 +219,6 @@ export default function Reader() {
     }
   }, [readerState, layers.data?.mine]);
 
-  // Popular highlights, gated on the prefs toggle: passages at least three readers
-  // highlighted, from the book's annotation layers.
   useEffect(() => {
     if (readerState !== "ready") return;
     if (!prefs.popularHighlightsEnabled) {
@@ -278,7 +231,6 @@ export default function Reader() {
     readerRef.current?.setPopularHighlights(list, colors.textTertiary);
   }, [readerState, layers.data?.popular, prefs.popularHighlightsEnabled, colors.textTertiary]);
 
-  // Club passage comments as margin dots.
   useEffect(() => {
     if (readerState !== "ready") return;
     const markers: PassageCommentMarker[] = (layers.data?.comments ?? [])
@@ -290,13 +242,6 @@ export default function Reader() {
     readerRef.current?.setPassageComments(markers, colors.brandUi);
   }, [readerState, layers.data?.comments, colors.brandUi]);
 
-  // Swipe responder claims ONE gesture while otherwise letting taps fall
-  // through to the WebView:
-  //   • left-edge swipe right → pop the last entry off position history and
-  //     navigate to the new tail (history-back)
-  // Chrome is toggled by a center tap (the WebView's onTap), so the old
-  // top-edge reveal swipe is gone. We never claim onStart so tap-to-flip
-  // pages still works; the move check gates on a clear left-edge gesture.
   const swipeResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
@@ -338,7 +283,6 @@ export default function Reader() {
     }
   }, [readerPage.data, userId, myBook.isPending, myBook.data, writes]);
 
-  // Reader prefs, per user (falls back to an anonymous key when signed out).
   useEffect(() => {
     if (session.isPending) return;
     let mounted = true;
@@ -377,8 +321,6 @@ export default function Reader() {
     };
   }, []);
 
-  // Auto-hide chrome 3s after it appears (same duration as the on-open peek
-  // below for consistency, users learn one rhythm).
   useEffect(() => {
     if (chromeTimerRef.current) {
       clearTimeout(chromeTimerRef.current);
@@ -392,16 +334,11 @@ export default function Reader() {
     };
   }, [chrome]);
 
-  // On book open, peek chrome for 3s so the user sees Back / Aa / menu
-  // affordances exist. The auto-hide effect above handles the timeout.
   useEffect(() => {
     if (readerState === "ready") setChrome(true);
   }, [readerState]);
 
-  // Keep screen awake while reading, gated on the Settings → Reading
-  // toggle. expo-keep-awake activates the platform's no-sleep flag on
-  // mount; we deactivate on unmount. Safe to call multiple times; the
-  // module reference-counts.
+  // Keep the screen awake while reading; the module reference-counts, so repeat calls are safe.
   useEffect(() => {
     let active = false;
     void (async () => {
@@ -436,8 +373,6 @@ export default function Reader() {
     });
   }
 
-  // Keep the ref pointed at the current-render saveProgress so the timers
-  // started in the mount effect always invoke the freshest closure.
   saveProgressRef.current = saveProgress;
 
   // Logs the stretch since the last one as a reading session (sessions are append-only,
@@ -467,8 +402,6 @@ export default function Reader() {
     // every call here is a real navigation the heartbeat can count.
     pagesReadRef.current += 1;
 
-    // Position history, append (collapsing consecutive same-CFI). Debounced
-    // save so a burst of page turns doesn't hammer AsyncStorage.
     if (book && cfi) {
       positionHistoryRef.current = appendHistoryEntry(positionHistoryRef.current, {
         cfi,
@@ -483,9 +416,6 @@ export default function Reader() {
       }, 2000);
     }
 
-    // Update rolling WPM average. We use the previous page's word count
-    // and the time delta, the new pageWordCount becomes "previous" on
-    // the next call. First call seeds; can't compute WPM until call #2.
     const now = Date.now();
     const prevWords = lastPageWordsRef.current;
     const elapsedSec = (now - lastLocationTimeRef.current) / 1000;
@@ -495,15 +425,12 @@ export default function Reader() {
         wpmSamplesRef.current = [...wpmSamplesRef.current.slice(-4), sample];
         const avg = wpmSamplesRef.current.reduce((a, b) => a + b, 0) / wpmSamplesRef.current.length;
         const rounded = Math.round(avg);
-        // Persist calibrated WPM so /settings can show it.
-        // Best-effort; never block reading on the AsyncStorage write.
         import("@/lib/user-prefs").then((m) => m.setCalibratedWpm(rounded)).catch(() => {});
       }
     }
     lastLocationTimeRef.current = now;
     if (pageWordCount && pageWordCount > 0) lastPageWordsRef.current = pageWordCount;
 
-    // Save the place at most every 5 seconds of page turning.
     if (Date.now() - lastSaveRef.current >= 5000) {
       lastSaveRef.current = Date.now();
       saveProgress();
@@ -512,10 +439,7 @@ export default function Reader() {
 
   function changePrefs(next: ReaderPrefs) {
     setPrefs(next);
-    // Persist async; we don't block UI on the AsyncStorage write.
     savePrefs(userId, next).catch((e) => console.warn("[reader] save prefs failed:", e));
-    // Push the resolved settings into the WebView so the change is visible
-    // immediately, same code path as initial mount.
     readerRef.current?.applySettings(prefsToSettings(next));
   }
 
@@ -526,9 +450,6 @@ export default function Reader() {
     setPassagePayload(null);
   }
 
-  // ── Sleep timer ─────────────────────────────────────────────────────────
-  // Cleared on unmount. Minute-based timers tick via setInterval; the
-  // end-of-chapter mode just sits dormant until onChapterChange fires.
   function clearSleepInterval() {
     if (sleepIntervalRef.current) {
       clearInterval(sleepIntervalRef.current);
@@ -582,7 +503,6 @@ export default function Reader() {
     [expireSleepTimer],
   );
 
-  // Clear the timers on unmount so they don't outlive the reader.
   useEffect(
     () => () => {
       clearSleepInterval();
@@ -591,10 +511,7 @@ export default function Reader() {
     [],
   );
 
-  // ── Pill action handlers ────────────────────────────────────────────────
-
   function handleHighlight(color: HighlightColor, privacy: PrivacyTier = "public") {
-    // Resolve the active payload (word or passage) to a single highlight row.
     const cfi = (pillMode === "word" ? wordPayload?.cfi : passagePayload?.cfi) ?? null;
     const text = pillMode === "word" ? wordPayload?.word : passagePayload?.text;
     if (!cfi || !text || !book) {
@@ -604,7 +521,6 @@ export default function Reader() {
         hasBook: !!book,
         mode: pillMode,
       });
-      // Tell the user something happened, silent dismiss was the prior bug.
       if (!cfi && text && book) {
         setToast("Couldn't save highlight, try selecting again.");
       }
@@ -646,9 +562,6 @@ export default function Reader() {
     dismissPill();
   }
 
-  // Ask seeds the companion chat with the current selection. Works for both a
-  // tapped word (with its sentence context) and a selected passage. Renamed
-  // from the old passage-only "Discuss".
   function handleAsk() {
     if (pillMode === "word" && wordPayload) {
       setChatSeed(`In "${wordPayload.surroundingText}", what does "${wordPayload.word}" mean? `);
@@ -665,8 +578,6 @@ export default function Reader() {
     dismissPill();
   }
 
-  // Translate the current selection into the reader's saved target language
-  // (prefs.targetLanguage).
   function handleTranslate() {
     const raw = pillMode === "word" ? wordPayload?.word : passagePayload?.text;
     if (raw) setTranslateText(raw);
@@ -677,8 +588,6 @@ export default function Reader() {
     setMenuOpen(false);
     switch (action) {
       case "ask-chat":
-        // Standalone ask-questions entry: open the companion in general mode
-        // with no passage seed (book + current chapter context only).
         setChatSeed(null);
         setChatOpen(true);
         break;
@@ -709,15 +618,12 @@ export default function Reader() {
         }
         break;
       case "my-clubs":
-        // First matching club for now. A multi-club picker is a future PR
-        // (Part 12 spec only requires routing to a ClubDetailScreen).
+        // First matching club only.
         if (matchingClubs.length > 0) {
           router.push(`/clubs/${matchingClubs[0].id}` as never);
         }
         break;
       case "listen":
-        // Pull the current chapter's plain text from the WebView, then
-        // surface the TTS bar. The bar handles split-into-sentences locally.
         void (async () => {
           try {
             const text = await (readerRef.current?.getChapterText?.() ?? Promise.resolve(""));
@@ -735,10 +641,7 @@ export default function Reader() {
     }
   }
 
-  // Hydrate per-book position history on open. The ref is the source of truth
-  // mid-session, onLocation appends to it directly and a debounced save
-  // mirrors changes to AsyncStorage. GoToSheet's History tab pulls a snapshot
-  // via the loadHistory prop each time it opens.
+  // The ref is the source of truth mid-session; a debounced save mirrors it to AsyncStorage.
   useEffect(() => {
     if (!book) return;
     let mounted = true;
@@ -750,8 +653,6 @@ export default function Reader() {
     };
   }, [book]);
 
-  // Persist any pending history write on unmount so a quick close doesn't
-  // lose the most recent entry.
   useEffect(
     () => () => {
       if (historySaveTimerRef.current) clearTimeout(historySaveTimerRef.current);
@@ -761,10 +662,7 @@ export default function Reader() {
     [book],
   );
 
-  // Pop the current position off history and navigate to the new tail. We
-  // don't suppress the navigation's own onLocation callback because the
-  // append helper collapses consecutive same-CFI entries, so the destination
-  // simply refreshes in place instead of growing the list.
+  // onLocation's append collapses consecutive same-CFI entries, so the destination refreshes in place.
   const onSwipeBack = useCallback(() => {
     const history = positionHistoryRef.current;
     if (history.length < 2 || !book) return;
@@ -777,8 +675,6 @@ export default function Reader() {
   }, [book]);
   swipeBackRef.current = onSwipeBack;
 
-  // Bookmark button handler, toggle if current position is bookmarked,
-  // else open the naming prompt.
   const onBookmarkTap = useCallback(() => {
     const cfi = positionRef.current.cfi;
     if (!cfi || !book) {
@@ -821,9 +717,7 @@ export default function Reader() {
   const themeColors = CANVAS_PALETTE[prefs.canvasTheme];
   const initialSettings: ReaderSettings = prefsToSettings(prefs);
 
-  // Wood-engraving chrome: cream surface (bgBase maps to the Cream token in
-  // light, warm near-black in dark), translucent so the reading canvas reads
-  // through. Mapped to existing tokens so dark mode keeps adapting.
+  // Mapped to existing tokens so dark mode keeps adapting.
   const chromeBg = hexToRgba(colors.bgBase, 0.95);
 
   return (
@@ -848,16 +742,10 @@ export default function Reader() {
         }}
         onLocationChange={onLocation}
         onChapterChange={(c) => {
-          // Detect a fresh chapter transition. The first onChapterChange
-          // after open populates previousChapter with the chapter we
-          // landed on; subsequent transitions fire the comprehension
-          // check-in for the chapter we just left.
           const prevTitle = previousChapterRef.current;
           const isRealTransition = !!prevTitle && prevTitle !== c.title;
           if (isRealTransition) {
-            // End-of-chapter sleep mode fires once on the next real
-            // transition. Wait until after the state update so the user
-            // sees the new chapter momentarily before we save + navigate.
+            // Wait for the state update so the new chapter shows before we save and navigate.
             if (sleepTimer?.kind === "end_of_chapter") {
               void expireSleepTimer();
             }
@@ -873,9 +761,6 @@ export default function Reader() {
             return;
           }
           console.log("[reader] word tap", { word, rect });
-          // Tapping a different word while a pill is active dismisses the
-          // old one and shows the new one, feels right; users wouldn't
-          // expect the old pill to stick.
           setWordPayload({ word, surroundingText, cfi });
           setPassagePayload(null);
           setPillAnchor(rect);
@@ -891,8 +776,6 @@ export default function Reader() {
           haptic.light();
         }}
         onTap={() => {
-          // Tap on empty area: dismiss any active pill first; if no pill
-          // was up, that tap is a chrome toggle instead.
           if (pillMode) {
             dismissPill();
           } else {

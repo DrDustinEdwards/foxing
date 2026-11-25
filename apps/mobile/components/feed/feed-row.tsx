@@ -16,7 +16,6 @@ import { Fonts } from "@/constants/fonts";
 import { Avatar } from "@/components/ui/avatar";
 import { relativeTime } from "@/lib/relative-time";
 
-// One row of GET /feed: what someone you follow did, or a new follower of yours.
 export function FeedRow({
   row,
   onOpenActor,

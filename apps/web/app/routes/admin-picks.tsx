@@ -1,7 +1,3 @@
-// Admin: Celebrity Picks. Filter the external curator clubs (Oprah, Reese, etc.),
-// publish/unpublish their picks, and edit the curator copy on a pick. A published pick
-// with a book is what renders on the /picks surfaces. Reads in-process; writes to
-// /api/v1/admin/picks with a visible error on failure.
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { useRevalidator } from "react-router";
@@ -35,7 +31,6 @@ export function meta() {
   return noindexMeta("Admin · Celebrity Picks | Foxing");
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
 
 export default function AdminPicks({ loaderData }: Route.ComponentProps) {

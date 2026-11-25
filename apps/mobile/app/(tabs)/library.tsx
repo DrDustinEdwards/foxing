@@ -35,8 +35,6 @@ import {
   type SortKey,
 } from "@/components/library/library-types";
 
-// The reader's library: status shelves from GET /library and their own shelves from
-// /shelves. Every change patches the cached library, so the list updates in place.
 export default function Library() {
   const colors = useColors();
   const router = useRouter();
@@ -56,7 +54,6 @@ export default function Library() {
   const [sortPickerOpen, setSortPickerOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
 
-  // Bulk edit mode; the selection holds book ids.
   const [editMode, setEditMode] = useState(false);
   const [selectedBookIds, setSelectedBookIds] = useState<Set<string>>(new Set());
   const [bulkShelfPickerOpen, setBulkShelfPickerOpen] = useState(false);
@@ -107,8 +104,6 @@ export default function Library() {
     [setBookStatus],
   );
 
-  // ── Bulk edit ─────────────────────────────────────────────────────────
-
   const exitBulkEdit = useCallback(() => {
     setEditMode(false);
     setSelectedBookIds(new Set());
@@ -154,8 +149,6 @@ export default function Library() {
     );
   }, [bulkSet, selectedBookIds]);
 
-  // Exit edit mode when the active shelf changes, feels intuitive and
-  // avoids the user's selection silently spanning a different list.
   useEffect(() => {
     if (editMode) exitBulkEdit();
     // oxlint-disable-next-line react/exhaustive-deps -- only a shelf change exits edit mode

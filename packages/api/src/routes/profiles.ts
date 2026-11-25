@@ -1,6 +1,4 @@
-// Profiles: the one resource wired end to end in Phase 1 (GET /me, PATCH /me,
-// GET /u/:username) plus onboarding, which fires the profile.onboarded emission.
-// Handlers stay thin: validate, call a core function, return.
+// Profile and onboarding routes; onboarding fires the profile.onboarded emission.
 import { Hono } from "hono";
 import {
   isUniqueViolation,
@@ -25,19 +23,16 @@ function usernameRace(err: unknown): never {
   throw isUniqueViolation(err) ? errors.conflict("That username is taken.") : err;
 }
 
-// GET /me - the reader's account; profile is null until onboarding.
 profileRoutes.get("/me", (c) => {
   const session = requireSession(c);
   return c.json(views.me(session, c.get("profile")));
 });
 
-// GET /me/onboarding - the starter books and genres the first-run flow offers.
 profileRoutes.get("/me/onboarding", async (c) => {
   requireSession(c);
   return c.json(await views.onboarding(c.get("db")));
 });
 
-// POST /me/onboard - creates the profile row and emits profile.onboarded.
 profileRoutes.post("/me/onboard", rateLimit("write"), async (c) => {
   const session = requireSession(c);
   if (c.get("profile")) throw errors.conflict("Already onboarded.");
@@ -48,7 +43,6 @@ profileRoutes.post("/me/onboard", rateLimit("write"), async (c) => {
   return c.json({ profile: views.myProfile(profile) }, 201);
 });
 
-// PATCH /me - update the current user's profile.
 profileRoutes.patch("/me", rateLimit("write"), async (c) => {
   const session = requireSession(c);
   if (!c.get("profile")) throw errors.notFound("Onboard before editing your profile.");
@@ -57,9 +51,7 @@ profileRoutes.patch("/me", rateLimit("write"), async (c) => {
   return c.json({ profile: profile && views.myProfile(profile) });
 });
 
-// GET /me/username-available?username=foo - live availability check for the username
-// picker. Session-gated so it is not an open enumeration endpoint. The user's own
-// current username counts as available.
+// Session-gated so it is not an open enumeration endpoint; the user's own username counts as available.
 profileRoutes.get("/me/username-available", async (c) => {
   requireSession(c);
   const parsed = usernameSchema.safeParse(c.req.query("username") ?? "");
@@ -69,7 +61,6 @@ profileRoutes.get("/me/username-available", async (c) => {
   return c.json({ available: !existing || existing.username === mine });
 });
 
-// PATCH /me/username - change the current user's username (unique, format-checked).
 profileRoutes.patch("/me/username", rateLimit("write"), async (c) => {
   const session = requireSession(c);
   if (!c.get("profile")) throw errors.notFound("Onboard before editing your profile.");
@@ -82,7 +73,6 @@ profileRoutes.patch("/me/username", rateLimit("write"), async (c) => {
   return c.json({ profile: profile && views.myProfile(profile) });
 });
 
-// PATCH /me/visibility - set the profile/progress/default-annotation visibility prefs.
 profileRoutes.patch("/me/visibility", rateLimit("write"), async (c) => {
   const session = requireSession(c);
   if (!c.get("profile")) throw errors.notFound("Onboard before editing your settings.");
@@ -91,9 +81,7 @@ profileRoutes.patch("/me/visibility", rateLimit("write"), async (c) => {
   return c.json({ ok: true });
 });
 
-// GET /u/:username - the profile page, visibility-aware. A non-public profile shows
-// only enough identity to confirm the account exists, to everyone but its owner: the
-// same view the web page renders.
+// A non-public profile shows only enough identity to confirm the account exists, to everyone but its owner.
 profileRoutes.get("/u/:username", async (c) => {
   const page = await views.profilePage(
     c.get("db"),

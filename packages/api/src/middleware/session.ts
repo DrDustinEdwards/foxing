@@ -1,5 +1,3 @@
-// Step 2: resolve the Better Auth session via the injected resolver (kept out of
-// this package so it stays provider-agnostic).
 import { createMiddleware } from "hono/factory";
 import type { ApiDeps, Env } from "../types";
 

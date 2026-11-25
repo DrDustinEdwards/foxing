@@ -2,7 +2,6 @@ import { View, Text } from "react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
-// The labeled text field every form sheet uses.
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   const colors = useColors();
   return (

@@ -4,19 +4,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView, KeyboardStickyView } from "react-native-keyboard-controller";
 
-// Shared sheet wrapper. Provides the one-and-only keyboard layer for sheets
-// (react-native-keyboard-controller's KeyboardAwareScrollView) plus a footer
-// slot that always clears the home-bar inset.
-//
-// CRITICAL: this owns the keyboard handling. Do NOT pass a ScrollView in
-// `children` (it would nest inside KeyboardAwareScrollView) and do NOT wrap
-// this in a KeyboardAvoidingView. Pass `scroll={false}` for short, fixed-height
-// content that never needs to scroll.
-//
-//  variant="page"   full-height pageSheet modal (top safe-area, header, body,
-//                   footer) -- the default for form sheets.
-//  variant="bottom" bottom-anchored rounded sheet that dismisses on backdrop
-//                   tap -- for choosers and compact action sheets.
+// Owns the keyboard handling (KeyboardAwareScrollView): do not pass a ScrollView in children or wrap in a KeyboardAvoidingView; use scroll={false} for short fixed content.
+// variant="page" is a full-height pageSheet; "bottom" is a bottom-anchored sheet dismissed by backdrop tap.
 
 interface SheetScaffoldProps {
   visible: boolean;
@@ -25,14 +14,9 @@ interface SheetScaffoldProps {
   header?: ReactNode;
   footer?: ReactNode;
   variant?: "page" | "bottom";
-  // Wrap children in the keyboard-aware scroll view (default true). Set false
-  // for short content with no inputs that should not scroll.
   scroll?: boolean;
   contentContainerStyle?: StyleProp<ViewStyle>;
-  // bottom variant only: cap the sheet height. Default '85%'.
   maxHeight?: number | `${number}%`;
-  // Lift the footer above the keyboard (chat-style composers). Uses
-  // keyboard-controller's KeyboardStickyView -- still a single keyboard library.
   stickyFooter?: boolean;
 }
 

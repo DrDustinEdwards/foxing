@@ -22,8 +22,6 @@ import { Screen } from "@/components/ui/screen";
 
 type Tab = "discussions" | "reading" | "members" | "about";
 
-// A club: the shared GET /clubs/:id page (threads, members, polls, meetings and the
-// reading schedule in one object). Joins, votes and RSVPs patch or refetch it.
 export default function ClubDetailScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -49,13 +47,11 @@ export default function ClubDetailScreen() {
     });
   }, [threadQuery, page?.threads]);
 
-  // Threads gated to a chapter stay locked until the schedule unlocks it.
   const scheduleByGate = useMemo(
     () => new Map((page?.schedule ?? []).map((r) => [r.chapterName, r.unlockDate])),
     [page?.schedule],
   );
 
-  // Earliest future unlock, drives the "Next chapter unlocks in Xd Yh" header.
   const [now] = useState(() => Date.now());
   const nextUnlock = useMemo(() => {
     const future = (page?.schedule ?? []).map((r) => r.unlockDate).filter((t) => t > now);
@@ -188,8 +184,6 @@ export default function ClubDetailScreen() {
     </Screen>
   );
 }
-
-// ── Tabs ─────────────────────────────────────────────────────────────────
 
 function TabButton({
   tab,

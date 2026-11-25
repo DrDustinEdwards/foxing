@@ -20,7 +20,6 @@ export const SORT_OPTIONS: Array<{ id: SortKey; label: string }> = [
   { id: "author", label: "Author" },
 ];
 
-/** A library row: the book, plus the reader's shelf state when it is in their library. */
 export interface BookRow {
   bookId: string;
   slug: string;

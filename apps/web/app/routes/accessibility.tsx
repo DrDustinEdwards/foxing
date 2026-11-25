@@ -1,6 +1,3 @@
-// The accessibility statement every site in the network carries, from Prelum's accessibilityStatement: the WCAG 2.2 AA
-// aim, what is not yet tested and how to report a problem. Foxing is built from Capsomer and its running-text links are
-// semibold as well as colored (base.css `.link`), so the statement says so.
 import {
   ACCESSIBILITY_PATH,
   accessibilityStatement,

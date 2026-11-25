@@ -1,9 +1,4 @@
-// The /api/v1 wire shapes: what each GET returns, as JSON. Core's view functions
-// (packages/core/src/views) are typed against these, the web loaders hand the same
-// objects to the page, and @foxing/client's hooks type their caches with them, so
-// web and mobile read one contract. Timestamps are epoch milliseconds; nothing here
-// is a Date. Dependency-free on purpose: mobile and web both type-check it. The one
-// runtime export is the club socket's keepalive pair (end of file).
+// The /api/v1 wire shapes. Timestamps are epoch milliseconds, never Dates. Dependency-free on purpose: mobile and web both type-check it.
 
 export type ShelfStatus = "want" | "reading" | "finished" | "paused" | "abandoned";
 export type Visibility = "private" | "friends" | "public";
@@ -34,7 +29,6 @@ export interface BookCard {
   readable: boolean;
 }
 
-/** The smallest book reference a list row carries. */
 export interface BookRef {
   id: string;
   slug: string;
@@ -67,15 +61,11 @@ export interface MyProfile {
   createdAt: number;
 }
 
-/** GET /me/onboarding: what the first-run flow offers before the profile exists. */
 export interface OnboardingPage {
-  /** Award-winning catalog books with covers, readable ones first. */
   starters: BookCard[];
   genres: GenreFacet[];
 }
 
-/** A club the reader created, who may take it over, and the default pick: what the
- *  delete-account flow asks before the account goes. */
 export interface ClubHandover {
   clubId: string;
   name: string;
@@ -98,7 +88,6 @@ export interface LibraryEntry {
   slug: string;
   coverUrl: string | null;
   updatedAt: number;
-  /** When it was last finished, for a finished book. */
   finishedAt: number | null;
 }
 
@@ -165,18 +154,13 @@ export interface RecapPage {
     booksFinished: number;
     totalWords: number;
     distinctAuthors: number;
-    /** In stars (0 to 5), over the year's rated finishes. */
     averageRating: number | null;
-    /** The highest-rated finishes, up to five. */
     topBooks: RecapBook[];
-    /** Every finish, oldest first. */
     finished: RecapBook[];
   };
   displayName: string;
   username: string;
-  /** Books finished in each month, January first. */
   monthly: number[];
-  /** The year's most-read subjects, most first. */
   genres: { name: string; value: number }[];
 }
 
@@ -184,9 +168,7 @@ export interface RecapPage {
 export interface ReadingStats {
   year: number;
   finishedThisYear: number;
-  /** Books finished in each month of the year, January first. */
   monthly: number[];
-  /** The most-read subjects among this year's finishes, most first. */
   genres: { name: string; value: number }[];
   booksYearGoalTarget: number | null;
   streak: Streak;
@@ -194,7 +176,6 @@ export interface ReadingStats {
   week: { day: number; minutes: number; pages: number }[];
 }
 
-/** One book's place in the reader's library: status, shelves it is on, progress. */
 export interface MyBookState {
   status: ShelfStatus | null;
   progressPct: number;
@@ -374,7 +355,6 @@ export interface FeedPage {
   nextCursor: string | null;
 }
 
-/** A book on a profile strip (finished, currently reading). */
 export interface ProfileBook {
   bookId: string;
   title: string;
@@ -402,7 +382,6 @@ export interface ListSummary {
   isPublic: boolean;
 }
 
-/** GET /lists: one of the reader's own lists, with a count and up to four covers. */
 export interface MyList {
   id: string;
   title: string;
@@ -477,7 +456,6 @@ export interface ListPage {
   books: { bookId: string; note: string | null; position: number; book: BookCard | null }[];
 }
 
-/** Search-as-you-type: books, authors, public profiles and public clubs. */
 export interface SearchSuggest {
   books: { id: string; slug: string; title: string; author: string; coverUrl: string | null }[];
   authors: { slug: string | null; name: string; bookCount: number }[];
@@ -486,14 +464,11 @@ export interface SearchSuggest {
 }
 
 export interface GenreFacet {
-  /** A genre slug from Foxing's fixed list (core's GENRES). */
   subject: string;
-  /** Its reader-facing name. */
   label: string;
   count: number;
 }
 
-/** GET /books: the browsable catalog, one page at a time. */
 export interface BrowsePage {
   books: BookCard[];
   total: number;
@@ -502,16 +477,13 @@ export interface BrowsePage {
   genres: GenreFacet[];
 }
 
-/** GET /search: full search, books plus matching authors. */
 export interface SearchPage extends BrowsePage {
   q: string;
   fuzzy: boolean;
   authors: { slug: string; name: string; bookCount: number }[];
 }
 
-/** GET /discover: the catalog's front shelf, the same for every reader. */
 export interface DiscoverPage {
-  /** The Book of the Month, or else the latest staff pick. */
   todaysPick: {
     source: "botm" | "staff";
     book: {
@@ -526,7 +498,6 @@ export interface DiscoverPage {
   } | null;
   staffPicks: BookCard[];
   awardWinners: BookCard[];
-  /** Most shelved in the last 30 days. */
   trending: BookCard[];
   newest: BookCard[];
   clubs: ClubCard[];
@@ -540,7 +511,6 @@ export interface AuthorPage {
   name: string;
   bookCount: number;
   yearRange: { first: number; last: number } | null;
-  /** The author biography generated for their catalog books, when there is one. */
   bio: string | null;
   books: BookCard[];
 }
@@ -573,7 +543,6 @@ export interface BookReview {
   logDate: number | null;
 }
 
-/** Where to buy or borrow a copy: Bookshop, then Amazon, then a library. */
 export interface BuyLink {
   retailer: "bookshop" | "amazon" | "library";
   label: string;
@@ -613,7 +582,6 @@ export interface Recommendation {
   reason: string;
 }
 
-/** GET /recommendations: what to read next, personalised by AI for Plus readers. */
 export interface Recommendations {
   recommendations: Recommendation[];
   aiPersonalized: boolean;
@@ -639,7 +607,6 @@ export interface AnnotationAuthor {
   avatarUrl: string | null;
 }
 
-/** One of the viewer's own highlights, notes or bookmarks in a book. */
 export interface ReaderMine {
   id: string;
   type: string;
@@ -681,12 +648,10 @@ export interface PopularHighlight {
   locator: Locator | null;
 }
 
-/** GET /books/:idOrSlug/reader: what opening a book in the reader needs. */
 export interface ReaderPage {
   book: { id: string; slug: string; title: string; author: string; epubUrl: string };
   /** Where the reader left off; null when signed out or never opened. */
   initialLocator: Locator | null;
-  /** The viewer's clubs reading this book, where passage comments can go. */
   shareableClubs: { id: string; name: string }[];
 }
 

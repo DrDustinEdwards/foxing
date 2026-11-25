@@ -11,8 +11,6 @@ import { SectionLabel } from "@/components/ui/section-label";
 import { BackHeader } from "@/components/ui/back-header";
 import { Screen } from "@/components/ui/screen";
 
-// An author's page: the shared GET /authors/:slug view, with a badge on the books
-// already on the reader's shelf.
 export default function AuthorScreen() {
   const colors = useColors();
   const router = useRouter();

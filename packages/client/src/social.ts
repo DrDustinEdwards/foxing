@@ -1,6 +1,4 @@
-// Social hooks: the feed, profiles, people, reading lists, the diary, reactions and
-// search-as-you-type. Follow and close-friend toggles patch every open screen that
-// shows them, so a toggle never reloads the page.
+// Follow and close-friend toggles patch every open screen that shows them, so a toggle never reloads the page.
 import type * as W from "@foxing/types";
 import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useDebounced } from "capsomer/react/form-hooks";
@@ -24,7 +22,6 @@ export function useFeed<S extends W.FeedPage | undefined = undefined>(
   );
 }
 
-/** The whole feed as pages, for an infinite list (mobile); `fetchNextPage` loads older rows. */
 export function useFeedPages() {
   const api = useApi();
   return useInfiniteQuery({
@@ -35,7 +32,6 @@ export function useFeedPages() {
   });
 }
 
-/** The words after the actor's name on a feed row, the same on web and mobile. */
 export function activityText(row: Extract<W.FeedRow, { kind: "activity" }>): string {
   const title = typeof row.data.title === "string" ? row.data.title : "a book";
   switch (row.type) {
@@ -91,7 +87,6 @@ export function useDiary<S extends W.DiaryEntry[] | undefined = undefined>(seed?
   );
 }
 
-/** The reader's own Year in Reading for one year. */
 export function useRecap(year: number) {
   const api = useApi();
   return useQuery({
@@ -285,7 +280,6 @@ export interface DiaryInput {
   logDate?: number;
 }
 
-/** A diary write moves the diary, the reader's profile, the feed and goal progress. */
 const DIARY_TOUCHES = [keys.diary, keys.profiles, keys.feed, keys.goals, keys.streak];
 
 export function useCreateDiaryEntry() {

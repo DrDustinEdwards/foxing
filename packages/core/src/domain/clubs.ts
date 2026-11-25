@@ -1,9 +1,6 @@
-// Club domain logic. This is where authorization, event emission, and the
-// decision of WHAT to fan out over the live layer all live -- in core, never in a
-// client and never in the Durable Object. Each write commits to D1 (via clubsRepo),
-// emits notifications/activity (via emit), and returns any `live` message for the API
-// to relay to the club's ClubRoom AFTER this returns. That ordering is the invariant:
-// D1 first, then notify. The DO never writes D1.
+// Club domain logic: authorization, event emission and the choice of what to fan out live, in core, never in a client or the
+// Durable Object. Each write commits to D1, emits, and returns any `live` message for the API to relay to ClubRoom AFTER it
+// returns: D1 first, then notify.
 import { toDate } from "@dustinedwards/site-runtime/time";
 import { eq } from "drizzle-orm";
 import type { Db } from "../db";
@@ -15,15 +12,12 @@ import { domainErrors } from "./errors";
 import * as membership from "./membership";
 import { computePollResult, firstPreferenceTallies } from "./poll-result";
 
-// Messages the API relays to a club's ClubRoom. Plain data (no DO coupling): the API
-// hands these to the injected hub notifier. Presence is produced by the DO itself.
 export type LiveMessage =
   | { t: "thread"; thread: clubsRepo.ClubThread }
   | { t: "post"; post: clubsRepo.ClubPost }
   | { t: "tally"; poll_id: string; tallies: Record<string, number>; closed?: boolean }
   | { t: "notice"; kind: string; [k: string]: unknown };
 
-/** Load the actor's membership and require it be active. Throws forbidden otherwise. */
 async function requireActive(
   db: Db,
   clubId: string,
@@ -48,8 +42,7 @@ async function requireModerator(
   return m;
 }
 
-// Clubs are free: no tier gate on creation. Everything below is membership/role
-// authorization, which is domain logic (Plus gates the AI companion, never clubs).
+// Clubs are free (Plus gates the AI companion, never clubs); everything below is membership/role authorization.
 
 async function requireClub(db: Db, clubId: string): Promise<clubsRepo.Club> {
   const club = await clubsRepo.getClubById(db, clubId);
@@ -85,8 +78,6 @@ export async function updateClub(
   await requireModerator(db, clubId, actor.userId);
   const { currentBookId, ...rest } = patch;
   if (currentBookId !== undefined && currentBookId !== null) {
-    // Pick an existing book (catalog or community). Search-to-add a new community book
-    // is deferred (see deferred-items.md).
     const [exists] = await db
       .select({ id: books.id })
       .from(books)
@@ -102,7 +93,6 @@ export async function updateClub(
 
 export async function deleteClub(db: Db, actor: EventActor, clubId: string): Promise<void> {
   const club = await requireClub(db, clubId);
-  // Only the creator (owner) may delete the club.
   if (club.creatorId !== actor.userId) {
     throw domainErrors.forbidden("Only the club creator can delete it.");
   }
@@ -116,7 +106,6 @@ export async function rotateInviteCode(db: Db, actor: EventActor, clubId: string
   return clubsRepo.rotateJoinCode(db, clubId);
 }
 
-/** Whether a member's role (the raw text column) may moderate: see ban and mute details. */
 export function canModerateRole(role: string | null | undefined): boolean {
   return membership.canModerate(role as ClubMemberRole);
 }
@@ -375,8 +364,6 @@ export async function createPost(
 
   const post = await clubsRepo.createPost(db, threadId, actor.userId, input);
 
-  // Notify the thread author (thread_reply) and the parent-post author (post_reply),
-  // deduped and never the actor themselves.
   const notify: { userId: string; type: "thread_reply" | "post_reply" }[] = [];
   if (thread.authorId !== actor.userId)
     notify.push({ userId: thread.authorId, type: "thread_reply" });
@@ -400,7 +387,6 @@ export async function removePost(
   if (!post) throw domainErrors.notFound("Post not found.");
   const thread = await clubsRepo.getThreadById(db, post.threadId);
   if (!thread) throw domainErrors.notFound("Thread not found.");
-  // Moderators/owners may remove any post; an author may remove their own.
   if (post.authorId !== actor.userId) {
     await requireModerator(db, thread.clubId, actor.userId);
   } else {
@@ -499,7 +485,6 @@ export async function closePoll(
   );
   await clubsRepo.closePoll(db, pollId);
 
-  // Persist the computed result in the close event's data json, and notify the club.
   const recipientIds = await clubsRepo.listActiveMemberIds(db, poll.clubId, actor.userId);
   await emit(db, "club.poll.closed", actor, {
     recipientIds,

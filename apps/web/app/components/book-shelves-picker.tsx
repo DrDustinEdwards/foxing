@@ -1,7 +1,3 @@
-// "Add to shelves" toggle for a book, shown to signed-in readers on the book page.
-// Membership lives in the book's cached library state; a toggle patches it at once
-// and rolls back if the write fails. No shelves yet -> a link to the library, where
-// shelves are created.
 import { useToggleShelfBook } from "@foxing/client";
 import type { Shelf } from "@foxing/types";
 import { Link } from "capsomer/react/link";

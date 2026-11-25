@@ -9,8 +9,6 @@ import { Fonts } from "@/constants/fonts";
 import { BackHeader } from "@/components/ui/back-header";
 import { PersonRow } from "@/components/profile/person-row";
 
-// Find readers by name, from the same search-as-you-type as the web header (public
-// profiles only). Follow them from their profile.
 export default function DiscoverReadersScreen() {
   const colors = useColors();
   const router = useRouter();

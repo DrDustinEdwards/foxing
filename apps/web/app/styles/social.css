@@ -253,7 +253,6 @@
   display: flex;
   gap: var(--space-4);
 }
-/* The color dot sits level with the quote's first line. */
 .fx-highlights-dot {
   margin-block-start: var(--space-3);
 }
@@ -325,7 +324,6 @@
 .fx-lists-caps {
   color: var(--dim);
 }
-/* Two lines, then an ellipsis: the list and club descriptions on their cards. */
 .fx-lists-text,
 .fx-clubs-text {
   display: -webkit-box;
@@ -617,7 +615,6 @@
   color: var(--dim);
 }
 
-/* A notification's read state: a quiet dot, the accent while unread. */
 .fx-dot {
   flex-shrink: 0;
   margin-block-start: var(--space-2-5);

@@ -1,6 +1,3 @@
-// Validators for the club write paths. Enums come from the single source
-// in enums.ts. Every club write route parses its body through one of these at the
-// boundary; core domain functions trust the parsed shape.
 import { z } from "zod";
 import { webUrl } from "./web-url";
 import {
@@ -38,13 +35,11 @@ export const updateClubInput = z
     chaptersPerWeek: z.number().int().positive().max(100).nullable().optional(),
     genreTags: z.array(z.string().max(60)).max(20).nullable().optional(),
     // A club's current read may be any book already in D1 (catalog or community).
-    // Search-to-add a brand-new community book is deferred (see deferred-items.md).
     currentBookId: z.string().min(1).nullable().optional(),
   })
   .refine((v) => Object.keys(v).length > 0, { message: "no fields to update" });
 export type UpdateClubInput = z.infer<typeof updateClubInput>;
 
-// Role change target (approve and unban take no body beyond the path userId).
 export const setRoleInput = z.object({
   role: clubMemberRole,
 });
@@ -60,7 +55,6 @@ export const muteMemberInput = z.object({
 });
 export type MuteMemberInput = z.infer<typeof muteMemberInput>;
 
-// The body is optional: a ban with no reason sends none.
 export const banMemberInput = z.object({
   reason: z.string().trim().max(500).optional(),
 });
@@ -73,7 +67,6 @@ export const createThreadInput = z.object({
   chapter: z.string().max(120).optional(),
   hasSpoilers: z.boolean().optional(),
   expiresAt: z.number().int().optional(), // epoch ms, announcements
-  // First post body (optional): starting a discussion usually opens with a message.
   body: z.string().min(1).max(20000).optional(),
 });
 export type CreateThreadInput = z.infer<typeof createThreadInput>;

@@ -1,7 +1,4 @@
-// Single source of truth for every text-enum column in the schema.
-// Schema columns store plain text; these zod enums validate at the core boundary.
-// Each `*Values` tuple feeds both a zod enum and (where useful) Drizzle column typing.
-// Spec: foxing/spec-cf-schema.md rev 3, foxing/spec-cf-api.md.
+// Single source of truth for every text-enum column; each `*Values` tuple feeds a zod enum and Drizzle column typing.
 import { z } from "zod";
 
 const tuple = <T extends readonly [string, ...string[]]>(v: T) => v;
@@ -10,7 +7,6 @@ export const sourceTypeValues = tuple(["catalog", "community"] as const);
 export const sourceType = z.enum(sourceTypeValues);
 export type SourceType = z.infer<typeof sourceType>;
 
-// pacing / reading feel on books (nullable in schema). Inferred set.
 export const pacingValues = tuple(["slow", "medium", "fast"] as const);
 export const pacing = z.enum(pacingValues);
 
@@ -28,11 +24,9 @@ export const userBookStatusValues = tuple([
 export const userBookStatus = z.enum(userBookStatusValues);
 export type UserBookStatus = z.infer<typeof userBookStatus>;
 
-// diary_entries.visibility
 export const diaryVisibilityValues = tuple(["private", "friends", "public"] as const);
 export const diaryVisibility = z.enum(diaryVisibilityValues);
 
-// reading_goals.type / period_type. Inferred (spec leaves shape open).
 export const goalTypeValues = tuple(["books", "pages", "minutes"] as const);
 export const goalType = z.enum(goalTypeValues);
 export const goalPeriodValues = tuple(["year", "month", "week"] as const);
@@ -48,14 +42,11 @@ export const annotationTypeValues = tuple([
 export const annotationType = z.enum(annotationTypeValues);
 export type AnnotationType = z.infer<typeof annotationType>;
 
-// annotation.visibility. Extension point for the future Edu class layer.
 export const annotationVisibilityValues = tuple(["private", "friends", "club", "public"] as const);
 export const annotationVisibility = z.enum(annotationVisibilityValues);
 export type AnnotationVisibility = z.infer<typeof annotationVisibility>;
 
-// The 7 semantic highlight colors (highlight type only). Canonical names from
-// design-system.md ("Annotation Highlight Colors": --hl-* tokens); identical to
-// the mobile palette keys so annotations.color round-trips web <-> mobile.
+// The 7 semantic highlight colors; keys match the mobile palette so annotations.color round-trips web <-> mobile.
 export const highlightColorValues = tuple([
   "amber",
   "auburn",
@@ -68,7 +59,6 @@ export const highlightColorValues = tuple([
 export const highlightColor = z.enum(highlightColorValues);
 export type HighlightColor = z.infer<typeof highlightColor>;
 
-// reactions.target_type
 export const reactionTargetValues = tuple([
   "annotation",
   "club_post",
@@ -79,7 +69,6 @@ export const reactionTargetValues = tuple([
 ] as const);
 export const reactionTarget = z.enum(reactionTargetValues);
 
-// saves.target_type (generalized). Inferred superset.
 export const saveTargetValues = tuple([
   "annotation",
   "club_post",
@@ -117,7 +106,6 @@ export const clubThreadType = z.enum(clubThreadTypeValues);
 export const pollTypeValues = tuple(["single", "irv"] as const);
 export const pollType = z.enum(pollTypeValues);
 
-// club_meetings.meeting_type + rsvp status. Inferred.
 export const meetingTypeValues = tuple(["virtual", "in_person", "hybrid"] as const);
 export const meetingType = z.enum(meetingTypeValues);
 export const rsvpStatusValues = tuple(["going", "maybe", "not_going"] as const);
@@ -137,16 +125,13 @@ export const reportTarget = z.enum(reportTargetValues);
 export const reportStatusValues = tuple(["open", "reviewing", "resolved", "dismissed"] as const);
 export const reportStatus = z.enum(reportStatusValues);
 
-// push_tokens.platform
 export const pushPlatformValues = tuple(["ios", "android"] as const);
 export const pushPlatform = z.enum(pushPlatformValues);
 
-// companion_messages.role
 export const companionRoleValues = tuple(["user", "assistant"] as const);
 export const companionRole = z.enum(companionRoleValues);
 
-// activity_events.type. Emitted only by the core event emitter on write paths.
-// Extensible: add a value here when a new emit() call needs it.
+// Emitted only by the core event emitter; add a value when a new emit() call needs it.
 export const activityTypeValues = tuple([
   "started_book",
   "finished_book",
@@ -161,7 +146,6 @@ export const activityTypeValues = tuple([
 export const activityType = z.enum(activityTypeValues);
 export type ActivityType = z.infer<typeof activityType>;
 
-// notifications.type
 export const notificationTypeValues = tuple([
   "new_follower",
   "club_request",

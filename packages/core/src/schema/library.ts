@@ -1,6 +1,4 @@
-// Library and tracking. profiles.id == better-auth user id.
-// Ratings/reviews live ONLY in diary_entries (Letterboxd model); user_books is
-// shelf state only. FKs cascade from the user root for GDPR deletion.
+// profiles.id == better-auth user id. Ratings/reviews live ONLY in diary_entries; user_books is shelf state only. FKs cascade from the user root for GDPR deletion.
 import {
   integer,
   primaryKey,
@@ -14,17 +12,14 @@ import { bool, cascadeFk, createdAt, idPk, json, ts, updatedAt } from "./_helper
 import { user } from "./auth";
 import { books } from "./catalog";
 
-/** Readium Locator JSON, canonical everywhere. Shape validated in core, not here. */
 type Locator = Record<string, unknown>;
 
-/** profiles.visibility json: profile/progress/default-annotation visibilities. */
 type VisibilityPrefs = {
   profile?: string;
   progress?: string;
   defaultAnnotation?: string;
 };
 
-/** notification_prefs json (api delta): per-category booleans + quiet hours. */
 type NotificationPrefs = {
   categories?: Record<string, boolean>;
   quietHours?: { start: string; end: string };

@@ -43,13 +43,9 @@ import {
 } from "@/components/settings/account-sheets";
 
 const APP_VERSION = "1.0.0";
-// Device-only settings. The account's own (visibility, push switches, quiet hours) live
-// on the server through /me, the same ones the web settings page edits.
 const LOCAL_REMINDERS_KEY = "notification_prefs";
 const READING_DEFAULTS_KEY = "reading_defaults";
 
-/** What lib/local-notifications schedules on the device. streakAtRisk follows the
- *  account's "streak" push switch, so one toggle governs streak nudges everywhere. */
 interface LocalReminders {
   master: boolean;
   dailyReminder: boolean;
@@ -64,7 +60,6 @@ const DEFAULT_LOCAL_REMINDERS: LocalReminders = {
   streakAtRisk: true,
 };
 
-// Only keepAwake is read (by the reader screen).
 interface ReadingDefaults {
   keepAwake: boolean;
 }
@@ -105,7 +100,6 @@ export default function SettingsScreen() {
   const [exporting, setExporting] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
 
-  // ── Load device settings ─────────────────────────────────────────────────
   useEffect(() => {
     let mounted = true;
     void (async () => {
@@ -137,7 +131,6 @@ export default function SettingsScreen() {
     };
   }, []);
 
-  // ── Persistence helpers ──────────────────────────────────────────────────
   const updateReadingDefaults = useCallback(async (next: ReadingDefaults) => {
     setReadingDefaults(next);
     await AsyncStorage.setItem(READING_DEFAULTS_KEY, JSON.stringify(next));
@@ -146,7 +139,6 @@ export default function SettingsScreen() {
   const updateReminders = useCallback(async (next: LocalReminders) => {
     setReminders(next);
     await AsyncStorage.setItem(LOCAL_REMINDERS_KEY, JSON.stringify(next));
-    // Re-program the device's scheduled reminders to match.
     rescheduleAll().catch(() => {});
   }, []);
 
@@ -155,7 +147,6 @@ export default function SettingsScreen() {
     await setUserPrefs(next);
   }, []);
 
-  // ── Account settings (saved on toggle; the cached profile patches at once) ─
   const visibility = profile?.visibility ?? {};
   const saveVisibility = (patch: Partial<Required<W.MyProfile["visibility"]>>) =>
     setVisibility.fire({
@@ -180,7 +171,6 @@ export default function SettingsScreen() {
     if (cat === "streak") void updateReminders({ ...reminders, streakAtRisk: on });
   };
 
-  // ── Data ─────────────────────────────────────────────────────────────────
   const runImport = async (source: ImportSource) => {
     if (importing) return;
     setDataError(null);
@@ -204,7 +194,6 @@ export default function SettingsScreen() {
     }
   };
 
-  // GET /account/export: the same JSON archive the web page downloads, handed to the share sheet.
   const exportData = async () => {
     if (exporting) return;
     setExporting(true);

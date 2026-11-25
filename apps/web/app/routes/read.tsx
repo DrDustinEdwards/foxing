@@ -1,8 +1,4 @@
-// The reader route. Server loader resolves the readable book, the same-origin
-// RWPM manifest URL, and (for signed-in readers) existing annotations + saved
-// position. The reader itself mounts client-only (ts-toolkit touches the DOM),
-// so the route renders a shell and the ReaderView lazy-loads the engine. Anonymous
-// readers can read fully; annotating/bookmarking/progress prompt sign-in.
+// The reader route: the loader resolves the readable book, the manifest URL and, for signed-in readers, annotations and saved position; the reader mounts client-only.
 import { loadReaderAnnotations, views } from "@foxing/core";
 import { sessionUserFromRequest } from "~/lib/auth.server";
 import { loaderBase } from "~/lib/loader.server";
@@ -17,24 +13,16 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db, env, origin } = loaderBase(context, request);
   const user = await sessionUserFromRequest(request, env);
   const userId = user?.id ?? null;
-  // The same view GET /books/:slug/reader returns to mobile: the readable book, the
-  // saved position and the clubs a passage comment can go to.
   const page = await views.readerPage(db, userId, params.slug);
   if (!page || page.book.slug !== params.slug) throw new Response("Not found", { status: 404 });
 
-  // One in-process resolution: the viewer's own annotations (MINE), the entitled
-  // club/friend/public annotations of OTHERS, the club passage discussion, and the
-  // popular-highlights layer. Same core function the mobile API calls, so web and mobile
-  // resolve identically. Anonymous readers get public + popular only.
+  // One in-process resolution, the same core function the mobile API calls; anonymous readers get public + popular only.
   const resolved = await loadReaderAnnotations(db, userId, page.book.id);
   const { epubUrl: _epubUrl, ...book } = page.book;
 
   return {
     book,
-    // Absolute (not root-relative) so the navigator's baseURL -> the <base href> it
-    // injects into each blob-URL content frame is absolute. Relative resource URLs
-    // (images, the epub's own CSS) do not resolve against an opaque blob: base, so a
-    // root-relative manifest URL leaves internal images broken.
+    // Absolute, so the <base href> Readium injects into each blob: frame is absolute: relative URLs do not resolve against an opaque blob: base.
     manifestUrl: `${origin}/reader-assets/${book.slug}/manifest.json`,
     signedIn: !!userId,
     loginHref: signInHref(`/read/${book.slug}`),
@@ -44,11 +32,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   };
 }
 
-// The reader is its own document: its Content-Security-Policy differs from the rest of the site's
-// (workers/security-headers.ts, readerContentSecurityPolicy) and a policy is fixed when a document
-// loads. So a client-side navigation here from another page becomes a full page load, whatever
-// link led here. Not run on the first load (no hydrate flag), which already has the reader's
-// policy; a revalidation on the reader itself goes to the server loader as usual.
+// The reader is its own document with its own CSP, fixed at load, so a client-side navigation here becomes a full page load.
 export async function clientLoader({ request, serverLoader }: Route.ClientLoaderArgs) {
   if (window.location.pathname !== new URL(request.url).pathname) {
     window.location.assign(request.url);
@@ -59,7 +43,6 @@ export async function clientLoader({ request, serverLoader }: Route.ClientLoader
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const title = loaderData ? `Reading ${loaderData.book.title}` : "Reader";
-  // Reader is a private surface; keep it out of search indexes.
   return noindexMeta(`${title} | Foxing`);
 }
 
@@ -67,5 +50,4 @@ export default function Read({ loaderData }: Route.ComponentProps) {
   return <ReaderView {...loaderData} />;
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

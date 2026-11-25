@@ -19,7 +19,6 @@ export type RoleChange = {
   to: RoleValue;
 };
 
-/** How long a preview stays performable. */
 const CONFIRM_TTL_SECONDS = 120;
 
 /** The shape mintConfirm signs (./signed-token): base64url payload, a dot, base64url signature. */

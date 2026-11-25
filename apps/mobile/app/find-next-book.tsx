@@ -7,8 +7,6 @@ import { ArrowClockwise } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
-// What to read next: GET /recommendations, the same picks and reasons as the web
-// page (personalised by AI for Plus readers). Refresh asks for a fresh set.
 export default function FindNextBookScreen() {
   const colors = useColors();
   const router = useRouter();

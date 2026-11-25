@@ -1,6 +1,3 @@
-// Admin: Clubs. Search user reading clubs, toggle the verified badge, and delete a club
-// (destructive, two-step confirm). Reads in-process; writes to /api/v1/admin/clubs with a
-// visible error on failure.
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { useRevalidator } from "react-router";
@@ -31,7 +28,6 @@ export function meta() {
   return noindexMeta("Admin · Clubs | Foxing");
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
 
 export default function AdminClubs({ loaderData }: Route.ComponentProps) {

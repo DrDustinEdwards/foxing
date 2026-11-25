@@ -1,7 +1,5 @@
-// External book clubs (celebrity / retailer picks): /picks + /picks/:clubSlug.
-// Picks mostly reference modern in-copyright titles (community books), so the book
-// join is NOT catalog-scoped here; the linked /books/:slug page resolves community
-// books too (noindex). This is the primary affiliate surface.
+// External book clubs (celebrity / retailer picks). Picks mostly reference in-copyright titles (community books), so the book join is NOT
+// catalog-scoped; /books/:slug resolves community books too (noindex).
 import { sql } from "drizzle-orm";
 import type { Db } from "../../db";
 import { cachedRead } from "../../kv-cache";
@@ -43,7 +41,6 @@ export function listExternalClubs(db: Db): Promise<ClubSummary[]> {
   return cachedRead(db, "catalog:external-clubs:v1", 300, () => readExternalClubs(db));
 }
 
-/** Each active club with the newest change to it or to one of its published picks, for the sitemap. */
 export async function listSitemapClubs(db: Db): Promise<Array<{ slug: string; updatedAt: Date }>> {
   const rows = await db.all<{ slug: string; updated_at: number }>(sql`
     SELECT c.slug AS slug, MAX(c.created_at, COALESCE(MAX(p.updated_at), 0)) AS updated_at

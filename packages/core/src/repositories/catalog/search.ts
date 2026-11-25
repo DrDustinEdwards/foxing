@@ -1,12 +1,6 @@
-// Catalog search over the trigram books_fts index (catalog surface only).
-//
-// The FTS index uses SQLite's trigram tokenizer, which gives substring matching but
-// NOT substitution-typo tolerance ('ostoevsk' matches 'Dostoyevsky'; 'Dostoevski'
-// does not, because it needs every query trigram present contiguously). The
-// crown-jewel promise "a misspelled author still returns the right book" is met here,
-// at the app layer (deferred-items.md): on zero strict matches we re-query with the
-// term's trigrams OR'd and rank by bm25, so a wrong letter still overlaps enough
-// trigrams to surface the intended book.
+// Catalog search over the trigram books_fts index (catalog only). Trigrams give substring matching but not substitution-typo
+// tolerance, so on zero strict matches we re-query with the term's trigrams OR'd and rank by bm25: a misspelled author still
+// returns the right book.
 import { ftsLiteral } from "@drdustinedwards/site-helpers/search";
 import { sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
@@ -25,21 +19,18 @@ export type SearchResult = {
   pageCount: number;
 };
 
-/** Catalog-column filters layered on top of the FTS match (genre/era/length). */
 export type SearchFilters = {
   subject?: string | null;
   era?: string | null;
   length?: string | null;
 };
 
-/** One author credited across the catalog, matched by name substring. */
 export type AuthorHit = {
   author: string;
   authorSlug: string;
   bookCount: number;
 };
 
-/** SQL fragments narrowing the joined `books b` rows by the active filters. */
 function filterConditions(filters: SearchFilters): SQL[] {
   const conds: SQL[] = [];
   if (filters.subject) {
@@ -74,7 +65,6 @@ export function strictExpr(q: string): string | null {
   return usable.map(ftsLiteral).join(" AND ");
 }
 
-/** Overlapping trigrams of every usable token, OR'd. Powers the typo fallback. */
 export function fuzzyExpr(q: string): string | null {
   const grams = new Set<string>();
   for (const t of tokens(q)) {
@@ -94,7 +84,6 @@ async function runMatch(
   const offset = (page - 1) * pageSize;
   const conds = filterConditions(filters);
 
-  // No filters: keep the fast FTS-only query (no join, no per-row column scan).
   if (conds.length === 0) {
     const rows = await db.all<{ book_id: string }>(sql`
       SELECT book_id FROM books_fts
@@ -149,7 +138,6 @@ export async function searchCatalog(
     total = res.total;
   }
 
-  // No strict hits (typo, variant spelling): fall back to OR'd trigrams, bm25-ranked.
   if (total === 0) {
     const expr = fuzzyExpr(q);
     if (expr) {
@@ -171,11 +159,7 @@ export async function searchCatalog(
   };
 }
 
-/**
- * Authors whose name contains the query, ranked by how many catalog books they have.
- * Authors are derived from the books table (no authors table), so this is a plain
- * substring match; the trigram fuzzy fallback lives on the books result set only.
- */
+/** Authors whose name contains the query, by catalog book count. Derived from books (no authors table), so a plain substring match. */
 export async function searchAuthors(db: Db, rawQuery: string, limit = 8): Promise<AuthorHit[]> {
   const q = sanitize(rawQuery);
   if (!q) return [];
@@ -197,7 +181,6 @@ export async function searchAuthors(db: Db, rawQuery: string, limit = 8): Promis
   }));
 }
 
-/** Fast, small type-ahead suggestions (strict substring only, first page). */
 export async function suggest(db: Db, rawQuery: string, limit = 8): Promise<BookCard[]> {
   const q = sanitize(rawQuery);
   const strict = strictExpr(q);

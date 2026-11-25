@@ -4,8 +4,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Pressable, Modal as RNModal, TextInput as RNTextInput, Text, View } from "react-native";
 import { Fonts } from "@/constants/fonts";
 
-// Lightweight transient toast, single instance, auto-dismisses. Kept local
-// to the reader because no other screen needs it yet.
 export function ReaderToast({ message, onHide }: { message: string | null; onHide: () => void }) {
   const colors = useColors();
   const onHideRef = useRef(onHide);
@@ -43,8 +41,6 @@ export function ReaderToast({ message, onHide }: { message: string | null; onHid
   );
 }
 
-// Inline modal for naming a fresh bookmark. Defaults to "[Chapter] · X%"
-// so a confused user can just hit Save without typing anything.
 export function BookmarkNamingModal({
   suggested,
   onCancel,

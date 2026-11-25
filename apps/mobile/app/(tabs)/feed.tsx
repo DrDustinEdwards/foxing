@@ -14,9 +14,6 @@ import {
   PopularSection,
 } from "@/components/feed/feed-sections";
 
-// The activity feed: GET /feed page by page (the same rows the web feed shows), with
-// the catalog's trending books on top so a reader who follows no one still has
-// something to open.
 export default function FeedScreen() {
   const colors = useColors();
   const router = useRouter();

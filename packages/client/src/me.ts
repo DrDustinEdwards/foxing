@@ -1,5 +1,4 @@
-// Account hooks: the reader's own profile and settings, onboarding, billing and
-// account deletion. Every write refetches "me" and the reader's public profile.
+// Every write refetches "me" and the reader's public profile.
 import type * as W from "@foxing/types";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounced } from "capsomer/react/form-hooks";
@@ -57,7 +56,6 @@ export function useOnboard() {
   });
 }
 
-/** Debounced availability of a username the reader is typing; null until it settles. */
 export function useUsernameAvailable(name: string, enabled: boolean, delayMs = 400) {
   const api = useApi();
   const term = useDebounced(name, delayMs);
@@ -89,7 +87,6 @@ export function useSetVisibility() {
   });
 }
 
-/** The push switches every settings screen shows, keyed by the server's categories. */
 export const NOTIFICATION_LABELS: Record<string, { label: string }> = {
   streak: { label: "Reading streak reminders" },
   club_replies: { label: "Club replies" },
@@ -119,7 +116,6 @@ export function useSetNotificationPrefs() {
   });
 }
 
-/** Both answer with a Stripe URL to send the reader to. */
 export function useCheckout() {
   const api = useApi();
   return useWrite<{ plan: "monthly" | "annual" }, { url: string }>({

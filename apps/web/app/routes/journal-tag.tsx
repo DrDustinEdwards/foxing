@@ -30,7 +30,6 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
     description: `Essays and close readings from the Foxing Journal tagged ${label.toLowerCase()}, on what the great books mean and why they endure.`,
     pathname: location.pathname,
     pageType: "CollectionPage",
-    // The visible trail above the heading, from the home page down.
     breadcrumbs: data
       ? [
           { name: SITE_NAME, path: "/" },

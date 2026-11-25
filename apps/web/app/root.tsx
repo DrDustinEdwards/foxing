@@ -19,10 +19,8 @@ import {
   useRouteLoaderData,
 } from "react-router";
 import type { Route } from "./+types/root";
-// Foxing's faces from its own origin (Fontsource, the files Google Fonts serves, bundled under /assets/): no
-// stylesheet from fonts.googleapis.com blocking the first paint, and no second origin to connect to. The variable
-// files carry Fraunces' and Source Serif's optical sizes, as the Google request asked for. vite.config.ts serves their
-// rules with font-display: optional, so text never moves once drawn (D5).
+// Foxing's faces from its own origin (Fontsource, bundled under /assets/): no blocking Google Fonts stylesheet, no second
+// origin. vite.config.ts serves them with font-display: optional so text never moves once drawn.
 import "@fontsource-variable/fraunces/opsz.css";
 import "@fontsource-variable/source-serif-4/opsz.css";
 import "@fontsource-variable/dm-sans/wght.css";
@@ -35,16 +33,13 @@ import { useNonce } from "@dustinedwards/site-runtime/nonce";
 import { SITE_NAME } from "./lib/seo";
 import { markup } from "capsomer/behavior/trusted-html";
 
-// Resolve the signed-in nav identity plus the public mega-menu data once per request;
-// the shell reads both via useRouteLoaderData("root"). navUser is null for anonymous
-// requests, keeping the server-rendered HTML signed-out (and edge-cacheable).
+// navUser is null for anonymous requests, keeping the server-rendered HTML signed-out (and edge-cacheable).
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const [navUser, navMenu] = await Promise.all([getNavUser(env, request), getNavMenu(env)]);
   return { navUser, navMenu };
 }
 
-// The error path's title for an error the root shows; every page sets its own, and a missing page's is in routes/not-found.tsx.
 export function meta({ error }: Route.MetaArgs) {
   return error ? [{ title: errorTitle(error, SITE_NAME) }] : [];
 }
@@ -54,21 +49,15 @@ export const links: Route.LinksFunction = () => [
   ...iconLinks(),
 ];
 
-// Set data-theme before paint so there is no theme flash. Stored preference wins (Capsomer's themeScript, under
-// Foxing's key; Capsomer's theme button in page-shell.tsx remembers its choice there, as the plain word); otherwise
-// follow the OS. Attribute-driven per design-system.md.
+// Set data-theme before paint so there is no theme flash: the stored preference wins, otherwise the OS.
 const FOLLOW_OS = `try{document.documentElement.setAttribute("data-theme",matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");}catch(e){}`;
 const NO_FLASH = `${FOLLOW_OS}${themeScript(THEME_PREF_KEY)}`;
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  // The CSP nonce (workers/security-headers.ts) for every script this document renders.
   const nonce = useNonce();
-  // HYDRATION IS OPT-IN BY ROUTE (`handle = { hydrate: true }`), as on dustinedwards.info. The public pages (home, the
-  // catalog, authors, awards, picks, the Journal, profiles, lists and the guides) send no React: their header, theme
-  // button, search palette and search field run from /site.js (app/site.ts) and its islands (app/islands/). The
-  // signed-in app, the reader, the admin, sign-in and sign-up, and search with its filters opt in. A signed-in reader
-  // hydrates on every page: their header carries the account panel, Sign out and the Your Foxing bar, which are
-  // React's, and their pages are private and never edge-cached.
+  // HYDRATION IS OPT-IN BY ROUTE (`handle = { hydrate: true }`): public pages send no React (header, theme button and search
+  // run from /site.js and app/islands/); the signed-in app, reader, admin, sign-in and search opt in, and a signed-in reader
+  // hydrates every page (the account panel is React's; their pages are never edge-cached).
   const signedIn = Boolean(useRouteLoaderData<typeof loader>("root")?.navUser);
   const matches = useMatches();
   const hydrates =
@@ -108,12 +97,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Same-origin /api/v1 with the session cookie. One QueryClient per document, so the
-// server never shares a cache between requests.
+// One QueryClient per document, so the server never shares a cache between requests.
 const api = createApiClient();
 
-// Capsomer's Link prefetches on hover, which runs the target's loader. This loader writes on a GET
-// (KV, and an AI call for a Plus reader), so it is never prefetched, beyond the family's own list.
+// Capsomer's Link prefetches on hover, running the target's loader; this loader writes on a GET (KV, an AI call), so it is never prefetched.
 const GET_WRITERS = ["/find-next-book"];
 
 export default function App() {
@@ -127,7 +114,6 @@ export default function App() {
   );
 }
 
-// Capsomer's error page. No site header: Foxing's reads the root loader's data, which the error path lacks.
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   return <ErrorPage error={error} home="/" dev={import.meta.env.DEV} />;
 }

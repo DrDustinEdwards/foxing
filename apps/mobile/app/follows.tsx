@@ -12,7 +12,6 @@ import { PersonRow } from "@/components/profile/person-row";
 
 type Tab = "followers" | "following";
 
-// The reader's own connections, from GET /people (the web People page's data).
 export default function FollowsScreen() {
   const colors = useColors();
   const router = useRouter();

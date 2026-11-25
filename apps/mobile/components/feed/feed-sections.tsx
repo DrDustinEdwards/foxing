@@ -182,9 +182,6 @@ export function FeedHeader({ unread, onBell }: { unread: number; onBell: () => v
   );
 }
 
-// "Popular on Foxing this month" + optional Find Readers card. Always rendered
-// as the FlatList header so the feed has content even when the user follows
-// no one.
 export function PopularSection({
   showFindReaders,
   onFindReaders,

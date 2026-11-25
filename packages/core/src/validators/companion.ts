@@ -1,5 +1,4 @@
-// Validator for POST /api/v1/companion. The `action` enum is the 15 D11 on-demand
-// actions ONLY -- the 4 free-cached generators are never accepted here (Queue-only).
+// `action` accepts the 15 on-demand actions ONLY: the 4 free-cached generators are Queue-only.
 import { z } from "zod";
 import { PLUS_ACTION_NAMES } from "../companion/registry";
 
@@ -9,10 +8,7 @@ export const companionSelection = z.object({
   chapter: z.string().max(200).nullish(),
 });
 
-/**
- * The languages Translate offers (the mobile reader's LANGUAGES list). The name goes into the system prompt, so it is
- * one of these, never free text a reader could write instructions in.
- */
+/** The languages Translate offers. The name goes into the system prompt, so it is one of these, never free text a reader could write instructions in. */
 export const TRANSLATE_LANGUAGES = [
   "English",
   "Spanish",
@@ -29,7 +25,6 @@ export const companionInput = z.object({
   threadId: z.string().min(1).optional(),
   message: z.string().max(4000).optional(),
   selection: companionSelection.optional(),
-  /** Where the reader is, for chapter-scoped actions sent without a selection. */
   chapter: z.string().max(200).optional(),
   targetLanguage: z.enum(TRANSLATE_LANGUAGES).optional(),
 });

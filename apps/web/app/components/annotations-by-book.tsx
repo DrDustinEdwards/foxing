@@ -1,5 +1,3 @@
-// Shared by the commonplace and highlights pages: the search and book filter row, and the
-// filtered annotations grouped under their book.
 import type { ReactNode } from "react";
 import { NativeSelect } from "capsomer/react/select-native";
 import { Link } from "capsomer/react/link";
@@ -19,7 +17,6 @@ function bookLabelOf(e: BookFields): string {
   return e.bookTitle ?? e.sourceTitle ?? "Unknown book";
 }
 
-// Distinct books present, in first-seen order, for the book filter.
 export function bookOptions(entries: BookFields[]): Array<{ key: string; label: string }> {
   const books: Array<{ key: string; label: string }> = [];
   const seenBooks = new Set<string>();
@@ -100,7 +97,6 @@ export function BookGroups<T extends BookFields>({
   empty: string;
   renderItem: (item: T) => ReactNode;
 }) {
-  // Group the filtered entries under their book.
   const groups: Array<{
     key: string;
     label: string;

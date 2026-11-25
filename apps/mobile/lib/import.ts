@@ -1,6 +1,3 @@
-// Goodreads and StoryGraph CSV imports, and the catalog matcher the barcode scanner shares. Each row is matched against the Foxing catalog
-// through /search and lands as an offline user_book write (status, finish date, the
-// reader's review as private notes), so a long import survives a dropped connection.
 import { parseCsv } from "@dustinedwards/site-runtime/csv";
 import type * as W from "@foxing/types";
 import { api, syncNow } from "@/lib/api";
@@ -21,7 +18,6 @@ interface ImportRow {
   notes: string;
 }
 
-// "Last, First & Other" to "First Last": the catalog stores one display author.
 function normalizeAuthor(raw: string): string {
   const first = raw.split(/\s*[&;]\s*/)[0]?.trim() ?? "";
   const [last, rest] = first.split(",").map((s) => s.trim());
@@ -42,7 +38,6 @@ function toTime(date: string): number | null {
   return Number.isFinite(t) ? t : null;
 }
 
-/** The two exports name their columns differently; this reads either. */
 function readRows(text: string, source: ImportSource): ImportRow[] {
   const [header, ...rows] = parseCsv(text);
   if (!header) return [];
@@ -76,7 +71,6 @@ const norm = (s: string) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
-/** The catalog book with this title (series suffixes aside) and a shared author surname. */
 export async function findCatalogBook(
   rawTitle: string,
   author: string | null,
@@ -123,7 +117,6 @@ export async function importCsv(
     }
     onProgress?.(i + 1, rows.length);
   }
-  // One push for the whole import rather than one per book.
   void syncNow();
   return { imported, skipped: rows.length - imported };
 }

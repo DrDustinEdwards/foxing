@@ -1,6 +1,3 @@
-// The signed-in reader's commonplace book (auth-gated, noindex): notes and saved
-// passages from the reader. Reads run in-process via core; requireProfile gates access.
-// Read-only.
 import { createDb, views } from "@foxing/core";
 import { useState } from "react";
 import {
@@ -85,5 +82,4 @@ export default function Commonplace({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

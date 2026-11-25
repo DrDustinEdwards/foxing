@@ -1,8 +1,3 @@
-// The reader's offline-first writes. Highlights, notes, bookmarks, words, shelf moves,
-// reading position and sessions all go through the sync queue (lib/sync-queue.ts), so
-// reading on a plane loses nothing. Annotation writes also patch the book's cached
-// layers straight away, the same cache the web reader's hooks patch, so the page and
-// every sheet show the change before the queue flushes.
 import { keys, useBookAnnotations } from "@foxing/client";
 import type * as W from "@foxing/types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -31,7 +26,6 @@ export function useReaderWrites(bookId: string | null) {
       );
     };
     return {
-      /** Saves a highlight, note or bookmark; returns its id. */
       addAnnotation(a: NewMine): string | null {
         if (!bookId) return null;
         const id = clientId();
@@ -54,7 +48,6 @@ export function useReaderWrites(bookId: string | null) {
         patchMine((mine) => mine.filter((m) => m.id !== id));
         void queueWrite({ id, resource: "annotation", verb: "delete" });
       },
-      /** Shelf state and position; the server keys these by book. */
       saveBook(fields: {
         status?: W.ShelfStatus;
         progress?: W.Locator | null;
@@ -65,7 +58,6 @@ export function useReaderWrites(bookId: string | null) {
         if (!bookId) return;
         void queueWrite({ resource: "user_book", verb: "update", payload: { bookId, ...fields } });
       },
-      /** One stretch of reading; sessions are append-only, so each stretch is its own row. */
       logSession(s: {
         startedAt: number;
         endedAt: number;
@@ -94,12 +86,10 @@ export function useReaderWrites(bookId: string | null) {
 
 export interface BookmarkRow {
   id: string;
-  /** The encoded locator, the reader's position currency. */
   cfi: string;
   name: string | null;
 }
 
-/** The reader's bookmarks in a book: bookmark annotations from the cached layers. */
 export function useBookmarks(bookId: string | null): {
   bookmarks: BookmarkRow[];
   loading: boolean;

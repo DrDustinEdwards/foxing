@@ -1,6 +1,3 @@
-// Edit a diary entry at /diary/:id/edit. Owner-gated in the loader (a non-owner or
-// missing entry 404s). The form PATCHes /api/v1/diary/:id. Editing does not re-emit a
-// feed event (create-only rule), but the rating aggregate recomputes in core.
 import { catalogRepo, createDb, diaryRepo } from "@foxing/core";
 import { PageShell } from "~/components/page-shell";
 import { DiaryForm } from "~/components/social/diary-form";
@@ -59,7 +56,6 @@ export default function DiaryEdit({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
 
 export { ErrorBoundary } from "~/components/route-error";

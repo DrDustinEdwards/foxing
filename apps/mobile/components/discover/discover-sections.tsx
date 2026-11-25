@@ -6,7 +6,6 @@ import { BookOpen, CaretDown, CaretUp } from "phosphor-react-native";
 import { useState } from "react";
 import { SectionBlock, SectionLabel } from "@/components/ui/section-label";
 
-/** What a cover tile needs; book cards and today's pick both have it. */
 export interface MiniBook {
   slug: string;
   title: string;
@@ -146,7 +145,6 @@ export function ClubMiniCard({ club, onPress }: { club: ClubCard; onPress: () =>
   );
 }
 
-// Today's Pick hero: the Book of the Month, or the latest staff pick.
 export function TodaysPickHero({ book, onOpen }: { book: MiniBook; onOpen: () => void }) {
   const colors = useColors();
   return (
@@ -215,8 +213,6 @@ export function TodaysPickHero({ book, onOpen }: { book: MiniBook; onOpen: () =>
   );
 }
 
-// Browse-by collapsible: era and length chip rows behind one header, so the default
-// discover view stays clean.
 export function BrowseBy({
   eras,
   lengths,

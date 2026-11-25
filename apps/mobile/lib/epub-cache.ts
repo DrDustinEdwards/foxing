@@ -1,28 +1,10 @@
-// Downloads a remote EPUB once and reuses the local copy on subsequent
-// opens. Foliate-js runs entirely inside a WebView; we feed it the EPUB
-// as base64 (rather than a file:// URL) so we don't depend on the WebView
-// having permission to fetch from arbitrary file paths, that surface is
-// inconsistent across Android/iOS WebView versions.
-//
-// Cache key is a hash of the remote URL. To make sure a hash collision
-// (or a hash function change between app versions) never serves the wrong
-// bytes, every cached EPUB has a sidecar `.url` file storing the URL it
-// was downloaded from. On every lookup we verify the sidecar matches the
-// URL we're asking for; mismatch → treat as cache miss, delete, redownload.
-//
-// This also handles the dedupe scenario where a book row's epub_url
-// changes in the database (e.g. Gutenberg → Standard Ebooks promotion):
-// the URL keyed in the cache no longer matches the DB value, so the next
-// open swaps to the correct file.
+// Downloads a remote EPUB once and reuses the local copy. A sidecar `.url` file records each file's source URL; a mismatch (hash collision, hash change, or a changed epub_url) is a cache miss: delete and redownload.
 
 import * as FileSystem from "expo-file-system/legacy";
 
 const CACHE_DIR = `${FileSystem.documentDirectory}epubs/`;
 
-// Stable filename derived from the URL. FNV-1a × 2 (two seeds) gives a
-// 64-bit fingerprint as 16 hex chars, meaningfully stronger than the
-// 32-bit djb2 previously used here, and still pure JS with no native
-// crypto dependency.
+// FNV-1a x2 (two seeds) gives a 64-bit fingerprint without a native crypto dependency.
 function cacheKey(remoteUrl: string): string {
   let a = 0x811c9dc5;
   let b = 0x84222325;
@@ -68,12 +50,7 @@ async function evictCacheEntry(key: string): Promise<void> {
   await FileSystem.deleteAsync(sidecarPath(key), { idempotent: true });
 }
 
-// One-time-per-session sweep: any .epub file without a matching .url
-// sidecar is from an older app version that wrote files under a
-// different naming scheme. Delete those orphans so they don't waste
-// disk and so the next download lands a fresh, sidecar-tagged copy.
-// Cheap (10s of files, one stat each) and runs at most once per launch;
-// every caller awaits the same promise so no download starts mid-sweep.
+// Once per session, delete .epub files without a .url sidecar (older naming scheme); every caller awaits the same promise so no download starts mid-sweep.
 let cleanup: Promise<void> | null = null;
 function cleanupOrphans(): Promise<void> {
   cleanup ??= sweepOrphans();
@@ -99,11 +76,7 @@ async function sweepOrphans(): Promise<void> {
   }
 }
 
-// Downloads (if needed) and returns the file:// URI of the cached EPUB.
-// Used by ReadiumView which only accepts local file paths -- it cannot
-// open an HTTPS URL directly. Skips the Base64 read that
-// ensureEpubLocallyCached does, so this is the cheap path for callers
-// that don't need the raw bytes.
+// Returns the file:// URI of the cached EPUB, downloading if needed, without the base64 read; ReadiumView only accepts local paths.
 const inFlight = new Map<string, Promise<string>>();
 export function ensureEpubLocalUri(remoteUrl: string): Promise<string> {
   let pending = inFlight.get(remoteUrl);

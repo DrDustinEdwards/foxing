@@ -1,5 +1,3 @@
-// Server entry for the Workers runtime (streaming SSR via renderToReadableStream).
-// Its presence tells React Router the runtime is not Node.
 import { renderToReadableStream } from "react-dom/server";
 import { ServerRouter } from "react-router";
 import type { EntryContext, RouterContextProvider } from "react-router";
@@ -20,8 +18,6 @@ export default async function handleRequest(
 ) {
   let shellRendered = false;
   const userAgent = request.headers.get("user-agent");
-  // The request's CSP nonce (workers/security-headers.ts): on React's streaming scripts, React
-  // Router's hydration scripts and, through NonceContext, every script the root Layout renders.
   const nonce = getNonce(loadContext);
 
   const body = await renderToReadableStream(

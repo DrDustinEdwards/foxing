@@ -39,8 +39,6 @@ import {
   toSoftTint,
 } from "./readium-helpers";
 
-// Readium implementation of the ReaderRef contract in reader-types.ts.
-
 const HIGHLIGHTS_GROUP = "highlights";
 const TTS_SENTENCE_GROUP = "tts-sentence";
 const PASSAGE_COMMENT_GROUP = "passage-comment-markers";
@@ -93,12 +91,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
   const [readiumPrefs, setReadiumPrefs] = useState<Preferences>(() =>
     settingsToReadiumPreferences(initialSettings),
   );
-  // Passage-comment markers, kept as a list of (passageText, cfi) so we
-  // can re-derive Decoration objects against the active chapter's href
-  // whenever the user navigates to a new chapter. The Kotlin
-  // navigator's text-based locator search only looks in the currently
-  // rendered chapter -- it doesn't try every spine item -- so the href
-  // we pass has to match where the rendered content lives.
+  // The Kotlin navigator's text locator search only covers the rendered chapter, so decorations are re-derived against the active chapter href.
   const [commentMarkers, setCommentMarkers] = useState<PassageCommentMarker[]>([]);
   const commentMarkersRef = useRef<PassageCommentMarker[]>([]);
   const highlightColorKeysRef = useRef(new Map<string, HighlightColor>());
@@ -107,25 +100,12 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
     Array<{ text?: string; cfi: string; count: number }>
   >([]);
   const [popularColor, setPopularColor] = useState<string>("#9E9E9E");
-  // Snapshot of the current Locator.href in state form so changes
-  // trigger a render and the decoration memos rebuild. currentLocatorRef
-  // stays the source of truth for non-render-driven reads (TTS, etc.).
+  // State form of the Locator href so decoration memos rebuild; currentLocatorRef stays the source for non-render reads.
   const [currentHref, setCurrentHref] = useState<string | null>(null);
-  // Local file URI for ReadiumView. Readium cannot open an HTTPS URL
-  // directly -- the native side errors "File does not exist: https://..."
-  // and silently leaves the publication in a loading state. We download
-  // the EPUB up front and only mount ReadiumView once the local file is
-  // ready.
+  // Readium cannot open an HTTPS URL (the native side silently stays loading), so download first and mount ReadiumView once the file is local.
   const [localUri, setLocalUri] = useState<string | null>(null);
 
-  // Host callbacks are passed as inline lambdas, so their identity
-  // changes on every parent render. Mirror them through refs so the
-  // download effect, gesture, and safety timeout can read the latest
-  // without depending on the callback as a useEffect/useCallback dep.
-  // Without this, every host re-render (e.g. setProgress on page turn)
-  // would cause the download effect to re-fire, reset localUri to null,
-  // unmount ReadiumView, then remount with `initialLocation: initialCfi`,
-  // which on a book with no saved position jumps back to chapter 1.
+  // Mirror host callbacks through refs: their identity changes every render, and a re-fired download effect would remount ReadiumView at initialLocation (chapter 1 with no saved position).
   const onReadyRef = useRef(onReady);
   const onErrorRef = useRef(onError);
   const onLocationChangeRef = useRef(onLocationChange);
@@ -143,21 +123,13 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
   onPassageCommentTappedRef.current = onPassageCommentTapped;
   onTapRef.current = onTap;
 
-  // Single-shot onReady. handlePublicationReady is the canonical trigger;
-  // handleLocationChange is a defensive fallback for Readium builds where
-  // the publication-ready event fires before our JS callback is wired or
-  // never reaches us. Either path flips this ref so the host's "Loading
-  // book…" overlay can come down. Never reset once true: the wrapper only
-  // initializes once per epubUrl, and resetting on host re-renders is what
-  // caused the "jumps to chapter 1" bug.
+  // Single-shot onReady; handleLocationChange is a fallback for builds where publication-ready never reaches us. Never reset: resetting on host re-renders caused the jump to chapter 1.
   const readyFiredRef = useRef(false);
   const fireReadyOnce = useCallback(() => {
     if (readyFiredRef.current) return;
     readyFiredRef.current = true;
     onReadyRef.current?.();
   }, []);
-  // Default palette; host calls setHighlightColors with the design-token
-  // values pulled from useColors() so light/dark match the rest of the UI.
   const highlightPaletteRef = useRef<Record<HighlightColor, string>>({
     amber: "#FFC107",
     auburn: "#A33B20",
@@ -169,31 +141,18 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
   });
   const lastSavedLocatorRef = useRef<string | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Live position + TOC, populated by Readium events. The chapter-text
-  // and sentence-highlight bridges read these to know which spine item
-  // to parse and which sentence text to highlight.
   const currentLocatorRef = useRef<Locator | null>(null);
   const tocRef = useRef<Array<{ label: string; href: string; cfi: string | null }>>([]);
   const chapterSentencesRef = useRef<string[]>([]);
-  // Cached positions list from onPublicationReady. Each entry is a
-  // Locator with locations.totalProgression filled in across 0..1 of
-  // the publication; jumpToProgress(fraction) searches this list for
-  // the closest match.
   const positionsRef = useRef<Locator[]>([]);
 
   const initialLocator = useMemo(() => decodeLocator(initialCfi), [initialCfi]);
 
-  // Passage-comment decorations: text-based Locator with the comment's
-  // passageText as text.highlight. Readium searches the rendered page
-  // for a match; if it's not there (e.g. the comment lives in a
-  // different chapter) the decoration silently doesn't paint. When the
-  // user navigates into the comment's chapter, currentHref updates,
-  // the memo recomputes, and the underline appears.
+  // Text-based locators only paint when the comment's chapter is rendered; the memo recomputes when currentHref changes.
   const passageCommentDecorations: Decoration[] = useMemo(() => {
     if (!currentHref || commentMarkers.length === 0) return [];
     const type = currentLocatorRef.current?.type ?? "application/xhtml+xml";
     return commentMarkers.map((m, i) => ({
-      // The index keys back to commentMarkersRef for the marker's cfi.
       id: `pc-${i}-${m.passageText.length}`,
       locator: {
         href: currentHref,
@@ -207,9 +166,6 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
     }));
   }, [commentMarkers, commentColor, currentHref]);
 
-  // Popular-highlight decorations: soft 'highlight' tint over the
-  // shared passage text. Same text-based-locator mechanic as comment
-  // markers; same chapter-bound search caveat.
   const popularHighlightDecorations: Decoration[] = useMemo(() => {
     if (!currentHref || popularMarkers.length === 0) return [];
     const type = currentLocatorRef.current?.type ?? "application/xhtml+xml";
@@ -232,8 +188,6 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
 
   const decorations: DecorationGroup[] = useMemo(() => {
     const groups: DecorationGroup[] = [{ name: HIGHLIGHTS_GROUP, decorations: highlights }];
-    // Popular highlights underlay before comment markers so the comment
-    // underline reads on top of the soft tint when they overlap.
     if (popularHighlightDecorations.length > 0) {
       groups.push({
         name: POPULAR_HIGHLIGHTS_GROUP,
@@ -260,21 +214,13 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
     onLocationChangeRef.current?.(serialized, progression, undefined, locator.text?.highlight);
   }, []);
 
-  // Suppress the very first onLocationChange after mount. Readium emits
-  // an initial relocate event when the publication renders -- if we let
-  // that fire the host's save, a fresh book with no saved CFI would
-  // overwrite its saved place with chapter 1 even if the user never turned a
-  // page. After the first event, every subsequent change is a real
-  // navigation.
+  // Skip the first onLocationChange: Readium emits an initial relocate that would overwrite a saved place with chapter 1.
   const firstLocationChangeRef = useRef(true);
 
   const handleLocationChange = useCallback(
     (locator: Locator) => {
       const hrefChanged = currentLocatorRef.current?.href !== locator.href;
       currentLocatorRef.current = locator;
-      // Mirror href into state so the passage-comment decoration memo
-      // refreshes on chapter changes. Same-href returns prev so a
-      // mid-chapter page turn doesn't re-render.
       setCurrentHref((prev) => (prev === locator.href ? prev : locator.href));
       fireReadyOnce();
       if (hrefChanged) {
@@ -309,10 +255,6 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
     [fireReadyOnce],
   );
 
-  // Download the EPUB to local cache on mount so ReadiumView can open it.
-  // Cached by URL hash; second open of the same book is essentially free.
-  // Deps: epubUrl only. onError is read via ref so a host re-render that
-  // changes the inline lambda's identity doesn't re-trigger the effect.
   useEffect(() => {
     let canceled = false;
     void (async () => {
@@ -331,11 +273,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
     };
   }, [epubUrl]);
 
-  // Safety net: if neither onPublicationReady nor onLocationChange has
-  // fired 10 seconds after the file is local, surface the canvas anyway.
-  // The worst case is the host overlay coming down before Readium actually
-  // finishes its first paint, which still beats an indefinite "Loading
-  // book…" lock.
+  // Safety net: surface the canvas 10s after the file is local even if no ready event fired, rather than lock on the loading overlay.
   useEffect(() => {
     if (!localUri) return;
     const t = setTimeout(() => {
@@ -352,11 +290,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
       const text = event.selectedText;
       if (!text || !event.locator) return;
       const cfi = encodeLocator(event.locator);
-      // Bottom-anchored: the Android system selection bar pins to the
-      // top of the screen, our pill renders just above the bottom
-      // safe area so the two never overlap. anchor.y near the bottom
-      // makes FloatingPill's "above the anchor" branch land the pill
-      // ~134px from the bottom edge.
+      // Bottom-anchored so the pill never overlaps Android's top selection bar.
       const rect: ReaderRect = {
         x: screenWidth / 2,
         y: screenHeight - 80,
@@ -379,9 +313,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
   );
 
   const handleDecorationActivated = useCallback((event: DecorationActivatedEvent) => {
-    // The viewer's own highlights and the soft popular-highlight tints
-    // aren't tappable surfaces -- only comment markers route through
-    // to a sheet. Ignore activations from any other group.
+    // Only comment markers open a sheet; ignore activations from other decoration groups.
     if (event.group !== PASSAGE_COMMENT_GROUP) return;
     const passageText = event.decoration.locator.text?.highlight ?? "";
     const index = Number(event.decoration.id.split("-")[1]);
@@ -421,7 +353,6 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
       },
       setHighlightColors: (map: Record<HighlightColor, string>) => {
         highlightPaletteRef.current = map;
-        // Re-tint existing decorations
         setHighlights((prev) =>
           prev.map((d) => {
             const colorKey = highlightColorKeysRef.current.get(d.id);
@@ -452,10 +383,6 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
       },
       getToc: async () => tocRef.current,
       jumpToProgress: (fraction: number) => {
-        // Find the closest locator in the cached positions list by
-        // totalProgression. Positions arrive once via onPublicationReady;
-        // before then this is a no-op so a drag on a half-loaded book
-        // doesn't try to navigate to nothing.
         const positions = positionsRef.current;
         if (positions.length === 0) return;
         const clamped = Math.max(0, Math.min(1, fraction));
@@ -476,14 +403,10 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
           setSentenceDecoration(null);
           return;
         }
-        // Index is 1-based per the TtsBar contract; convert to 0-based.
         const sentence = chapterSentencesRef.current[index - 1];
         const currentLoc = currentLocatorRef.current;
         if (!sentence || !currentLoc) return;
-        // Text-based locator: Readium matches `text.highlight` against the
-        // rendered page text. before/after windows would improve accuracy
-        // for duplicate sentences but the chapter parser doesn't surface
-        // them yet; this works well enough for unique-enough prose.
+        // Text-based locator: Readium matches text.highlight against the rendered page; before/after windows are not available from the chapter parser.
         setSentenceDecoration({
           id: `tts-${index}`,
           locator: {
@@ -501,10 +424,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
     [epubUrl],
   );
 
-  // Tap-to-hide chrome. Single-tap, short max duration, tight movement
-  // tolerance so RNGH only catches deliberate taps; swipes and long-
-  // presses pass through to Readium. Reads onTap via ref so the
-  // gesture's identity stays stable across host re-renders.
+  // Single short tap with tight tolerance so swipes and long-presses pass through to Readium; onTap read via ref keeps the gesture stable.
   const tapGesture = useMemo(
     () =>
       Gesture.Tap()
@@ -517,20 +437,8 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
     [],
   );
 
-  // Word-selection threshold raiser. RNGH LongPress with minDuration
-  // 500ms, composed alongside tapGesture via Race so whichever fires
-  // first wins. Single-tap chrome toggle (<= 250 ms) still resolves
-  // through tapGesture; presses 250..499 ms now fail (no gesture
-  // activates). Once a press crosses 500 ms, this LongPress activates
-  // and lets the underlying Readium WebView's native selection
-  // handler take over -- matching the Kindle / iOS Books feel.
-  //
-  // Caveat: Android's native WebView long-press timer runs in parallel
-  // (~400 ms by default on most devices), so selection can still start
-  // before this gesture's threshold on devices that configure a
-  // shorter system long-press timeout. A definitive fix would require
-  // a deeper native patch to the WebView; this RNGH gesture is the
-  // JS-side layer of defense.
+  // Long-press (500ms) raises the selection threshold, composed with tapGesture via Race.
+  // Android's native long-press timer runs in parallel (~400ms), so selection can still start earlier on some devices.
   const longPressGesture = useMemo(
     () => Gesture.LongPress().minDuration(500).maxDistance(10).runOnJS(true),
     [],
@@ -541,36 +449,19 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
     [tapGesture, longPressGesture],
   );
 
-  // Stable references for ReadiumView props so the native side doesn't
-  // see a "new file" / "new preferences" on every host re-render and
-  // reload the publication (which would jump the reader to its
-  // initialLocation, i.e. chapter 1 when no progress is saved yet).
+  // Stable ReadiumView props: new file/preferences identity would reload the publication to initialLocation.
   const file = useMemo(
     () => (localUri ? { url: localUri, initialLocation: initialLocator } : null),
     [localUri, initialLocator],
   );
   const preferencesProp = useMemo(() => readiumPrefs, [readiumPrefs]);
-  // Pass a non-empty selectionActions array so EpubReaderFragment
-  // installs its custom ActionMode.Callback instead of falling back to
-  // the WebView's default Copy / Translate / Select all / Share menu.
-  // Our patch in scripts/patch-readium.mjs makes
-  // that callback's onCreateActionMode return false so Android never
-  // shows the toolbar; the selection itself still happens and our
-  // onSelectionChange-driven floating pill is the user-facing surface.
-  // The Highlight action's onSelectionAction handler below is the
-  // defensive path in case Android shows the menu anyway on some
-  // device or future library version.
+  // A non-empty selectionActions array makes EpubReaderFragment install our ActionMode.Callback, which scripts/patch-readium.mjs makes return false so Android shows no toolbar; the Highlight handler below is a fallback.
   const selectionActions = useMemo<SelectionAction[]>(
     () => [{ id: "highlight", label: "Highlight" }],
     [],
   );
 
-  // No internal loading overlay. The host renders "Loading book…" while
-  // readerState === 'loading' (opaque background that covers our canvas);
-  // a second overlay here would either be redundant or, if it stayed on
-  // forever, would hide Readium's content after the host transitions.
-  // Until the EPUB is downloaded we render an empty View; the host
-  // overlay covers it.
+  // No internal loading overlay: the host renders "Loading book…" and covers the empty View until the EPUB is downloaded.
   if (!file) {
     return <View style={{ flex: 1, backgroundColor: initialSettings.theme.background }} />;
   }

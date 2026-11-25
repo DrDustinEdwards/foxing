@@ -58,8 +58,6 @@ export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheet
   const [created, setCreated] = useState<CreatedClub | null>(null);
   const error = createClub.error ? "Couldn't create the club. Try again." : null;
 
-  // Reset state every time the sheet (re)opens, a previous half-finished
-  // draft shouldn't leak into a brand-new flow.
   useEffect(() => {
     if (visible) {
       // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
@@ -77,7 +75,6 @@ export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheet
   const goNext = useCallback(async () => {
     if (step === "pace") {
       if (created) return setStep("invite"); // Back from Invite: the club already exists
-      // Commit on transition into the Invite step, landing on the created confirmation.
       const res = await createClub.run({
         name: draft.name.trim(),
         description: draft.description.trim() || undefined,
@@ -189,8 +186,6 @@ export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheet
   );
 }
 
-// ── Step bar ─────────────────────────────────────────────────────────────
-
 function StepBar({ count, index }: { count: number; index: number }) {
   const colors = useColors();
   return (
@@ -209,8 +204,6 @@ function StepBar({ count, index }: { count: number; index: number }) {
     </View>
   );
 }
-
-// ── Basics ───────────────────────────────────────────────────────────────
 
 function BasicsStep({
   draft,
@@ -262,8 +255,6 @@ function BasicsStep({
   );
 }
 
-// ── Current book ────────────────────────────────────────────────────────
-
 function BookStep({
   draft,
   setDraft,
@@ -274,7 +265,6 @@ function BookStep({
   const colors = useColors();
   const [query, setQuery] = useState("");
   const [term, setTerm] = useState("");
-  // Lightweight debounce, search after the user pauses typing.
   useEffect(() => {
     const t = setTimeout(() => setTerm(query.trim().length >= 2 ? query.trim() : ""), 300);
     return () => clearTimeout(t);
@@ -391,8 +381,6 @@ function BookCover({ book }: { book: W.BookCard }) {
   );
 }
 
-// ── Pace ────────────────────────────────────────────────────────────────
-
 function PaceStep({
   draft,
   setDraft,
@@ -440,8 +428,6 @@ function PaceStep({
   );
 }
 
-// ── Invite ──────────────────────────────────────────────────────────────
-
 function InviteStep({ club }: { club: CreatedClub | null }) {
   const colors = useColors();
   if (!club) {
@@ -478,8 +464,6 @@ function InviteStep({ club }: { club: CreatedClub | null }) {
     </View>
   );
 }
-
-// ── Reusable bits ────────────────────────────────────────────────────────
 
 function StepTitle({ children }: { children: React.ReactNode }) {
   const colors = useColors();

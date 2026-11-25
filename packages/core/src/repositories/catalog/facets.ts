@@ -1,8 +1,5 @@
-// Browse facets. Only facets backed by real catalog data are surfaced by the UI;
-// mood/difficulty/language are wired but stay empty until enrichment populates them
-// (verified live 2026-07-07: mood_tags/reading_difficulty/pacing are 100% null,
-// language is single-valued 'en'). Era and length are derived buckets; genre is one of
-// GENRES, read from the subjects json array (toGenres).
+// Browse facets. Only facets backed by real catalog data are surfaced; mood/difficulty/language are wired but stay empty until
+// enrichment populates them. Era and length are derived buckets; genre is one of GENRES, read from the subjects json (toGenres).
 import { sql } from "drizzle-orm";
 import type { Db } from "../../db";
 import { ERA_BUCKETS, LENGTH_BUCKETS, type Bucket } from "../../catalog-buckets";
@@ -18,11 +15,7 @@ export function resolveLength(slug?: string | null): Bucket | undefined {
   return slug ? LENGTH_BUCKETS.find((b) => b.slug === slug) : undefined;
 }
 
-/**
- * The genres readers see: a fixed list. books.subjects holds these slugs for the catalog; a raw Library of
- * Congress heading ("Frankenstein's monster (Fictitious character) -- Fiction") is mapped onto one by
- * HEADING_GENRES, or left out, and never shown as a genre.
- */
+/** The fixed genre list readers see: books.subjects holds these slugs; a raw Library of Congress heading is mapped onto one by HEADING_GENRES or left out, never shown as a genre. */
 export const GENRES = [
   { slug: "literary-fiction", label: "Literary fiction" },
   { slug: "mystery", label: "Mystery" },
@@ -63,7 +56,6 @@ const HEADING_GENRES: Array<[RegExp, GenreSlug]> = [
   [/^philosophy/, "philosophy"],
 ];
 
-/** A book's subjects as genre slugs from GENRES, in their order, each once. */
 export function toGenres(subjects: readonly string[] | null | undefined): GenreSlug[] {
   const out = new Set<GenreSlug>();
   for (const subject of subjects ?? []) {
@@ -74,14 +66,12 @@ export function toGenres(subjects: readonly string[] | null | undefined): GenreS
   return [...out];
 }
 
-/** The reader-facing name of a genre slug. */
 export function genreLabel(slug: string): string {
   return GENRES.find((g) => g.slug === slug)?.label ?? slug;
 }
 
 export type GenreFacet = { subject: GenreSlug; label: string; count: number };
 
-/** The genres with books in the catalog, most books first, for the genre filter and genre chips. */
 export function getGenreFacets(db: Db, limit = 32): Promise<GenreFacet[]> {
   // Counts every catalog book's subjects, called by most catalog pages: ten minutes stale is invisible.
   return cachedRead(db, `catalog:genre-facets:v2:${limit}`, 600, () => readGenreFacets(db, limit));

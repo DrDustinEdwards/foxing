@@ -70,8 +70,6 @@ export function HighlightsSheet({
     [filterColor, rows],
   );
 
-  // Export uses the visible-filtered set so users can pull a single color's
-  // highlights when they want a focused list.
   const handleExport = useCallback(
     async (format: ExportFormat) => {
       setFormatPickerOpen(false);

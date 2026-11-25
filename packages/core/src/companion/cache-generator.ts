@@ -1,9 +1,6 @@
-// Generates the 4 free-cached catalog actions for one book and writes them to
-// book_ai_cache. Called from both the Queue consumer (production) and a manual
-// one-off script (proving cost on a small batch) -- one code path, not two.
-// These texts are public catalog pages, so a reply that did not finish (the caller throws)
-// or that trips a high prose finding (a refusal, a cutoff note, a blank, chatbot markup, a
-// blurb tell) is never written: the generation throws and the queue retries it.
+// Generates the 4 free-cached catalog actions for one book into book_ai_cache; one code path for the Queue consumer and the manual
+// one-off script. These texts are public catalog pages, so a reply that did not finish or trips a high prose finding (refusal, cutoff
+// note, blank, chatbot markup, blurb tell) is never written: generation throws and the queue retries.
 import { checkProse, OUT_OF_PLACE } from "@dustinedwards/site-runtime/prose";
 import type { Usage } from "@dustinedwards/site-runtime/anthropic";
 import type { Db } from "../db";
@@ -42,7 +39,6 @@ async function collectText(
   return { text, usage };
 }
 
-/** Generate (or regenerate) the given cached actions for one book, writing each row. */
 export async function generateCachedActionsForBook(
   db: Db,
   caller: CompanionCaller,
@@ -73,7 +69,6 @@ export async function generateCachedActionsForBook(
       (i) => i.severity === "high" || i.severity === "critical",
     );
     if (findings.length) {
-      // Names the checks only; the text itself is never logged.
       throw new Error(
         `${name} for ${book.id} failed the prose check: ${findings.map((i) => i.check).join(", ")}`,
       );
@@ -92,11 +87,6 @@ export async function generateCachedActionsForBook(
   return results;
 }
 
-/**
- * Find up to `limit` catalog books still missing a cached action and generate all 4
- * for each. Used by both the Cron-triggered Queue producer path and the manual proof
- * route (POST /ops/companion-cache-batch) -- the only two callers, one code path.
- */
 export async function runCacheBatch(
   db: Db,
   caller: CompanionCaller,

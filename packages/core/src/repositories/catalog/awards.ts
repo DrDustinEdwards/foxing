@@ -1,5 +1,4 @@
-// Literary awards. book_awards rows group by award_slug into award pages
-// (/awards + /awards/:slug). Award-winning books are catalog titles.
+// book_awards rows group by award_slug into award pages; award-winning books are catalog titles.
 import { sql } from "drizzle-orm";
 import type { Db } from "../../db";
 import type { BookCard } from "./books";
@@ -31,7 +30,6 @@ export type BookAward = {
   distinction: string;
 };
 
-/** Awards attached to one book (for the book detail page). */
 export async function getBookAwards(db: Db, bookId: string): Promise<BookAward[]> {
   const rows = await db.all<{
     award_slug: string;
@@ -66,7 +64,6 @@ export async function listAwards(db: Db): Promise<AwardSummary[]> {
   return rows.map((r) => ({ ...r, count: Number(r.count) }));
 }
 
-/** Each award with the newest change to its award rows or to a catalog book that holds it, for the sitemap. */
 export async function listSitemapAwards(db: Db): Promise<Array<{ slug: string; updatedAt: Date }>> {
   const rows = await db.all<{ slug: string; updated_at: number }>(sql`
     SELECT ba.award_slug AS slug, MAX(MAX(b.updated_at), MAX(ba.created_at)) AS updated_at

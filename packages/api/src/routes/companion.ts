@@ -1,8 +1,5 @@
-// The AI companion endpoint. Server assembles ALL context; the client
-// sends only { action, bookId, threadId?, message?, selection?, chapter?, targetLanguage? }
-// and never a prompt or system prompt -- this is what the D10 adversarial eval
-// checks. Tier-gated (D11 Plus actions) and quota-gated (cost-based, not request-
-// count, security-open-items.md item 4). Streams via SSE.
+// The server assembles ALL context; the client sends only { action, bookId, threadId?, message?, selection?, chapter?, targetLanguage? }, never a
+// prompt (what the adversarial eval checks). Tier-gated, and quota-gated by estimated cost. Streams via SSE.
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { checkProse } from "@dustinedwards/site-runtime/prose";
 import { Hono } from "hono";
@@ -91,7 +88,6 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
         messages: [...ctx.history, { role: "user", content: userContent }],
         maxTokens,
         feature: `companion:${input.action}`,
-        // The system prompt and the thread so far are the same on the next turn: cache them (C7).
         cache: true,
       })) {
         if (event.type === "text") {
@@ -106,16 +102,10 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
         event: "error",
         data: "The companion could not complete that request.",
       });
-      logEvent(
-        "companion_stream_failed",
-        // No reader id in the log (S5); the action and the failure kind are enough to act on.
-        { action: input.action, error: err },
-        { level: "error" },
-      );
+      logEvent("companion_stream_failed", { action: input.action, error: err }, { level: "error" });
       return;
     }
 
-    // The reply is whole: its real cost replaces the reservation.
     const costCents = companion.estimateCostCents(action.role, usage);
     await companionRepo.settleUsage(db, session.id, quotaDay, reserved, costCents);
 

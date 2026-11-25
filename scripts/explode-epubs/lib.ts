@@ -1,11 +1,5 @@
-// Shared EPUB -> Readium Web Publication explosion. Turns a raw .epub buffer
-// into an RWPM manifest.json, its resource files, and a Readium position list
-// (application/vnd.readium.position-list+json) so the web reader gets an
-// accurate scrubber and positionsFromManifest() returns real positions.
-//
-// The manifest links the position list (rel "position-list") and hrefs are
-// the archive-relative paths, resolved by the navigator against the manifest's
-// self link. Mirrors the throwaway spike explode, hardened for the batch run.
+// Shared EPUB -> Readium Web Publication explosion: an RWPM manifest.json, its resources and a Readium position list (rel "position-list"),
+// so the web reader gets an accurate scrubber. Hrefs are archive-relative paths, resolved against the manifest's self link.
 import JSZip from "jszip";
 import { XMLParser } from "fast-xml-parser";
 import { posix } from "node:path";
@@ -99,7 +93,6 @@ export async function explodeEpub(buf: Buffer): Promise<ExplodeResult> {
   const language = textNode(meta["dc:language"]) ?? "en";
   const identifier = textNode(meta["dc:identifier"]) ?? opfPath;
 
-  // readingOrder from spine (skip linear="no")
   const readingOrder: RwpmLink[] = [];
   for (const ref of spineRefs) {
     if (ref["@_linear"] === "no") continue;
@@ -127,7 +120,6 @@ export async function explodeEpub(buf: Buffer): Promise<ExplodeResult> {
     resources.push(entry);
   }
 
-  // toc: EPUB3 nav -> NCX -> reading order
   let toc: { href: string; title: string }[] = [];
   if (navHref) toc = await tocFromNav(zip, navHref);
   if (toc.length === 0 && ncxHref) toc = await tocFromNcx(zip, ncxHref);
@@ -135,13 +127,11 @@ export async function explodeEpub(buf: Buffer): Promise<ExplodeResult> {
     toc = readingOrder.map((r, i) => ({ href: r.href, title: `Section ${i + 1}` }));
   }
 
-  // Emit every entry except mimetype (added by wrappers) and the OPF itself is
-  // kept (harmless). Files keyed by archive path; manifest hrefs match.
+  // Every entry except mimetype (added by wrappers) is emitted; the OPF stays (harmless).
   const files = new Map<string, Buffer>();
   for (const entry of Object.values(zip.files)) {
     if (entry.dir || entry.name === "mimetype") continue;
     const bytes = await entry.async("nodebuffer");
-    // A book's pages and SVG files are cleaned here, once, before they are stored.
     files.set(
       entry.name,
       /\.(?:x?html?|svg)$/i.test(entry.name)

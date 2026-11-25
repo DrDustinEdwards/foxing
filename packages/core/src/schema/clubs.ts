@@ -1,6 +1,5 @@
-// Clubs (10 tables, consolidated from 17). Invites are join_code links (no invite
-// table); poll options + ballots are JSON (IRV computed in core); no denormalized
-// counts. A club's current read may be a catalog OR community book.
+// Invites are join_code links (no invite table); poll options + ballots are JSON (IRV computed in core); no denormalized counts.
+// A club's current read may be a catalog OR community book.
 import {
   integer,
   sqliteTable,

@@ -1,6 +1,3 @@
-// Club list (auth-gated). The loader reads the clubs view in-process and seeds the
-// shared cache, so joining or leaving a club updates this list without a reload. The
-// "New club" button routes to /clubs/new; joining happens on the club detail page.
 import { useClubsIndex } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import { ButtonLink, Link } from "capsomer/react/link";
@@ -85,5 +82,4 @@ export default function Clubs({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };

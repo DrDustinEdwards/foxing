@@ -4,10 +4,6 @@ import { CaretLeft, TextAa, BookmarkSimple } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
-// Phase 1 reading chrome: the top bar is reduced to Back, a tappable
-// title/chapter that opens the Go To sheet, Bookmark, and Aa (typography).
-// Listen, Search, and the chapter-features (Sparkle) trigger moved to the
-// bottom bar (overflow + Companion button).
 interface ReaderTopBarProps {
   chromeBg: string;
   isTablet: boolean;

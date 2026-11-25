@@ -34,18 +34,14 @@ interface Stats {
   longestStreak: number;
   monthly: number[];
   mostHighlightedBook: { title: string; author: string; count: number } | null;
-  /** The book the companion reads the year through for the personality slide. */
   anchorBookId: string | null;
 }
 
-// Same reading-speed assumption as the reader's time estimates: 250 words a page,
-// 250 words a minute.
 const WORDS_PER_PAGE = 250;
 const WORDS_PER_MINUTE = 250;
 
 const SLIDE_COUNT = 7;
 
-// Pinned-dark experience: dark-scheme tokens regardless of the system scheme.
 const C = Colors.dark;
 
 export default function YearInReadingScreen() {
@@ -63,8 +59,6 @@ export default function YearInReadingScreen() {
   const personality = useCompanion();
   const loading = recap.isPending;
 
-  // GET /recap/:year (the same numbers as the web Year in Reading page), the all-time
-  // longest streak, and the year's highlights counted per book.
   const stats = useMemo<Stats | null>(() => {
     if (!recap.data) return null;
     const { recap: r, monthly, genres } = recap.data;

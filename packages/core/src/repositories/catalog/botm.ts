@@ -1,5 +1,4 @@
-// Book of the Month: Foxing's own monthly pick (/book-of-the-month). Distinct from
-// external picks (/picks) and user clubs (/clubs) per the three-club-spaces rule.
+// Foxing's own monthly pick, distinct from external picks and user clubs (the three-club-spaces rule).
 import { sql } from "drizzle-orm";
 import type { Db } from "../../db";
 
@@ -87,12 +86,7 @@ type StaffRow = {
   staff_pick_note: string | null;
 };
 
-/**
- * The homepage's featured-book slot. Prefers the published Book of the Month; when
- * none is published, falls back to a staff pick (books.is_staff_pick). Returns null
- * when neither source has a row, so the homepage section self-omits rather than
- * scaffolding a placeholder.
- */
+/** The homepage's featured-book slot: the published Book of the Month, else a staff pick; null when neither exists, so the section self-omits. */
 export async function getTodaysPick(db: Db): Promise<TodaysPick | null> {
   const botm = await getCurrentBotm(db);
   if (botm?.book) return { source: "botm", book: botm.book, note: botm.curatorNote };

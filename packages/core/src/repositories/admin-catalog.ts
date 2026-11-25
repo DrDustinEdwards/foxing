@@ -52,15 +52,10 @@ export async function listBooksAdmin(
 export type CatalogHealth = {
   checkedBooks: number;
   checks: ReturnType<typeof summarize>;
-  /** Published Book of the Month entries and celebrity picks whose book is gone or never set. */
   publishedWithoutBook: { botm: number; picks: number };
   findings: ReturnType<typeof auditCatalog>;
 };
 
-/**
- * Reads every book once (the catalog is a few thousand rows, a handful of short columns each) and runs the checks of
- * domain/catalog-health.ts. `only` keeps the findings of one check; the counts always cover all of them.
- */
 export async function getCatalogHealth(
   db: Db,
   opts: { coverOrigin: string; only?: CatalogCheck; skipAiText?: boolean },
@@ -307,8 +302,6 @@ export async function setClubVerified(
   );
 }
 
-/** Hard-delete a club. Members, threads, posts, polls, and meetings cascade from the
- *  clubs FK (onDelete: cascade). Operator moderation action. */
 export async function deleteClubAdmin(db: Db, id: string): Promise<boolean> {
   return changed(await db.delete(clubs).where(eq(clubs.id, id)).run());
 }

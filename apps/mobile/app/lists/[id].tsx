@@ -28,8 +28,6 @@ import { ListLikeButton } from "@/components/lists/list-like-button";
 import { BackHeader } from "@/components/ui/back-header";
 import { Screen } from "@/components/ui/screen";
 
-// A reading list from GET /lists/:id. Its owner edits, adds and removes books in place;
-// everyone else can like it.
 export default function ListDetailScreen() {
   const colors = useColors();
   const router = useRouter();

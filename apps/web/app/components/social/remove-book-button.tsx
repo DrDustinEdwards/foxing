@@ -1,5 +1,3 @@
-// Owner-only control to remove a book from a reading list. DELETEs
-// /api/v1/lists/:id/books/:bookId; the book leaves the cached list at once. Failed writes surface a visible error.
 import { useRemoveListBook } from "@foxing/client";
 
 export function RemoveBookButton({ listId, bookId }: { listId: string; bookId: string }) {

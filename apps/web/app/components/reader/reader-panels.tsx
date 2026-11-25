@@ -39,8 +39,6 @@ function ChromeButton({
       onClick={onClick}
       aria-label={label}
       aria-pressed={pressed}
-      // Border/hover/pressed derive from currentColor (the reading theme's text) so the
-      // button always contrasts with its canvas, whatever the site theme.
       className="fx-reader-toggle"
     >
       {children}
@@ -67,8 +65,6 @@ function LayerChip({
   );
 }
 
-// A side sheet: Capsomer's dialog on the right edge (native <dialog>), so focus, Esc, the backdrop,
-// the drag to close and the page behind behave as every other sheet on the network.
 export function SidePanel({
   title,
   children,
@@ -80,9 +76,7 @@ export function SidePanel({
   onClose: () => void;
   canvas: { bg: string; text: string };
 }) {
-  // Themed with the reading canvas (not site tokens): the reader root sets a text color per
-  // reading theme, so a site-surface panel would show light text on a light panel in dark theme.
-  // The dialog takes no style prop, so the canvas is set on the element (CSSOM, not markup).
+  // Themed with the reading canvas, not site tokens (a site-surface panel would show light text on a light panel in dark theme); the dialog takes no style prop, so it is set on the element.
   const paint = useCallback(
     (el: HTMLDialogElement | null) => {
       el?.style.setProperty("--fx-canvas-bg", canvas.bg);
@@ -236,8 +230,6 @@ export function TypographyControls({
                 type="button"
                 aria-pressed={settings.columns === n}
                 onClick={() => onChange({ columns: n as 1 | 2 })}
-                // Selected: the accent-soft fill with its own text color, so it reads on
-                // every reading canvas (the panel's inherited text is not used).
                 className="fx-reader-cols"
               >
                 {n}
@@ -250,8 +242,6 @@ export function TypographyControls({
   );
 }
 
-// The Contents panel body: table of contents, bookmarks, and the persistent list of
-// highlights + notes (the reliable way to reopen a note).
 export function ContentsList({
   toc,
   bookmarks,
@@ -269,7 +259,6 @@ export function ContentsList({
   onDelete: (id: string) => void;
   onOpenMark: (a: ReaderAnnotation) => void;
 }) {
-  // The dialog body's own gap is 8px; the contents, bookmarks and marks sit 32px apart.
   return (
     <div className="cap-stack" data-gap="7">
       <nav aria-label="Table of contents">
@@ -354,8 +343,6 @@ export function ContentsList({
 }
 
 export function SignInPrompt({ loginHref, onClose }: { loginHref: string; onClose: () => void }) {
-  // Capsomer's Dialog: a native modal, so focus stays inside, the reader behind is inert,
-  // and Esc, the backdrop and Keep reading close it.
   return (
     <Dialog
       open
@@ -379,8 +366,6 @@ export function SignInPrompt({ loginHref, onClose }: { loginHref: string; onClos
   );
 }
 
-// Personal-feature writes never swallow a failure: saving drives a role="status"
-// indicator, writeError a role="alert" banner.
 export function WriteStatus({
   saving,
   writeError,
@@ -410,7 +395,6 @@ export function WriteStatus({
   );
 }
 
-// Top bar (back, title + chapter, Contents / Aa / Bookmark) and the social layer toggles.
 export function ReaderTopBar({
   book,
   chapter,

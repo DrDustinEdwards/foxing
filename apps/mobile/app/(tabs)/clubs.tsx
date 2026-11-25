@@ -20,7 +20,6 @@ import { CreateClubSheet } from "@/components/clubs/create-club-sheet";
 
 type Tab = "mine" | "discover";
 
-// The reader's clubs and public clubs to join, from GET /clubs.
 export default function ClubsScreen() {
   const colors = useColors();
   const router = useRouter();

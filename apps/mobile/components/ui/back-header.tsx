@@ -5,8 +5,6 @@ import { CaretLeft } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
-// The back row every pushed screen starts with. `children` sit at the right (or fill the row
-// when there is no title); `onBack` replaces router.back() for a header inside a modal.
 export function BackHeader({
   title,
   children,

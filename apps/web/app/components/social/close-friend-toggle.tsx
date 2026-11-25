@@ -1,7 +1,3 @@
-// Close-friends toggle. Adds/removes a user from the viewer's close-friends list via
-// PUT/DELETE /close-friends/:userId. This list is the audience for the viewer's
-// friends-only diary entries, activity, and shared annotations. It is a free social /
-// privacy control (not a Plus feature). Failed writes show a visible error.
 import { useCloseFriend } from "@foxing/client";
 
 export function CloseFriendToggle({ userId, isClose }: { userId: string; isClose: boolean }) {

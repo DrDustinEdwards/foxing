@@ -1,7 +1,3 @@
-// Library / tracking write + read surface. Shelf status changes go through the
-// core changeBookStatus domain function, which emits the activity/notification
-// events (started_book, finished_book, goal_met) on the write path. Handlers stay
-// thin: session, validate, call core, return. Reused by Phase 7 mobile as-is.
 import { Hono } from "hono";
 import {
   changeBookStatus,

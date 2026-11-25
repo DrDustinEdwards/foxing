@@ -1,6 +1,3 @@
-// Book picker for admin forms (BOTM, celebrity picks): the chosen book with a Change button, or
-// BookCombobox to choose one from the public /api/v1/search/suggest. Emits the selected book (or
-// null when cleared).
 import { BookCombobox, type SuggestedBook } from "../book-combobox";
 
 export function BookPicker({

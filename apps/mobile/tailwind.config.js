@@ -5,10 +5,6 @@ module.exports = {
   darkMode: "class",
   theme: {
     extend: {
-      // Each entry must match the exact React Native family name registered
-      // by useFonts(). Expo Google Fonts uses `<Family>_<weight><weightName>[_Italic]`.
-      // RN does not promote fontWeight to a heavier file — pick the family that
-      // already encodes the weight you want.
       fontFamily: {
         display: ["Fraunces_600SemiBold"],
         "display-light": ["Fraunces_300Light"],
@@ -29,7 +25,6 @@ module.exports = {
         "mono-medium": ["DMMono_500Medium"],
       },
       colors: {
-        // Brand
         "brand-ui": { light: "#D4622E", dark: "#E07840", DEFAULT: "#D4622E" },
         "brand-text": { light: "#B04A1C", dark: "#E07840", DEFAULT: "#B04A1C" },
         "brand-hover": { light: "#8A3610", dark: "#E88F58", DEFAULT: "#8A3610" },
@@ -37,12 +32,10 @@ module.exports = {
         "brand-subtle": { light: "#FAE0D6", dark: "#2E1C0E", DEFAULT: "#FAE0D6" },
         "brand-subtle-text": { light: "#632507", dark: "#F0A070", DEFAULT: "#632507" },
 
-        // Toggle / active binary controls (sky blue, complement of auburn)
         "toggle-on": { light: "#43a1d8", dark: "#43a1d8", DEFAULT: "#43a1d8" },
         "toggle-on-hover": { light: "#2B87BC", dark: "#5AAFE0", DEFAULT: "#2B87BC" },
         "toggle-on-subtle": { light: "#D6EDF8", dark: "#0D1E2A", DEFAULT: "#D6EDF8" },
 
-        // Backgrounds
         "bg-base": { light: "#FAF6EE", dark: "#16100B", DEFAULT: "#FAF6EE" },
         "bg-surface": { light: "#FFFFFF", dark: "#1F1710", DEFAULT: "#FFFFFF" },
         "bg-elevated": { light: "#FFFFFF", dark: "#2A1F16", DEFAULT: "#FFFFFF" },
@@ -54,7 +47,6 @@ module.exports = {
         "bg-reading-sepia": { light: "#F5EDDA", dark: "#1E190E", DEFAULT: "#F5EDDA" },
         "bg-reading-oled": { light: "#000000", dark: "#000000", DEFAULT: "#000000" },
 
-        // Text
         "text-primary": { light: "#16100B", dark: "#F5EDDE", DEFAULT: "#16100B" },
         "text-secondary": { light: "#3E3028", dark: "#C4AE96", DEFAULT: "#3E3028" },
         "text-tertiary": { light: "#815E41", dark: "#A28269", DEFAULT: "#815E41" },
@@ -64,31 +56,26 @@ module.exports = {
         "text-on-dark": { light: "#F5EDDE", dark: "#F5EDDE", DEFAULT: "#F5EDDE" },
         "text-on-sepia": { light: "#2A1E12", dark: "#2A1E12", DEFAULT: "#2A1E12" },
 
-        // Status — success
         success: { light: "#2B6443", dark: "#72CA9A", DEFAULT: "#2B6443" },
         "success-bg": { light: "#EEF5EF", dark: "#0D2018", DEFAULT: "#EEF5EF" },
         "success-border": { light: "#D2E9D8", dark: "#72CA9A", DEFAULT: "#D2E9D8" },
         "success-border-interactive": { light: "#196639", dark: "#72CA9A", DEFAULT: "#196639" },
 
-        // Status — warning
         warning: { light: "#605206", dark: "#F3DA49", DEFAULT: "#605206" },
         "warning-bg": { light: "#FCF5CF", dark: "#221C00", DEFAULT: "#FCF5CF" },
         "warning-border": { light: "#E8DC80", dark: "#F3DA49", DEFAULT: "#E8DC80" },
         "warning-border-interactive": { light: "#665B19", dark: "#F3DA49", DEFAULT: "#665B19" },
 
-        // Status — error
         error: { light: "#8D253F", dark: "#E46872", DEFAULT: "#8D253F" },
         "error-bg": { light: "#FAF0F3", dark: "#220A0E", DEFAULT: "#FAF0F3" },
         "error-border": { light: "#F5D5DF", dark: "#E46872", DEFAULT: "#F5D5DF" },
         "error-border-interactive": { light: "#66192D", dark: "#E46872", DEFAULT: "#66192D" },
 
-        // Status — info
         info: { light: "#2B6391", dark: "#70A6DB", DEFAULT: "#2B6391" },
         "info-bg": { light: "#EEF3F8", dark: "#091220", DEFAULT: "#EEF3F8" },
         "info-border": { light: "#D5E4F2", dark: "#70A6DB", DEFAULT: "#D5E4F2" },
         "info-border-interactive": { light: "#194466", dark: "#70A6DB", DEFAULT: "#194466" },
 
-        // Borders
         "border-subtle": { light: "#E5D8BF", dark: "#261C13", DEFAULT: "#E5D8BF" },
         "border-default": { light: "#CFC7BC", dark: "#3A2C22", DEFAULT: "#CFC7BC" },
         "border-interactive": { light: "#7A4329", dark: "#BE7A37", DEFAULT: "#7A4329" },
@@ -96,7 +83,6 @@ module.exports = {
         "border-brand": { light: "#E58D6D", dark: "#E07840", DEFAULT: "#E58D6D" },
         "border-focus": { light: "#B04A1C", dark: "#F5B840", DEFAULT: "#B04A1C" },
 
-        // Annotation highlights — backgrounds
         "hl-amber": { light: "#FEF0C0", dark: "#2E2008", DEFAULT: "#FEF0C0" },
         "hl-auburn": { light: "#FAD8C8", dark: "#2E1808", DEFAULT: "#FAD8C8" },
         "hl-yellow": { light: "#FAF3C6", dark: "#3D360B", DEFAULT: "#FAF3C6" },
@@ -105,7 +91,6 @@ module.exports = {
         "hl-crimson": { light: "#F5D0DC", dark: "#20080E", DEFAULT: "#F5D0DC" },
         "hl-purple": { light: "#DFD3EE", dark: "#231532", DEFAULT: "#DFD3EE" },
 
-        // Annotation highlights — text
         "hl-amber-t": { light: "#5C3A00", dark: "#F5C060", DEFAULT: "#5C3A00" },
         "hl-auburn-t": { light: "#5A1E08", dark: "#F0A070", DEFAULT: "#5A1E08" },
         "hl-yellow-t": { light: "#554B07", dark: "#F4E47B", DEFAULT: "#554B07" },
@@ -114,7 +99,6 @@ module.exports = {
         "hl-crimson-t": { light: "#4F1223", dark: "#E46872", DEFAULT: "#4F1223" },
         "hl-purple-t": { light: "#361C54", dark: "#B58DE2", DEFAULT: "#361C54" },
 
-        // UI states
         "skeleton-base": { light: "#EDE6DC", dark: "#261C13", DEFAULT: "#EDE6DC" },
         "skeleton-shimmer": { light: "#F5EFE6", dark: "#3A2C22", DEFAULT: "#F5EFE6" },
         "tooltip-bg": { light: "#261E17", dark: "#F5EDDE", DEFAULT: "#261E17" },
@@ -129,7 +113,6 @@ module.exports = {
         "presence-online": { light: "#1F7A4A", dark: "#4CAF7D", DEFAULT: "#1F7A4A" },
         "presence-away": { light: "#8A5B0F", dark: "#F5B840", DEFAULT: "#8A5B0F" },
 
-        // Section backgrounds
         "section-cream": "#FAF6EE",
         "section-auburn": "#D4622E",
         "section-deep-auburn": "#8A3610",

@@ -1,10 +1,5 @@
-// Diary / reviews domain. diary_entries is THE rating + review home.
-//
-// EVENT RULE (approved): creating an entry emits 'reviewed' (it has review text) or
-// 'rated' (rating only), RESPECTING visibility -- a private entry emits NO event; a
-// friends/public entry emits a feed event carrying that visibility. We do NOT emit
-// 'finished' here: Phase 3 library status already emits finished_book, so the diary
-// path must never double-count a finish.
+// diary_entries is THE rating + review home. Creating an entry emits 'reviewed' (review text) or 'rated', RESPECTING visibility: a private
+// entry emits NO event. It never emits 'finished': library status already emits finished_book, so the diary must not double-count.
 import { eq } from "drizzle-orm";
 import type { Db } from "../db";
 import { emit, type EventActor } from "../events";
@@ -47,7 +42,6 @@ export async function createEntry(
 
   await diaryRepo.recomputeBookRating(db, input.bookId);
 
-  // Feed emission respects the entry's own visibility. Private -> nothing.
   if (visibility !== "private") {
     const payload = {
       bookId: input.bookId,
@@ -77,9 +71,7 @@ async function requireOwnedEntry(
   return entry;
 }
 
-// Editing an existing entry does NOT re-emit a feed event (the "creating a diary entry
-// emits" rule is create-only; re-emitting on edit would spam the feed). The rating
-// aggregate is recomputed because the rating may have changed.
+// Editing does NOT re-emit a feed event (it would spam the feed); the rating aggregate is recomputed because the rating may have changed.
 export async function updateEntry(
   db: Db,
   actor: EventActor,

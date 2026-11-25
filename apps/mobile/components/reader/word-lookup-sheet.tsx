@@ -5,8 +5,6 @@ import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { CompanionSheet } from "./companion-sheet";
 
-// A tapped word: what it means here, then what is notable about it. Each definition
-// is saved to the reader's vocabulary.
 export function WordLookupSheet({
   visible,
   word,
