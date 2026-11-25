@@ -64,7 +64,10 @@ export function journalScheduleAdapter(ctx: {
       const row = await adminRepo.getJournalBySlug(db, id);
       const waiting = await schedules.get(id);
       if (!row || !waiting || row.trashedAt) return null;
-      if (waiting.changeId !== input.changeId || waiting.publishAt !== new Date(input.publishAt).toISOString())
+      if (
+        waiting.changeId !== input.changeId ||
+        waiting.publishAt !== new Date(input.publishAt).toISOString()
+      )
         return null;
       if (Date.parse(waiting.publishAt) > input.now.getTime()) return null;
       if (input.kind === "update") {
