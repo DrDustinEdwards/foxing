@@ -89,7 +89,7 @@ export async function clubPage(
 
   const [threads, members, meetings, schedule, polls, books] = await Promise.all([
     clubsRepo.listThreads(db, club.id),
-    clubsRepo.listMembers(db, club.id),
+    clubsRepo.listClubMembers(db, club.id),
     clubsRepo.listMeetings(db, club.id),
     clubsRepo.listSchedule(db, club.id),
     clubsRepo.listPolls(db, club.id),

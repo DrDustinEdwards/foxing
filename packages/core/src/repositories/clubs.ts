@@ -221,7 +221,7 @@ export async function countActiveMembersFor(
   return map;
 }
 
-export async function listMembers(db: Db, clubId: string): Promise<ClubMember[]> {
+export async function listClubMembers(db: Db, clubId: string): Promise<ClubMember[]> {
   return db
     .select()
     .from(clubMembers)
