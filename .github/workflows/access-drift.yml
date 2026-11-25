@@ -19,7 +19,7 @@ jobs:
     with:
       app: foxing-login
       admins-url: https://foxing.app/admin/access-drift
-      site-runtime-ref: v0.182.2
+      site-runtime-ref: v0.182.3
     secrets:
       ACCESS_READ_TOKEN: ${{ secrets.ACCESS_READ_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

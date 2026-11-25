@@ -23,9 +23,9 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.68.1",
+    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.68.2",
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.49.2",
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.182.2",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.182.3",
     "@foxing/types": "*",
     "capsomer": "github:DrDustinEdwards/capsomer#v0.164.10",
     "drizzle-orm": "0.45.4",
