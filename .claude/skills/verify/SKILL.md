@@ -88,20 +88,7 @@ const browser = await chromium.launch(
 );
 const context = await browser.newContext({ baseURL: base });
 const page = await context.newPage();
-const errors = [];
-page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
-page.on("pageerror", (e) => errors.push(String(e)));
-const log = [];
-async function step(name, fn) {
-  try {
-    await fn();
-    log.push(`ok   ${name}`);
-  } catch (e) {
-    log.push(`FAIL ${name}: ${e.message.split("\n")[0]}`);
-    await page.screenshot({ path: "fail.png", fullPage: true });
-    throw e;
-  }
-}
+// errors, log and step(): the helpers in devkit docs/verify.md
 try {
   await step("open the home page (this is Foxing)", async () => {
     const r = await page.goto("/");
@@ -147,11 +134,6 @@ at 390 px wide and in dark mode (`page.setViewportSize`,
 `page.emulateMedia({ colorScheme: "dark" })`). Pages that must work without scripts:
 run once more with `browser.newContext({ javaScriptEnabled: false })`.
 
-Playwright here is the repo's `@playwright/test`. In a cloud session
-`PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers` already matches it. If launch ever fails with
-"Executable doesn't exist", set `PW_CHROMIUM=/opt/pw-browsers/chromium`. Do not run
-`playwright install`.
-
 ## 4. Run the specs that cover the area
 
 Run the existing spec for the area you changed, not the whole suite; CI runs all of it
@@ -193,26 +175,11 @@ pkill -f 'vite dev --port 5173'
 `wrangler.jsonc`, `.dev.vars`, `.wrangler/` and `e2e/.auth/` are gitignored; leave them
 or delete them, but never commit them (CLAUDE.md, public repo rule).
 
-## Rules
+## Rules and report
 
-- A failed step is a finding about the change. Fix the code, then run the same
-  script again. Never add a sleep, a retry or a looser selector to make it pass.
-- If a step fails sometimes, find out why before going on; a flaky check teaches
-  the next thread to re-run instead of fix.
-- Never edit an existing spec to make it agree with new behavior unless the
-  change is meant to alter that behavior, and say so in the pull request.
-- Never run the seed scripts or a spec that writes with `--remote`, and never print the
-  passkey key. Leave nothing behind: stop the server, and keep the scripts, the key
-  and the screenshots in the scratchpad. Nothing from this skill is committed.
+Follow the Rules and the report in [devkit's docs/verify.md](https://github.com/DrDustinEdwards/devkit/blob/main/docs/verify.md). For this repo:
 
-## The report
-
-Put this in the reply and the pull request body:
-
-- First line: verified, partly verified (and what was not), or failed.
-- Each step's ok or FAIL line, verbatim, and the console errors line.
-- The end-state screenshot, attached (Dustin cannot open a scratchpad path).
-- The spec run's summary line.
+- Never run the seed scripts or a spec that writes with `--remote`, and never print the passkey key; keep the key in the scratchpad.
 - Anything the local build cannot show, named as not verified: the real catalog and
   its covers and EPUBs (R2), the Images binding, real email and sign-in (Google, Apple,
   Turnstile, a new reader's email link), Stripe billing, the Anthropic companion, the
