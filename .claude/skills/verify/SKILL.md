@@ -5,11 +5,8 @@ description: Use before committing or opening a pull request that changes what t
 
 # Verify a Foxing web change
 
-Tests prove what someone thought to test. This skill proves the change itself: run
-the real web app, use the changed flow as a reader would, and look at the result. Do
-it before every commit that touches `apps/web/` (or `packages/core`, `packages/api`
-as the web app uses them), and before the pull request. Web only: never touch or
-verify `apps/mobile/` here (CLAUDE.md, hard rule 2).
+Do it before every commit that touches `apps/web/` (or `packages/core`,
+`packages/api` as the web app uses them), and before the pull request.
 
 There is no mock server. The app runs for real in workerd with a local, throwaway D1
 (`apps/web/.wrangler/`, gitignored), so the data is a few fake books and one fake
@@ -17,8 +14,8 @@ account, nothing real.
 
 ## 1. One-time setup for this checkout
 
-From the repo root, on the repo's Node 26 (`.nvmrc`; in a cloud session a Node 26 is at
-`~/.cache/capsid-node/node-v26.13.1-linux-x64/bin`, put it on PATH). `npm ci` must run
+From the repo root, on the repo's Node 26 (`.nvmrc`; in a cloud session the SessionStart hook
+installs it; put it on PATH). `npm ci` must run
 without `--ignore-scripts`: the git dependencies build themselves on install.
 
 ```sh
@@ -43,6 +40,7 @@ From `apps/web/`, in the background:
 
 ```sh
 npx vite dev --port 5173 --strictPort > $SCRATCH/vite.log 2>&1 &
+echo $! > $SCRATCH/vite.pid
 ```
 
 Wait until `curl -s -o /dev/null -w '%{http_code}' http://localhost:5173/books` prints 200,
@@ -55,10 +53,11 @@ says "Failed query" means the migrations were not applied; "Invalid base URL" me
 about `nonce=""` on a `<link>`; it comes from Vite's dev server, not the change.
 Anything else in the console errors line is a finding.
 
-Then the signed-in account. Rule 8: e2e signs in through the visible form with the
-seeded `e2e@foxing.app`, whose passkey sits in Chromium's virtual authenticator. For the
+Then the signed-in account: e2e signs in through the visible form with the seeded
+`e2e@foxing.app`, whose passkey sits in Chromium's virtual authenticator. For the
 local D1 make your own key; never run `scripts/seed-e2e-passkeys.mjs`, which writes the
-repo's real `E2E_PASSKEY_PRIVATE_KEY` Actions secret through `gh`. The seed signs in once to onboard the account, so the server must be running:
+repo's real `E2E_PASSKEY_PRIVATE_KEY` Actions secret through `gh`. The seed signs in
+once to onboard the account, so the server must be running:
 
 ```sh
 node -e 'const {generateKeyPairSync:g}=require("crypto");process.stdout.write(g("ec",{namedCurve:"P-256"}).privateKey.export({format:"der",type:"pkcs8"}).toString("base64"))' > $SCRATCH/key
@@ -72,8 +71,8 @@ Write a short script in the scratchpad, never in the repo. Name each step the wa
 reader would say it, act through roles and labels, and assert what the reader should
 see afterward (e2e/README.md: only what a person can see and click; never an API call
 or a forged session). Collect console and page errors, and keep a screenshot of the end
-state. The script reuses the repo's own sign-in (`e2e/passkey.ts`). This one drives the
-reading-status flow; replace the steps after sign-in with the changed flow.
+state. The script reuses the repo's own sign-in (`e2e/passkey.ts`). Replace the steps after
+sign-in with the changed flow.
 
 ```js
 // $SCRATCH/drive.mjs: cd $SCRATCH/out && REPO=<repo> E2E_EMAIL=e2e@foxing.app E2E_PASSKEY_PRIVATE_KEY=$(cat $SCRATCH/key) node $SCRATCH/drive.mjs http://localhost:5173
@@ -82,7 +81,6 @@ const repo = process.env.REPO;
 const { chromium, expect } = createRequire(`${repo}/apps/web/package.json`)("@playwright/test");
 const { signInThroughLogin } = await import(`${repo}/apps/web/e2e/passkey.ts`);
 const base = process.argv[2];
-const slug = process.env.E2E_BOOK_SLUG ?? "frankenstein-seed";
 const browser = await chromium.launch(
   process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {},
 );
@@ -99,25 +97,8 @@ try {
     await signInThroughLogin(page, process.env.E2E_EMAIL, base);
     await expect(page.getByRole("button", { name: /your account/i })).toBeVisible();
   });
-  await step("set a book's reading status from the visible select", async () => {
-    await page.goto(`/books/${slug}`, { waitUntil: "networkidle" });
-    const control = page.getByRole("combobox", { name: /reading status/i });
-    const saved = () =>
-      page.waitForResponse(
-        (r) => /\/api\/v1\/library\//.test(r.url()) && r.request().method() === "PUT" && r.ok(),
-      );
-    for (const label of ["Finished", "Reading"]) {
-      const done = saved();
-      await control.selectOption({ label });
-      await done;
-    }
-    await expect(control).toHaveValue("reading");
-    await expect(page.getByRole("alert")).toHaveCount(0);
-  });
-  await step("reload and see the status hold", async () => {
-    await page.reload({ waitUntil: "networkidle" });
-    await expect(page.getByRole("combobox", { name: /reading status/i })).toHaveValue("reading");
-  });
+  // ...the changed flow: act through roles and labels, wait for each save, then
+  // assert the visible result and that it holds after a reload.
   await page.screenshot({ path: "after.png", fullPage: true });
 } finally {
   console.log(log.join("\n"));
@@ -126,13 +107,11 @@ try {
 }
 ```
 
-Wait for each save before the next change, as above: two selects in quick succession
-can leave the older write as the stored value. For a public flow, skip the sign-in step
-(the seeded books are `frankenstein-seed`, `the-time-machine-seed` and others in
-`apps/web/scripts/seed.sql`). If the change is responsive or themed, repeat the end state
-at 390 px wide and in dark mode (`page.setViewportSize`,
-`page.emulateMedia({ colorScheme: "dark" })`). Pages that must work without scripts:
-run once more with `browser.newContext({ javaScriptEnabled: false })`.
+For a public flow, skip the sign-in step (the seeded books are `frankenstein-seed`,
+`the-time-machine-seed` and others in `apps/web/scripts/seed.sql`). Wait for each save
+before the next change. Drive the whole flow (act, see the result, reload and see it
+hold); repeat the end state at 390 px and dark when the change is responsive or
+themed.
 
 ## 4. Run the specs that cover the area
 
@@ -144,32 +123,24 @@ at `PLAYWRIGHT_BASE_URL`, so leave step 2's server running and point it there:
 cd apps/web
 PLAYWRIGHT_BASE_URL=http://localhost:5173 E2E_EMAIL=e2e@foxing.app \
   E2E_PASSKEY_PRIVATE_KEY=$(cat $SCRATCH/key) E2E_BOOK_SLUG=frankenstein-seed \
-  npx playwright test --project=authed --reporter=list --output=$SCRATCH/test-results library.spec.ts
+  npx playwright test --project=authed --reporter=list --output=$SCRATCH/test-results e2e/authed/library.spec.ts
 ```
 
-Which spec covers what (`apps/web/e2e/`):
-
-- Anonymous (`--project=public`, no env needed beyond the base URL): `shell.spec.ts`
-  (header, panels, links), `catalog.spec.ts` and `search.spec.ts` (browse, book page,
-  search; they expect a fuller catalog than the five fake books and may fail on count
-  or genre, which is not your change), `reader.spec.ts`, `auth.spec.ts`,
-  `onboarding-flow.spec.ts` (writes to the remote D1 through wrangler: never run it here).
-- Signed in (`--project=authed`, depends on the `setup` project, which signs in through the
-  form): `library.spec.ts`, `settings.spec.ts`, `personal.spec.ts`, `nav.spec.ts`,
-  `shell.spec.ts`, `find-next-book.spec.ts`, `billing.spec.ts`, `clubs-paywall.spec.ts`.
-- Plus and social accounts (`authed-plus`, `authed-social`) need more seeded accounts
-  (`scripts/seed-e2e-plus-user.mjs`, `seed-e2e-social.mjs`) and the real Plus tier; leave
-  them to CI.
+The specs are `apps/web/e2e/` (public project, no env beyond the base URL) and
+`apps/web/e2e/authed/` (`--project=authed`, signed in); run the spec named for the
+area. `catalog.spec.ts` and `search.spec.ts` expect a fuller catalog than the four fake
+books and may fail on count or genre, which is not your change. Never run
+`onboarding-flow.spec.ts` here (it writes to the remote D1). `authed-plus` and
+`authed-social` need more seeded accounts and the real Plus tier; leave them to CI.
 
 For logic below the UI, the web app's integration tests run in a few seconds each:
-`cd apps/web && npx vitest run test/<name>.integration.test.ts`. The repo's quick
-checks before a push: `npm run type-check`, `npm run lint`, `npm run format:check` (from the
-root).
+`cd apps/web && npx vitest run test/<name>.integration.test.ts`. Before a push, from the root:
+`npm run type-check`, `npm run lint`, `npm run format:check`.
 
 ## 5. Stop what you started
 
 ```sh
-pkill -f 'vite dev --port 5173'
+kill $(cat $SCRATCH/vite.pid)
 ```
 
 `wrangler.jsonc`, `.dev.vars`, `.wrangler/` and `e2e/.auth/` are gitignored; leave them
@@ -186,5 +157,5 @@ Follow the Rules and the report in [devkit's docs/verify.md](https://github.com/
   club live room Durable Object over a real network, the edge cache and the deploy's
   headers. The check after the merge deploys runs by itself: the `deploy` job in
   `.github/workflows/ci-cf.yml` waits for `/health` and the home page and rolls back
-  on failure, then the `e2e` job runs the full Playwright suite against the live
-  site. Read both on the merged commit.
+  on failure, then the `e2e` job runs the full suite against the live site. Read both
+  on the merged commit.
