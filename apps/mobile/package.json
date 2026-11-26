@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@better-auth/expo": "1.7.27",
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.182.3",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.183.1",
     "@epubjs-react-native/core": "1.4.8",
     "@expo-google-fonts/dm-mono": "0.4.2",
     "@expo-google-fonts/dm-sans": "0.4.2",
@@ -30,7 +30,7 @@
     "@tanstack/react-query": "5.108.2",
     "babel-preset-expo": "58.0.26",
     "better-auth": "1.7.27",
-    "capsomer": "github:DrDustinEdwards/capsomer#v0.164.10",
+    "capsomer": "github:DrDustinEdwards/capsomer#v0.164.11",
     "expo": "58.0.26",
     "expo-asset": "58.0.21",
     "expo-build-properties": "58.0.12",

@@ -24,10 +24,10 @@
   },
   "dependencies": {
     "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.69.0",
-    "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.49.2",
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.182.3",
+    "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.50.1",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.183.1",
     "@foxing/types": "*",
-    "capsomer": "github:DrDustinEdwards/capsomer#v0.164.10",
+    "capsomer": "github:DrDustinEdwards/capsomer#v0.164.11",
     "drizzle-orm": "0.45.4",
     "entities": "8.1.0",
     "hastscript": "9.0.3",
