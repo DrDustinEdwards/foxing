@@ -135,7 +135,7 @@ jobs:
       health-url: https://foxing.app/health
       verify-command: node "$DEVKIT_DIR/bin/verify-deploy.mjs" https://foxing.app
       working-directory: apps/web
-      keep-assets: apps/web/build/client
+      keep-assets: build/client
       pre-deploy: >-
         sed -e "s|<D1_DATABASE_ID>|${{ vars.D1_DATABASE_ID }}|"
         -e "s|<KV_NAMESPACE_ID>|${{ vars.KV_NAMESPACE_ID }}|"
