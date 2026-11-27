@@ -31,6 +31,7 @@
     "0026_one_thread_one_list_entry.sql": "b307e8e3b3bcfa85119773ed9001c2491529bfb76ea1d373f8e72ed81e0bba4c",
     "0027_ai_review_columns_indexes.sql": "522b3218f970aaa56349a08a3fd669dc60835278b43932399ba95baac0d40006",
     "0028_drop_unused_tables_columns_indexes.sql": "8c77f9383602f44461c7e67baa82d3cb448081655a452aa7e0eba99a058a997e",
-    "0029_club_book_history_fts_trigger.sql": "ff68f2310901d40f7bd6b957a669cfdfcd33743abc0ad27e0d92652ef140a0a7"
+    "0029_club_book_history_fts_trigger.sql": "ff68f2310901d40f7bd6b957a669cfdfcd33743abc0ad27e0d92652ef140a0a7",
+    "0030_books_source_title_index.sql": "b9a986333e0f92f706443da682320c943362df36b2799f6146f575e00d77b4d1"
   }
 }
