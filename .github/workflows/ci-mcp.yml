@@ -7,10 +7,10 @@ on:
     paths:
       - "mcp/**"
       - ".github/workflows/ci-mcp.yml"
+  # Every pull request, with no paths filter: these jobs are required checks, and a required check whose workflow a
+  # paths filter skips stays Pending and blocks the merge (GitHub Docs, "Troubleshooting required status checks").
+  # GitHub's auto-merge waits only for required checks, so they must run on every pull request (2026-11-27).
   pull_request:
-    paths:
-      - "mcp/**"
-      - ".github/workflows/ci-mcp.yml"
 
 permissions:
   contents: read
@@ -22,6 +22,7 @@ concurrency:
 
 jobs:
   check:
+    name: Admin MCP check
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -52,6 +53,7 @@ jobs:
   # The official MCP conformance suite (devkit-conformance, .conformance.json) against the real protocol layer under
   # wrangler dev, and the door's authorization server: a regression against the recorded baseline fails.
   conformance:
+    name: Admin MCP conformance
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:

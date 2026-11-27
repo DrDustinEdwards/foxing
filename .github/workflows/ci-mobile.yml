@@ -4,16 +4,10 @@ name: CI (mobile)
 # Pull requests only: no deploy reads it, and the merge was checked as a pull request (devkit README, "No second run on
 # main").
 on:
+  # Every pull request, with no paths filter: these jobs are required checks, and a required check whose workflow a
+  # paths filter skips stays Pending and blocks the merge (GitHub Docs, "Troubleshooting required status checks").
+  # GitHub's auto-merge waits only for required checks, so they must run on every pull request (2026-11-27).
   pull_request:
-    paths:
-      - "apps/mobile/**"
-      - "packages/client/**"
-      - "packages/types/**"
-      - "oxlint.config.ts"
-      - "oxfmt.config.ts"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/ci-mobile.yml"
 
 permissions:
   contents: read
@@ -25,6 +19,7 @@ concurrency:
 
 jobs:
   lint:
+    name: Mobile lint
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
