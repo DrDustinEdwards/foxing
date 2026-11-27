@@ -149,7 +149,6 @@ jobs:
       # takes all traffic; a refused one is rolled back to the version it shared traffic with. A deploy that adds a
       # Durable Object migration (wrangler.jsonc) sets gradual-percent to 0 for that deploy.
       gradual-percent: 10
-      gradual-minutes: 10
       # No preview per pull request (D6): Cloudflare makes no preview URL for a Worker that has a Durable Object, and
       # foxing has one (ClubRoom, RateLimiter). Stated, so it is not mistaken for forgotten.
       preview: false
